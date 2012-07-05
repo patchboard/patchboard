@@ -1,6 +1,4 @@
-fs = require("fs")
-
-api =
+module.exports =
   account_collection:
     url: "{service_url}/accounts"
     actions:
@@ -68,4 +66,3 @@ api =
         authorization: "Capability"
 
 
-fs.writeFileSync("api.json", JSON.stringify(api, null, 2))

@@ -12,4 +12,14 @@ task "json" do
   end
 end
 
+rule ".json" => ".coffee" do |target|
+  sh "#{$COFFEE} bin/c2json.coffee #{target.source} #{target.name}"
+end
+
+task "examples:build" => %w[
+  examples/messaging/api.json
+  examples/messaging/directory.json
+  examples/messaging/resource_schema.json
+]
+
 

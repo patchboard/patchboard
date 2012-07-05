@@ -1,6 +1,4 @@
-fs = require("fs")
-
-schema =
+module.exports =
   account_collection:
     type: "array"
     items:
@@ -35,5 +33,3 @@ schema =
         type: "string"
     required: ["name"]
 
-
-fs.writeFileSync("schema.json", JSON.stringify(schema, null, 2))
