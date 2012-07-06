@@ -52,8 +52,9 @@ class Resource
       if response_type
         headers["Accept"] = @schema[response_type].media_type
       if definition.authorization
-        cap = @properties.capabilities[action_name]
-        headers["Authorization"] = "Capability #{cap}"
+        auth_type = definition.authorization
+        credential = @credential(auth_type, action_name)
+        headers["Authorization"] = "#{auth_type} #{credential}"
 
 
       @shred.request
@@ -68,5 +69,11 @@ class Resource
           error: (r) ->
             console.log "whoops"
 
+  # TODO: figure out how to have pluggable authorization
+  # handlers.  What should happen if the authorization type is
+  # Basic?  Other types: Cookie?
+  credential: (type, action) ->
+    if type == "Capability"
+      @properties.capabilities[action]
 
 module.exports = Client

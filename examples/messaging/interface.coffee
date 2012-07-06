@@ -44,12 +44,6 @@ module.exports =
 
       all:
         method: "GET"
-        #query:
-          #required:
-            #limit: {type: "integer"}
-          #optional:
-            #offset: {type: "integer"}
-            #sort: {type: "string"}
         response_schema: "channel_collection"
         authorization: "Capability"
 

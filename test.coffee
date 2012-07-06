@@ -14,7 +14,6 @@ schema = JSON.parse(string)
 
 
 
-
 rigger = new Rigger.Client "http://localhost:1337",
   interface: interface
   schema: schema
