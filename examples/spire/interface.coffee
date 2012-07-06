@@ -39,12 +39,12 @@ module.exports =
             name:
               description: "Search for channels by name"
               type: ["glob"]
-        response_entity: "channel_collection"
+        response_entity: "channel_dictionary"
         authorization: "Capability"
 
       all:
         method: "GET"
-        response_entity: "channel_collection"
+        response_entity: "channel_dictionary"
         authorization: "Capability"
 
 

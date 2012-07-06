@@ -13,22 +13,15 @@ module.exports =
       type: "account"
 
   account:
-    extends: ["resource"]
+    type: "resource"
     media_type: "application/vnd.spire-io.account+json;version=1.0"
     properties:
-      id:
-        type: "string"
-        readonly: true
+      id: {type: "string", readonly: true}
+      secret: {type: "string", readonly: true}
       created_at: {type: "number"}
-      secret:
-        type: "string"
-        readonly: true
-      email:
-        type: "string"
-      name:
-        type: "string"
-      password:
-        type: "string"
+      email: {type: "string"}
+      name: {type: "string"}
+      password: {type: "string"}
     required: ["email", "password"]
 
   session:
@@ -49,13 +42,22 @@ module.exports =
       url: {type: "string"}
       capabilities: {type: "capability_collection"}
 
+  channel_dictionary:
+    type: "dictionary"
+    media_type: "application/vnd.spire-io.channels+json;version=1.0"
+    items: {type: "channel"}
+
   channel:
-    extends: ["resource"]
+    type: "resource"
     media_type: "application/vnd.spire-io.channel+json;version=1.0"
     properties:
       name: {type: "string"}
+      application_key: {type: "string", readonly: true}
       limit: {type: "number"}
     required: ["name"]
 
   capability_collection:
     type: "dictionary"
+    items: {type: "string"}
+
+
