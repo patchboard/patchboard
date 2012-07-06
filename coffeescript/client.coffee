@@ -9,6 +9,10 @@ class Client
     @schema = options.schema
     @interface = options.interface
     @assemble_interface(@interface)
+    # TODO: assemble schemae ?
+    # We need to generate classes for the schemas
+    # that don't correspond to resources, i.e. those
+    # that do not appear in the interfaces JSON.
 
   assemble_interface: (interface) ->
     for resource, definition of interface
