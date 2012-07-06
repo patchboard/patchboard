@@ -50,7 +50,7 @@ module.exports =
       capabilities: {type: "capability_collection"}
 
   channel:
-    type: "object"
+    extends: ["resource"]
     media_type: "application/vnd.spire-io.channel+json;version=1.0"
     properties:
       name: {type: "string"}
