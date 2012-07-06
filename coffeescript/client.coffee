@@ -44,8 +44,8 @@ class Resource
       request = {}
       request.headers = headers = {}
 
-      request_type = definition.request_schema
-      response_type = definition.response_schema
+      request_type = definition.request_entity
+      response_type = definition.response_entity
       headers = {}
       if request_type
         headers["Content-Type"] = @schema[request_type].media_type

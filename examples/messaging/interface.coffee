@@ -5,15 +5,15 @@ module.exports =
     actions:
       create:
         method: "POST"
-        request_schema: "account"
-        response_schema: "session"
+        request_entity: "account"
+        response_entity: "session"
       search:
         method: "GET"
         query:
           required:
             email: {type: "glob"}
             limit: {type: "integer"}
-        response_schema: "account_collection"
+        response_entity: "account_collection"
 
   "/accounts/:account_id":
     resource: "account"
@@ -21,8 +21,8 @@ module.exports =
     actions:
       update:
         method: "PUT"
-        request_schema: "account"
-        response_schema: "account"
+        request_entity: "account"
+        response_entity: "account"
         authorization: "Capability"
       delete:
         method: "DELETE"
@@ -39,19 +39,19 @@ module.exports =
             name:
               description: "Search for channels by name"
               type: ["glob"]
-        response_schema: "channel_collection"
+        response_entity: "channel_collection"
         authorization: "Capability"
 
       all:
         method: "GET"
-        response_schema: "channel_collection"
+        response_entity: "channel_collection"
         authorization: "Capability"
 
 
       create:
         method: "POST"
-        request_schema: "channel"
-        response_schema: "channel"
+        request_entity: "channel"
+        response_entity: "channel"
         authorization: "Capability"
 
   "/accounts/:account_id/channels/:channel_id":
@@ -61,12 +61,12 @@ module.exports =
       get:
         method: "GET"
         authorization: "Capability"
-        response_schema: "channel"
+        response_entity: "channel"
       update:
         method: "PUT"
         authorization: "Capability"
-        request_schema: "channel"
-        response_schema: "channel"
+        request_entity: "channel"
+        response_entity: "channel"
       delete:
         method: "DELETE"
         authorization: "Capability"
