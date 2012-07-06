@@ -1,5 +1,5 @@
 module.exports =
   "/accounts": "account_collection"
-  "/accounts/:id": "account"
-  "/channels": "channel_collection"
-  "/channels/:id": "channel"
+  "/accounts/:account_id": "account"
+  "/accounts/:account_id/channels": "channel_collection"
+  "/accounts/:account_id/channels/:channel_id": "channel"

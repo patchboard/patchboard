@@ -1,5 +1,7 @@
 module.exports =
-  account_collection:
+  "/accounts":
+    resource: "account_collection"
+    description: "The collection of accounts"
     actions:
       create:
         method: "POST"
@@ -13,7 +15,9 @@ module.exports =
             limit: {type: "integer"}
         response_schema: "account_collection"
 
-  account:
+  "/accounts/:account_id":
+    resource: "account"
+    description: "The account resource"
     actions:
       update:
         method: "PUT"
@@ -24,7 +28,9 @@ module.exports =
         method: "DELETE"
         authorization: "Basic"
 
-  channel_collection:
+  "/accounts/:account_id/channels":
+    resource: "channel_collection"
+    description: "The collection of channels for a particular account"
     actions:
       search:
         method: "GET"
@@ -52,7 +58,9 @@ module.exports =
         response_schema: "channel"
         authorization: "Capability"
 
-  channel:
+  "/accounts/:account_id/channels/:channel_id":
+    resource: "channel"
+    description: "The channel resource"
     actions:
       get:
         method: "GET"
