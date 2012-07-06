@@ -1,6 +1,5 @@
 module.exports =
   account_collection:
-    path: "/accounts"
     actions:
       create:
         method: "POST"
@@ -15,7 +14,6 @@ module.exports =
         response_schema: "account_collection"
 
   account:
-    path: "/accounts/{id}"
     actions:
       update:
         method: "PUT"
@@ -27,7 +25,6 @@ module.exports =
         authorization: "Basic"
 
   channel_collection:
-    path: "/channels"
     actions:
       search:
         method: "GET"
@@ -56,13 +53,19 @@ module.exports =
         authorization: "Capability"
 
   channel:
-    path: "/channels/{id}"
     actions:
       get:
         method: "GET"
         authorization: "Capability"
+        response_schema: "channel"
+      update:
+        method: "PUT"
+        authorization: "Capability"
+        request_schema: "channel"
+        response_schema: "channel"
       delete:
         method: "DELETE"
         authorization: "Capability"
+
 
 

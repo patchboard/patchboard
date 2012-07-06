@@ -7,8 +7,12 @@
     "type": "git",
     "url": "https://github.com/automatthew/quern/"
   },
+  "main": "./node/quern.js",
+  "dependencies": {
+    "shred": "0.8.x"
+  },
   "devDependencies": {
-    "shred": "0.8.x",
+    "mocha": "1.3.x",
     "coffee-script": "1.3.x"
   }
 }
