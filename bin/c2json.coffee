@@ -15,5 +15,6 @@ try
   else
     console.log(json)
 catch error
+  console.log(error)
   console.log "Usage: c2json.coffee <path/to/coffee> [path/to/json]"
 

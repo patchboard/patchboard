@@ -6,7 +6,7 @@ module.exports =
       create:
         method: "POST"
         request_schema: "account"
-        response_schema: "account"
+        response_schema: "session"
       search:
         method: "GET"
         query:
@@ -42,15 +42,17 @@ module.exports =
         response_schema: "channel_collection"
         authorization: "Capability"
 
-      list:
+      all:
         method: "GET"
-        query:
-          required:
-            limit: {type: "integer"}
-          optional:
-            offset: {type: "integer"}
-            sort: {type: "string"}
+        #query:
+          #required:
+            #limit: {type: "integer"}
+          #optional:
+            #offset: {type: "integer"}
+            #sort: {type: "string"}
         response_schema: "channel_collection"
+        authorization: "Capability"
+
 
       create:
         method: "POST"
