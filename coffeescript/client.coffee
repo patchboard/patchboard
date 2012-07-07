@@ -9,8 +9,6 @@ class Client
     @interface = options.interface
 
     rigger = @
-    shred = @shred
-    schema = @schema
 
     for resource_name, schema_def of @schema
       interface_def = @interface[resource_name]
