@@ -1,5 +1,5 @@
 module.exports =
-  resource:
+  spire_resource:
     type: "object"
     properties:
       url: {type: "string"}
@@ -7,7 +7,7 @@ module.exports =
     required: ["url"]
 
   account:
-    type: "resource"
+    type: "spire_resource"
     media_type: "application/vnd.spire-io.account+json;version=1.0"
     properties:
       id: {type: "string", readonly: true}
@@ -33,10 +33,10 @@ module.exports =
       resources:
         type: "dictionary"
         additionalProperties:
-          type: "resource"
+          type: "object"
 
   channel:
-    type: "resource"
+    type: "spire_resource"
     media_type: "application/vnd.spire-io.channel+json;version=1.0"
     properties:
       name: {type: "string"}
