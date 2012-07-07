@@ -1,7 +1,7 @@
 $COFFEE = "node_modules/coffee-script/bin/coffee"
 
 task "build:node" do
-  sh "#{$COFFEE} --compile --bare --output build/ node/"
+  sh "#{$COFFEE} --compile --bare --output node/ coffeescript/"
 end
 
 task "json" do

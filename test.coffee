@@ -31,5 +31,5 @@ account_collection.create
       callback: (channel) ->
         collection.all
           callback: (channel_dict) ->
-            #console.log("channel:", channel_dict)
+            #console.log("channel:", channel_dict.properties)
 
