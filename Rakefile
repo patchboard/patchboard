@@ -1,5 +1,9 @@
 $COFFEE = "node_modules/coffee-script/bin/coffee"
 
+task "build" => %w[
+  rigger-schema.json
+]
+
 task "build:node" do
   sh "#{$COFFEE} --compile --bare --output node/ coffeescript/"
 end

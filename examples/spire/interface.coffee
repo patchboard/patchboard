@@ -1,4 +1,5 @@
 module.exports =
+
   "/accounts":
     resource: "account_collection"
     description: "The collection of accounts"
@@ -7,32 +8,32 @@ module.exports =
         method: "POST"
         request_entity: "account"
         response_entity: "session"
-      search:
-        method: "GET"
-        query:
-          required:
-            email: {type: "glob"}
-            limit: {type: "integer"}
-        response_entity: "account_collection"
 
   "/accounts/:account_id":
     resource: "account"
     description: "The account resource"
     actions:
+      get:
+        method: "GET"
+        response_entity: "account"
+        authorization: "Capability"
       update:
         method: "PUT"
         request_entity: "account"
         response_entity: "account"
         authorization: "Capability"
+      reset:
+        method: "POST"
+        response_entity: "account"
       delete:
         method: "DELETE"
-        authorization: "Basic"
+        authorization: "Capability"
 
   "/accounts/:account_id/channels":
     resource: "channel_collection"
     description: "The collection of channels for a particular account"
     actions:
-      search:
+      get_by_name:
         method: "GET"
         query:
           required:
@@ -46,7 +47,6 @@ module.exports =
         method: "GET"
         response_entity: "channel_dictionary"
         authorization: "Capability"
-
 
       create:
         method: "POST"
@@ -62,11 +62,10 @@ module.exports =
         method: "GET"
         authorization: "Capability"
         response_entity: "channel"
-      update:
-        method: "PUT"
-        authorization: "Capability"
-        request_entity: "channel"
-        response_entity: "channel"
+      publish:
+        method: "POST"
+        request_entity: "message"
+        response_entity: "message"
       delete:
         method: "DELETE"
         authorization: "Capability"

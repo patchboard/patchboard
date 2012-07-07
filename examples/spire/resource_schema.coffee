@@ -1,15 +1,11 @@
 module.exports =
-  spire_resource:
-    type: "object"
-    properties:
-      url: {type: "string"}
-      capabilities: {type: "object"}
-    required: ["url"]
 
   account:
-    type: "spire_resource"
+    type: "object"
     media_type: "application/vnd.spire-io.account+json;version=1.0"
     properties:
+      url: {type: "string"}
+      capabilities: {type: "capability_dictionary"}
       id: {type: "string", readonly: true}
       secret: {type: "string", readonly: true}
       created_at: {type: "number"}
@@ -19,7 +15,7 @@ module.exports =
     required: ["email", "password"]
 
   account_collection:
-    type: "array"
+    type: "object"
     media_type: "application/vnd.spire-io.accounts+json;version=1.0"
     items:
       type: "account"
@@ -29,16 +25,23 @@ module.exports =
     media_type: "application/vnd.spire-io.session+json;version=1.0"
     properties:
       url: {type: "string"}
-      capabilities: {type: "capability_collection"}
+      capabilities: {type: "capability_dictionary"}
       resources:
-        type: "dictionary"
-        additionalProperties:
-          type: "object"
+        type: "object"
+        properties:
+          account: {type: "account"}
+          #applications: {}
+          channels: {type: "channel_collection"}
+          #subscriptions: {}
+          #notifications: {}
+          
 
   channel:
-    type: "spire_resource"
+    type: "object"
     media_type: "application/vnd.spire-io.channel+json;version=1.0"
     properties:
+      url: {type: "string"}
+      capabilities: {type: "capability_dictionary"}
       name: {type: "string"}
       application_key: {type: "string", readonly: true}
       limit: {type: "number"}
@@ -49,14 +52,14 @@ module.exports =
     media_type: "application/vnd.spire-io.channels+json;version=1.0"
     properties:
       url: {type: "string"}
-      capabilities: {type: "capability_collection"}
+      capabilities: {type: "capability_dictionary"}
 
   channel_dictionary:
     type: "dictionary"
     media_type: "application/vnd.spire-io.channels+json;version=1.0"
     items: {type: "channel"}
 
-  capability_collection:
+  capability_dictionary:
     type: "dictionary"
     items: {type: "string"}
 
