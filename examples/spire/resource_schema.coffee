@@ -30,8 +30,8 @@ module.exports =
         type: "object"
         properties:
           account: {type: "account"}
-          #applications: {}
           channels: {type: "channel_collection"}
+          #applications: {}
           #subscriptions: {}
           #notifications: {}
           

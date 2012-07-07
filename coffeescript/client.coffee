@@ -66,15 +66,11 @@ class Resource
           out
     else
       for property_name, prop_def of definition.properties
-        # when we see a property that is not a primitive type,
-        # we need to define a wrapper class for it.  So that the
-        # rigger.wrap method will be able to find the correct
-        # class, we change the type name to the property name.
-        # Skeezy, but should be obviated by a real schema handler.
         if prop_def.type == "object"
-          prop_def.type = property_name
           rigger.generate_resource_class(property_name, prop_def)
-        @simple_property(property_name, prop_def)
+          @simple_property(property_name, prop_def)
+        else
+          @simple_property(property_name, prop_def)
 
   @simple_property: (property_name, definition) ->
     spec = {}
@@ -99,7 +95,7 @@ class Resource
     type = definition.type
     props = definition.properties
     () ->
-      console.log("getter for", name, type)
+      console.log(name)
       val = @properties[name]
       @rigger.wrap(type, val)
 
