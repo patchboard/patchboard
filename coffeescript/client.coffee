@@ -49,7 +49,6 @@ class Client
     @resources[resource_name] = klass
 
 
-
   # Generate and store a resource class based on the schema
   # and interface
   generate_resource_class: (resource_name, schema_def) ->

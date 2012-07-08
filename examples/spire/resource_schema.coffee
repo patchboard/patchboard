@@ -35,11 +35,10 @@ module.exports =
         properties:
           account: {type: "account"}
           channels: {type: "channel_collection"}
-          #applications: {}
-          #subscriptions: {}
-          #notifications: {}
+          applications: {type: "object"}
+          subscriptions: {type: "object"}
+          notifications: {type: "object"}
           
-
   channel:
     type: "resource"
     media_type: "application/vnd.spire-io.channel+json;version=1.0"

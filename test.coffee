@@ -2,10 +2,13 @@ assert = require("assert")
 
 test = require("./test/helpers").test
 
-
 fs = require("fs")
 Rigger = require("./coffeescript/rigger")
 
+# read the full interface (intended for use by the server side)
+# and create the filtered interface for use by clients.
+# In real use, the client will discover the interface and schema
+# via a request to the server.
 string = fs.readFileSync("examples/spire/interface.json")
 full_interface = JSON.parse(string)
 interface = {}
