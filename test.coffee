@@ -31,7 +31,7 @@ validate_channel_collection = (channel_collection) ->
     assert(channel_collection.capabilities.create)
 
 validate_channel = (channel) ->
-  test "Channel has correct constructor", ->
+  test "Channel is wrapped", ->
     assert.equal(channel.constructor.resource_name, "channel")
   test "Channel has correct getters", ->
     assert.equal(channel.name.constructor, String)

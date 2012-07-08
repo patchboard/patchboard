@@ -4,8 +4,6 @@ rigger_schema = require("../rigger-schema")
 
 class Client
 
-  class Dictionary
-
   # options.schema describes the data structures of
   # the API service resources, and possibly some "helper"
   # constructs (e.g. dictionaries or arrays of resources)
@@ -38,16 +36,18 @@ class Client
 
   generate_dictionary_class: (resource_name, schema_def) ->
     rigger = @
-    @resources[resource_name] = class GeneratedDictionary extends Dictionary
-      @resource_name = resource_name
-      item_type = schema_def.items.type
 
-      constructor: (items) ->
-        # wrap all members of the input object with the appropriate
-        # resource class.
-        for name, value of items
-          raw = items[name]
-          @[name] = rigger.wrap(item_type, raw)
+    item_type = schema_def.items.type
+    klass = (items) ->
+      # wrap all members of the input object with the appropriate
+      # resource class.
+      for name, value of items
+        raw = items[name]
+        @[name] = rigger.wrap(item_type, raw)
+      null
+    klass.resource_name = resource_name
+    @resources[resource_name] = klass
+
 
 
   # Generate and store a resource class based on the schema
@@ -70,11 +70,16 @@ class Client
       # Set the constructor to the function created above
       constructor: constructor
 
+      credential: (type, action) ->
+        # TODO: figure out how to have pluggable authorization
+        # handlers.  What should happen if the authorization type is
+        # Basic?  Other types: Cookie?
+        if type == "Capability"
+          cap = @properties.capabilities[action]
+
       for property_name, prop_def of schema_def.properties
         spec = {}
-
-        type = prop_def.type
-        get_wrapper = rigger.wrapper(property_name, type, prop_def)
+        get_wrapper = rigger.wrapper(property_name, prop_def.type, prop_def)
         spec.get = rigger.define_props(property_name, get_wrapper)
 
         # FIXME: this needs to be in the define_props method
@@ -82,15 +87,48 @@ class Client
           spec.set = (val) ->
             @properties[property_name] = val
 
-        Object.defineProperty @prototype, property_name, spec
-
+        Object.defineProperty(@prototype, property_name, spec)
 
       if interface_def
-        try
-          @process_interface(interface_def)
-        catch e
-          console.log(resource_name, schema_def, interface_def)
-          throw e
+        for name, definition of interface_def.actions
+          @prototype[name] = rigger.generate_action(name, definition)
+
+
+  generate_action: (name, definition) ->
+    rigger = @
+    resources = rigger.schema.resources
+    method = definition.method
+    if request_schema = definition.request_entity
+      request_type = resources[request_schema].media_type
+    if response_schema = definition.response_entity
+      response_type = resources[response_schema].media_type
+    authorization = definition.authorization
+
+    (data) ->
+      # FIXME: instead of using data.callback, passthrough
+      # the "on" object to the Shred instance.
+      callback = data.callback
+      delete data.callback
+      req =
+        url: @url
+        method: method
+        headers: {}
+        content: data
+        on:
+          response: (response) ->
+            wrapped = rigger.wrap(response_schema, response.content.data)
+            callback(wrapped)
+          error: (r) ->
+            console.log "whoops"
+      if request_schema
+        req.headers["Content-Type"] = request_type
+      if response_schema
+        req.headers["Accept"] = response_type
+      if authorization
+        credential = @credential(authorization, name)
+
+        req.headers["Authorization"] = "#{authorization} #{credential}"
+      rigger.shred.request(req)
 
   define_props: (name, get_wrapper) ->
     () ->
@@ -142,53 +180,12 @@ class Client
 
 
 
-
 class Resource
-
-  @process_interface: (definition) ->
-    for action_name, action_def of definition.actions
-      @define_action(action_name, action_def)
-
-  @define_action: (action_name, definition) ->
-    @prototype[action_name] = (data) ->
-      rigger = @rigger
-      resource = @
-      callback = data.callback
-      delete data.callback
-
-      request = {}
-      request.headers = headers = {}
-
-      request_type = definition.request_entity
-      response_type = definition.response_entity
-      headers = {}
-      if request_type
-        headers["Content-Type"] = rigger.schema.resources[request_type].media_type
-      if response_type
-        headers["Accept"] = rigger.schema.resources[response_type].media_type
-      if definition.authorization
-        auth_type = definition.authorization
-        credential = @credential(auth_type, action_name)
-        headers["Authorization"] = "#{auth_type} #{credential}"
-
-
-      rigger.shred.request
-        url: @properties.url
-        method: definition.method
-        headers: headers
-        content: data
-        on:
-          response: (response) ->
-            wrapped = rigger.wrap(response_type, response.content.data)
-            callback(wrapped)
-          error: (r) ->
-            console.log "whoops"
-
-  # TODO: figure out how to have pluggable authorization
-  # handlers.  What should happen if the authorization type is
-  # Basic?  Other types: Cookie?
-  credential: (type, action) ->
-    if type == "Capability"
-      cap = @properties.capabilities[action]
+  #credential: (type, action) ->
+    ## TODO: figure out how to have pluggable authorization
+    ## handlers.  What should happen if the authorization type is
+    ## Basic?  Other types: Cookie?
+    #if type == "Capability"
+      #cap = @properties.capabilities[action]
 
 module.exports = Client

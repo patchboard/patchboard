@@ -1,7 +1,8 @@
 {
   "resource": {
+    "id": "resource",
     "extends": {
-      "$ref": "http://json-schema.org/draft-04/schema#object"
+      "$ref": "http://json-schema.org/draft-04/schema#"
     },
     "properties": {
       "url": {
