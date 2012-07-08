@@ -1,7 +1,5 @@
 Shred = require("shred")
 
-rigger_schema = require("../rigger-schema")
-
 class Client
 
   # options.schema describes the data structures of
@@ -14,7 +12,6 @@ class Client
     @shred = new Shred()
     @resources = {}
     @schema =
-      rigger: rigger_schema
       resources: options.schema
     @interface = options.interface
 
