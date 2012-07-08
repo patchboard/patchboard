@@ -17,48 +17,55 @@ for pattern, rig of full_interface
 string = fs.readFileSync("examples/spire/resource_schema.json")
 schema = JSON.parse(string)
 
+validate_session = (session) ->
+  test "Session is wrapped", ->
+    assert.equal(session.constructor.resource_name, "session")
 
+validate_channel_collection = (channel_collection) ->
+  test "Channel collection is wrapped", ->
+    assert.equal(
+      channel_collection.constructor.resource_name,
+      "channel_collection"
+    )
+    assert(channel_collection.url)
+    assert(channel_collection.capabilities.create)
+
+validate_channel = (channel) ->
+  test "Channel has correct constructor", ->
+    assert.equal(channel.constructor.resource_name, "channel")
+  test "Channel has correct getters", ->
+    assert.equal(channel.name.constructor, String)
+    assert.equal(channel.application_key.constructor, String)
+    assert.equal(channel.limit.constructor, Number)
+
+validate_dictionary = (dictionary, type) ->
+  test "Dictionary contains items of type #{type}", ->
+    for name in Object.keys(dictionary)
+      assert.equal(dictionary[name].constructor.resource_name, type)
 
 rigger = new Rigger.Client "http://localhost:1337",
   interface: interface
   schema: schema
 
-#test "Defines expected resource classes", ->
-  #assert.deepEqual Object.keys(rigger.resources).sort(),
-    #["account", "account_collection", "session", "channel",
-    #"channel_collection"].sort()
-
+# Fake out the discovery of public resources
 account_collection = new rigger.resources.account_collection
   url: "http://localhost:1337/accounts"
-
-console.log(account_collection.url)
 
 account_collection.create
   email: "foo#{Math.random()}@bar.com", password: "monkeyshines",
   callback: (session) ->
-    test "Session is wrapped", ->
-      assert.equal(session.constructor.resource_name, "session")
+    validate_session(session)
 
     channel_collection = session.resources.channels
-    test "Channel collection has the correct constructor", ->
-      assert.equal(
-        channel_collection.constructor.resource_name,
-        "channel_collection"
-      )
+    validate_channel_collection(channel_collection)
+
     channel_collection.create
       name: "monkey"
       callback: (channel) ->
-
-        test "Channel has correct constructor", ->
-          assert.equal(channel.constructor.resource_name, "channel")
-
+        validate_channel(channel)
         channel_collection.all
           callback: (channel_dict) ->
-            test "Channel dictionary items are wrapped", ->
-              assert.equal(
-                channel_dict.monkey.constructor.resource_name, "channel"
-              )
-              assert.equal(channel_dict.monkey.name, "monkey")
+            validate_dictionary(channel_dict, "channel")
             channel_dict.monkey.publish
               content: "bologna"
               callback: (message) ->
