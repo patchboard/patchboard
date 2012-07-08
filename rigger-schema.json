@@ -1,0 +1,15 @@
+{
+  "resource": {
+    "extends": {
+      "$ref": "http://json-schema.org/draft-04/schema#object"
+    },
+    "properties": {
+      "url": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "url"
+    ]
+  }
+}

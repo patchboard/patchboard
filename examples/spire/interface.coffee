@@ -42,12 +42,10 @@ module.exports =
               type: ["glob"]
         response_entity: "channel_dictionary"
         authorization: "Capability"
-
       all:
         method: "GET"
         response_entity: "channel_dictionary"
         authorization: "Capability"
-
       create:
         method: "POST"
         request_entity: "channel"
@@ -64,6 +62,7 @@ module.exports =
         response_entity: "channel"
       publish:
         method: "POST"
+        authorization: "Capability"
         request_entity: "message"
         response_entity: "message"
       delete:
