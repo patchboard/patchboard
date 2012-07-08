@@ -1,46 +1,53 @@
 Shred = require("shred")
 
-#string = fs.readFileSync("../rigger-schema.json")
-#rigger_schema = JSON.parse(string)
 rigger_schema = require("../rigger-schema")
 
 class Client
 
   class Dictionary
 
+  # options.schema describes the data structures of
+  # the API service resources, and possibly some "helper"
+  # constructs (e.g. dictionaries or arrays of resources)
+  #
+  # options.interface represents the actions available
+  # via HTTP requests to the API service.
   constructor: (@service_url, options) ->
     @shred = new Shred()
     @resources = {}
-    # The schema object describes the data structures of
-    # the API service resources, and possibly some "helper"
-    # constructs (e.g. dictionaries or arrays of resources)
     @schema =
       rigger: rigger_schema
       resources: options.schema
-    # The interface object represents the actions available
-    # via HTTP requests to the API service.
     @interface = options.interface
 
     @resource_keys = {}
     for name, def of @schema.resources
       @resource_keys[name] = true
     for resource_name, schema_def of @schema.resources
+      # NOTE: I've silently introduced two pseudo-primitive types to the
+      # pidgin JSON schema I'm using.  "resource" is a type that must have
+      # a "url" property "dictionary" is an object-based type, the properties
+      # of which must all contain values of the type specified by the "items"
+      # value of the schema.
       if schema_def.type == "resource"
         @generate_resource_class(resource_name, schema_def)
       else if schema_def.type == "dictionary"
         @generate_dictionary_class(resource_name, schema_def)
+      else if schema_def.type == "object"
+        console.log("Not doing anything for an 'object' def:", resource_name)
 
   generate_dictionary_class: (resource_name, schema_def) ->
     rigger = @
     @resources[resource_name] = class GeneratedDictionary extends Dictionary
       @resource_name = resource_name
       item_type = schema_def.items.type
+
       constructor: (items) ->
+        # wrap all members of the input object with the appropriate
+        # resource class.
         for name, value of items
           raw = items[name]
           @[name] = rigger.wrap(item_type, raw)
-
-
 
 
   # Generate and store a resource class based on the schema
@@ -138,41 +145,9 @@ class Client
 
 class Resource
 
-  #session:
-    #type: "object"
-    #media_type: "application/vnd.spire-io.session+json;version=1.0"
-    #properties:
-      #url: {type: "string"}
-      #capabilities: {type: "capability_dictionary"}
-      #resources:
-        #type: "object"
-        #properties:
-          #account: {type: "account"}
-          #channels: {type: "channel_collection"}
   @process_interface: (definition) ->
     for action_name, action_def of definition.actions
       @define_action(action_name, action_def)
-
-  @process_schema: (rigger, definition) ->
-    for property_name, prop_def of definition.properties
-      @simple_property(property_name, prop_def)
-
-  @simple_property: (property_name, definition) ->
-    spec = {}
-    spec["get"] = @define_getter(property_name, definition)
-    if !definition.readonly
-      spec["set"] = (val) ->
-        @properties[property_name] = val
-    Object.defineProperty @prototype, property_name, spec
-
-  @define_getter: (name, definition) ->
-    type = definition.type
-    () ->
-      #console.log("getter for", name, type)
-      val = @properties[name]
-      @rigger.wrap(type, val)
-
-      
 
   @define_action: (action_name, definition) ->
     @prototype[action_name] = (data) ->
