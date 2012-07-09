@@ -39,7 +39,7 @@ module.exports =
           required:
             name:
               description: "Search for channels by name"
-              type: ["glob"]
+              type: "string"
         response_entity: "channel_dictionary"
         authorization: "Capability"
       all:
