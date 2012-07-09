@@ -80,44 +80,52 @@ class Client
       for name, definition of interface_def.actions
         constructor.prototype[name] = rigger.create_action(name, definition)
     else
-      console.warn "No interface defined for resource type: #{resource_type}."
+      console.log "WARNING: No interface defined for resource type: #{resource_type}."
 
     constructor
 
 
-  property_spec: (name, def) ->
+  property_spec: (name, property_schema) ->
     rigger = @
 
-    type = def.type
+    type = property_schema.type
     if type == "object"
-      getter = (data) ->
-        for prop_name, prop_def of def.properties
-          raw = data[prop_name]
-          if raw.properties
-            raw = raw.properties
-          type = prop_def.type
-          wrapped = rigger.wrap(type, raw)
-          data[prop_name] = wrapped
-
-        data
+      getter = @object_getter(property_schema)
     else if @wrappers[type]
       getter = (data) ->
-        klass = rigger.wrappers[type]
-        new klass(data)
+        new rigger.wrappers[type](data)
     else
       getter = (data) -> data
 
+    spec = {}
+    spec.get = () ->
+      val = @properties[name]
+      getter(val)
 
-    spec =
-      get: () ->
-        val = @properties[name]
-        getter(val)
-    if !def.readonly
+    if !property_schema.readonly
       spec.set = (val) ->
         # TODO: actually make use of schema def
         @properties[name] = val
     spec
 
+  # When a resource property has type "object", we need to
+  # see if any of that property's properties should be wrapped
+  # as resources or dictionaries.
+  object_getter: (property_schema) ->
+    rigger = @
+    (data) ->
+      for name, prop_def of property_schema.properties
+        raw = data[name]
+        type = prop_def.type
+        wrapped = rigger.wrap(type, raw)
+        data[name] = wrapped
+      data
+
+  wrap: (type, data) ->
+    if klass = @wrappers[type]
+      new klass(data)
+    else
+      data
 
   create_action: (name, definition) ->
     rigger = @
@@ -154,12 +162,6 @@ class Client
 
         req.headers["Authorization"] = "#{authorization} #{credential}"
       rigger.shred.request(req)
-
-  wrap: (type, data) ->
-    if klass = @wrappers[type]
-      new klass(data)
-    else
-      data
 
 
 module.exports = Client
