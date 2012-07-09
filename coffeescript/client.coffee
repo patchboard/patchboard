@@ -29,7 +29,8 @@ class Client
         @wrappers[resource_type] = @dictionary_wrapper(resource_type, schema)
       else if schema.type == "object"
         # This is here because I plan to experiment with defining schemas
-        # that aren't resources or dictionaries.
+        # that aren't resources or dictionaries.  Object and Array are the
+        # obvious first candidates.
         console.log(
           "Not currently doing anything for an 'object' def:",
           resource_type
@@ -87,26 +88,27 @@ class Client
 
   property_spec: (name, property_schema) ->
     rigger = @
-
-    type = property_schema.type
-    if type == "object"
-      getter = @object_getter(property_schema)
-    else if @wrappers[type]
-      getter = (data) ->
-        new rigger.wrappers[type](data)
-    else
-      getter = (data) -> data
+    wrap_function = @create_wrapping_function(property_schema)
 
     spec = {}
     spec.get = () ->
       val = @properties[name]
-      getter(val)
+      wrap_function(val)
 
     if !property_schema.readonly
       spec.set = (val) ->
         # TODO: actually make use of schema def
         @properties[name] = val
     spec
+
+  create_wrapping_function: (schema) ->
+    rigger = @
+    if schema.type == "object"
+      @object_getter(schema)
+    else if @wrappers[schema.type]
+      (data) -> new rigger.wrappers[schema.type](data)
+    else
+      (data) -> data
 
   # When a resource property has type "object", we need to
   # see if any of that property's properties should be wrapped
@@ -128,6 +130,7 @@ class Client
       data
 
   create_action: (name, definition) ->
+    # TODO: separate out the creation of the request spec object.
     rigger = @
     resources = rigger.schemas
     method = definition.method
