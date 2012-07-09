@@ -1,10 +1,10 @@
 # Rigger
 
-Rigger is a set of libraries that allow you to construct an HTTP API around simple, sensible JSON descriptions of the resource types and of the HTTP interface.
+Rigger is (or will be) a set of libraries that allow you to construct an HTTP API around simple, sensible JSON descriptions of the resource types and of the HTTP interface.
 
 **Rigger is currently pre-alpha.**
 
-Rigger's client library uses these resource and interface descriptions to assemble
+Rigger's client library (currently written in CoffeeScript for Node.js) uses these resource and interface descriptions to assemble
 a working API client, with resources, properties, and API actions defined
 at runtime.
 
