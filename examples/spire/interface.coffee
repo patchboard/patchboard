@@ -29,6 +29,26 @@ module.exports =
         method: "DELETE"
         authorization: "Capability"
 
+  "/sessions":
+    resource: "session_collection"
+    description: "The place to get sessions from"
+    actions:
+      create:
+        method: "POST"
+        request_entity: "account"
+        response_entity: "session"
+
+  "/account/:account_id/session/:session_id":
+    resource: "session"
+    actions:
+      get:
+        method: "GET"
+        response_entity: "session"
+        authorization: "Capability"
+      delete:
+        method: "DELETE"
+        authorization: "Capability"
+
   "/accounts/:account_id/channels":
     resource: "channel_collection"
     description: "The collection of channels for a particular account"

@@ -1,3 +1,4 @@
+# HTTP client library
 Shred = require("shred")
 
 class Client
@@ -10,89 +11,117 @@ class Client
   # via HTTP requests to the API service.
   constructor: (@service_url, options) ->
     @shred = new Shred()
-    @resources = {}
-    @schema =
-      resources: options.schema
+    # Dictionary of wrapper classes
+    @schemas = options.schema
     @interface = options.interface
 
-    @resource_keys = {}
-    for name, def of @schema.resources
-      @resource_keys[name] = true
-    for resource_name, schema_def of @schema.resources
-      # NOTE: I've silently introduced two pseudo-primitive types to the
-      # pidgin JSON schema I'm using.  "resource" is a type that must have
-      # a "url" property "dictionary" is an object-based type, the properties
-      # of which must all contain values of the type specified by the "items"
-      # value of the schema.
-      if schema_def.type == "resource"
-        @generate_resource_class(resource_name, schema_def)
-      else if schema_def.type == "dictionary"
-        @generate_dictionary_class(resource_name, schema_def)
-      else if schema_def.type == "object"
-        console.log("Not doing anything for an 'object' def:", resource_name)
+    @wrappers = {}
 
-  generate_dictionary_class: (resource_name, schema_def) ->
+    # Add placeholder values for all resource types, so the types seen
+    # earlier can rely on the existence of types seen later.
+    for type, def of @schemas
+      @wrappers[type] = "placeholder"
+
+    for resource_type, schema of @schemas
+      if schema.type == "resource"
+        @wrappers[resource_type] = @resource_wrapper(resource_type, schema)
+      else if schema.type == "dictionary"
+        @wrappers[resource_type] = @dictionary_wrapper(resource_type, schema)
+      else if schema.type == "object"
+        # This is here because I plan to experiment with defining schemas
+        # that aren't resources or dictionaries.
+        console.log(
+          "Not currently doing anything for an 'object' def:",
+          resource_type
+        )
+
+  dictionary_wrapper: (resource_type, schema) ->
     rigger = @
 
-    item_type = schema_def.items.type
-    klass = (items) ->
+    item_type = schema.items.type
+    constructor = (items) ->
       # wrap all members of the input object with the appropriate
       # resource class.
       for name, value of items
         raw = items[name]
         @[name] = rigger.wrap(item_type, raw)
       null
-    klass.resource_name = resource_name
-    @resources[resource_name] = klass
+    constructor.resource_type = resource_type
+    constructor
 
 
   # Generate and store a resource class based on the schema
   # and interface
-  generate_resource_class: (resource_name, schema_def) ->
+  resource_wrapper: (resource_type, schema) ->
     rigger = @
-    interface_def = @interface[resource_name]
-    constructor = @generate_constructor()
 
-    # NOTE: this is a crappy way to generate a constructor/class,
-    # and should later be changed to simply create the function
-    # manually.  I'm doing this now because I suspect I might want
-    # to use the CoffeeScript inheritance feature during initial
-    # development.
-    @resources[resource_name] = class GeneratedResource extends Resource
-      # Set the resource name in the constructor so we can reflect on 
-      # it later, if necessary.
-      @resource_name = resource_name
+    constructor = (properties) ->
+      # Hide the rigger from console.log
+      Object.defineProperty @, "rigger",
+        value: rigger
+        enumerable: false
+      @properties = properties
+      null # bless coffeescript.  bless it's little heart.
+    constructor.resource_type = resource_type
 
-      # Set the constructor to the function created above
-      constructor: constructor
+    constructor.prototype.credential = (type, action) ->
+      # TODO: figure out how to have pluggable authorization
+      # handlers.  What should happen if the authorization type is
+      # Basic?  Other types: Cookie?
+      if type == "Capability"
+        cap = @properties.capabilities[action]
 
-      credential: (type, action) ->
-        # TODO: figure out how to have pluggable authorization
-        # handlers.  What should happen if the authorization type is
-        # Basic?  Other types: Cookie?
-        if type == "Capability"
-          cap = @properties.capabilities[action]
+    for property_name, prop_def of schema.properties
+      spec = rigger.property_spec(property_name, prop_def)
+      Object.defineProperty(constructor.prototype, property_name, spec)
 
-      for property_name, prop_def of schema_def.properties
-        spec = {}
-        get_wrapper = rigger.wrapper(property_name, prop_def.type, prop_def)
-        spec.get = rigger.define_props(property_name, get_wrapper)
+    interface_def = @interface[resource_type]
+    if interface_def
+      for name, definition of interface_def.actions
+        constructor.prototype[name] = rigger.create_action(name, definition)
+    else
+      console.warn "No interface defined for resource type: #{resource_type}."
 
-        # FIXME: this needs to be in the define_props method
-        if !prop_def.readonly
-          spec.set = (val) ->
-            @properties[property_name] = val
-
-        Object.defineProperty(@prototype, property_name, spec)
-
-      if interface_def
-        for name, definition of interface_def.actions
-          @prototype[name] = rigger.generate_action(name, definition)
+    constructor
 
 
-  generate_action: (name, definition) ->
+  property_spec: (name, def) ->
     rigger = @
-    resources = rigger.schema.resources
+
+    type = def.type
+    if type == "object"
+      getter = (data) ->
+        for prop_name, prop_def of def.properties
+          raw = data[prop_name]
+          if raw.properties
+            raw = raw.properties
+          type = prop_def.type
+          wrapped = rigger.wrap(type, raw)
+          data[prop_name] = wrapped
+
+        data
+    else if @wrappers[type]
+      getter = (data) ->
+        klass = rigger.wrappers[type]
+        new klass(data)
+    else
+      getter = (data) -> data
+
+
+    spec =
+      get: () ->
+        val = @properties[name]
+        getter(val)
+    if !def.readonly
+      spec.set = (val) ->
+        # TODO: actually make use of schema def
+        @properties[name] = val
+    spec
+
+
+  create_action: (name, definition) ->
+    rigger = @
+    resources = rigger.schemas
     method = definition.method
     if request_schema = definition.request_entity
       request_type = resources[request_schema].media_type
@@ -126,62 +155,11 @@ class Client
         req.headers["Authorization"] = "#{authorization} #{credential}"
       rigger.shred.request(req)
 
-  define_props: (name, get_wrapper) ->
-    () ->
-      val = @properties[name]
-      get_wrapper(val)
-
   wrap: (type, data) ->
-    if klass = @resources[type]
+    if klass = @wrappers[type]
       new klass(data)
     else
       data
 
-  wrapper: (name, type, def) ->
-    rigger = @
-    exists = @resource_keys[type]
-    # TODO: move all this into the definition of
-    # resources for the rigger.  We should always
-    # handle objects this way.
-    if type == "object"
-      (data) ->
-        for prop_name, prop_def of def.properties
-          raw = data[prop_name]
-          if raw.properties
-            raw = raw.properties
-          type = prop_def.type
-          wrapped = rigger.wrap(type, raw)
-          data[prop_name] = wrapped
-
-        data
-    else if exists
-      (data) ->
-        klass = rigger.resources[type]
-        new klass(data)
-    else
-      (data) -> data
-
-  generate_constructor: ->
-    rigger = @
-
-    (properties) ->
-      # Hide the rigger from console.log
-      Object.defineProperty @, "rigger",
-        value: rigger
-        enumerable: false
-
-      @properties = properties
-      if @wrap_data
-        @properties = @wrap_data(@properties)
-
-
-
-class Resource
-  #credential: (type, action) ->
-    ## TODO: figure out how to have pluggable authorization
-    ## handlers.  What should happen if the authorization type is
-    ## Basic?  Other types: Cookie?
-    #if type == "Capability"
-      #cap = @properties.capabilities[action]
 
 module.exports = Client

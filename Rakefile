@@ -2,18 +2,17 @@ $COFFEE = "node_modules/coffee-script/bin/coffee"
 
 task "build" => %w[
   rigger-schema.json
+  build:node
+  build:examples
 ]
 
 task "build:node" do
   sh "#{$COFFEE} --compile --bare --output node/ coffeescript/"
 end
 
-task "json" do
-  # FIXME: this should really be using the json output files
-  # as targets.
-  FileList["*.coffee"].each do |file|
-    sh "#{$COFFEE} #{file}"
-  end
+
+task "test" => "build" do
+  sh "#{$COFFEE} test.coffee"
 end
 
 rule ".json" => ".coffee" do |target|

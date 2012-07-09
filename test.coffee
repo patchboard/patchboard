@@ -11,23 +11,23 @@ Rigger = require("./coffeescript/rigger")
 # via a request to the server.
 string = fs.readFileSync("examples/spire/interface.json")
 full_interface = JSON.parse(string)
-interface = {}
+client_interface = {}
 for pattern, rig of full_interface
   resource = rig.resource
   delete rig.resource
-  interface[resource] = rig
+  client_interface[resource] = rig
 
 string = fs.readFileSync("examples/spire/resource_schema.json")
 schema = JSON.parse(string)
 
 validate_session = (session) ->
   test "Session is wrapped", ->
-    assert.equal(session.constructor.resource_name, "session")
+    assert.equal(session.constructor.resource_type, "session")
 
 validate_channel_collection = (channel_collection) ->
   test "Channel collection is wrapped", ->
     assert.equal(
-      channel_collection.constructor.resource_name,
+      channel_collection.constructor.resource_type,
       "channel_collection"
     )
     assert(channel_collection.url)
@@ -35,7 +35,7 @@ validate_channel_collection = (channel_collection) ->
 
 validate_channel = (channel) ->
   test "Channel is wrapped", ->
-    assert.equal(channel.constructor.resource_name, "channel")
+    assert.equal(channel.constructor.resource_type, "channel")
   test "Channel has correct getters", ->
     assert.equal(channel.name.constructor, String)
     assert.equal(channel.application_key.constructor, String)
@@ -44,14 +44,14 @@ validate_channel = (channel) ->
 validate_dictionary = (dictionary, type) ->
   test "Dictionary contains items of type #{type}", ->
     for name in Object.keys(dictionary)
-      assert.equal(dictionary[name].constructor.resource_name, type)
+      assert.equal(dictionary[name].constructor.resource_type, type)
 
 rigger = new Rigger.Client "http://localhost:1337",
-  interface: interface
+  interface: client_interface
   schema: schema
 
 # Fake out the discovery of public resources
-account_collection = new rigger.resources.account_collection
+account_collection = new rigger.wrappers.account_collection
   url: "http://localhost:1337/accounts"
 
 account_collection.create
@@ -73,6 +73,6 @@ account_collection.create
               content: "bologna"
               callback: (message) ->
                 test "Message is wrapped", ->
-                  assert.equal(message.constructor.resource_name, "message")
+                  assert.equal(message.constructor.resource_type, "message")
             
 
