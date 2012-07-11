@@ -56,35 +56,101 @@ class Client
   resource_wrapper: (resource_type, schema) ->
     rigger = @
 
-    constructor = (properties) ->
-      # Hide the rigger from console.log
+    constructor = @resource_constructor()
+    # Because coffeescript won't give me Named Function Expressions.
+    constructor.resource_type = resource_type
+
+    interface_def = @interface[resource_type]
+    if interface_def
+      for name, method of @resource_prototype
+        constructor.prototype[name] = method
+
+      # Set up the request-preparing and firing methods.
+      constructor.prototype.requests = {}
+      for name, definition of interface_def.actions
+        constructor.prototype.requests[name] = @request_creator(name, definition)
+        constructor.prototype[name] = @register_action(name)
+    else
+      console.log "WARNING: No interface defined for resource type: #{resource_type}."
+
+    for property_name, prop_def of schema.properties
+      spec = @property_spec(property_name, prop_def)
+      Object.defineProperty(constructor.prototype, property_name, spec)
+
+    constructor
+
+  resource_constructor:  ->
+    rigger = @
+    (properties) ->
+      # Using Object.defineProperty to hide the rigger from console.log
       Object.defineProperty @, "rigger",
         value: rigger
         enumerable: false
       @properties = properties
       null # bless coffeescript.  bless it's little heart.
-    constructor.resource_type = resource_type
 
-    constructor.prototype.credential = (type, action) ->
+  resource_prototype:
+    # Method for preparing a request object that can be modified
+    # before passing to shred.request().
+    #
+    #   req = resource.prepare_request "create", {content: "some data"}
+    #   req.headers["X-Custom-Whatsit"] =  "Space Monkeys"
+    #   shred.request(req)
+    prepare_request: (name, options) ->
+      prepper = @requests[name]
+      if prepper
+        prepper.call(@, name, options)
+      else
+        throw "No such action defined: #{name}"
+
+    request: (name, options) ->
+      req = @prepare_request(name, options)
+      @rigger.shred.request(req)
+    credential: (type, action) ->
       # TODO: figure out how to have pluggable authorization
       # handlers.  What should happen if the authorization type is
       # Basic?  Other types: Cookie?
       if type == "Capability"
         cap = @properties.capabilities[action]
 
-    for property_name, prop_def of schema.properties
-      spec = rigger.property_spec(property_name, prop_def)
-      Object.defineProperty(constructor.prototype, property_name, spec)
 
-    interface_def = @interface[resource_type]
-    if interface_def
-      for name, definition of interface_def.actions
-        constructor.prototype[name] = rigger.create_action(name, definition)
-    else
-      console.log "WARNING: No interface defined for resource type: #{resource_type}."
+  register_action: (name) ->
+    (data) -> @request(name, data)
 
-    constructor
+  # Returns a function intended to be used as a method on a
+  # Resource wrapper instance.
+  request_creator: (name, definition) ->
+    rigger = @
 
+    method = definition.method
+    if request_type = definition.request_entity
+      request_media_type = rigger.schemas[request_type].media_type
+    if response_type = definition.response_entity
+      response_media_type = rigger.schemas[response_type].media_type
+    authorization = definition.authorization
+
+    (name, options) ->
+      callback = options.callback
+      req =
+        url: @url
+        method: method
+        headers: {}
+        content: options.content
+        on:
+          response: (response) ->
+            wrapped = rigger.wrap(response_type, response.content.data)
+            callback(wrapped)
+          error: (r) ->
+            console.log "whoops"
+      if request_type
+        req.headers["Content-Type"] = request_media_type
+      if response_type
+        req.headers["Accept"] = response_media_type
+      if authorization
+        credential = @credential(authorization, name)
+
+        req.headers["Authorization"] = "#{authorization} #{credential}"
+      req
 
   property_spec: (name, property_schema) ->
     rigger = @
@@ -128,43 +194,9 @@ class Client
       new klass(data)
     else
       data
+  
 
-  create_action: (name, definition) ->
-    # TODO: separate out the creation of the request spec object.
-    rigger = @
-    resources = rigger.schemas
-    method = definition.method
-    if request_schema = definition.request_entity
-      request_type = resources[request_schema].media_type
-    if response_schema = definition.response_entity
-      response_type = resources[response_schema].media_type
-    authorization = definition.authorization
 
-    (data) ->
-      # FIXME: instead of using data.callback, passthrough
-      # the "on" object to the Shred instance.
-      callback = data.callback
-      delete data.callback
-      req =
-        url: @url
-        method: method
-        headers: {}
-        content: data
-        on:
-          response: (response) ->
-            wrapped = rigger.wrap(response_schema, response.content.data)
-            callback(wrapped)
-          error: (r) ->
-            console.log "whoops"
-      if request_schema
-        req.headers["Content-Type"] = request_type
-      if response_schema
-        req.headers["Accept"] = response_type
-      if authorization
-        credential = @credential(authorization, name)
-
-        req.headers["Authorization"] = "#{authorization} #{credential}"
-      rigger.shred.request(req)
 
 
 module.exports = Client
