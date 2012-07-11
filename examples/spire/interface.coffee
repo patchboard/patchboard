@@ -58,7 +58,7 @@ module.exports =
         query:
           required:
             name:
-              description: "Search for channels by name"
+              description: "The exact name of a channel"
               type: "string"
         response_entity: "channel_dictionary"
         authorization: "Capability"
@@ -97,7 +97,20 @@ module.exports =
         authorization: "Capability"
         request_entity: "subscription"
         response_entity: "subscription"
-
+      get_by_name:
+        method: "GET"
+        response_entity: "subscription_dictionary"
+        query:
+          required:
+            name:
+              description: "The exact name of the subscription"
+              type: "string"
+        authorization: "Capability"
+      all:
+        method: "GET"
+        response_entity: "subscription"
+        authorization: "Capability"
+        
   "/accounts/:account_id/subscriptions/:sub_id":
     resource: "subscription"
     actions:
@@ -106,5 +119,18 @@ module.exports =
         authorization: "Capability"
         response_entity: "events"
 
-
-
+  "/account/:accountID/channel/:channelID/messages/:messageID":
+    resource: "message"
+    actions:
+      get:
+        method: "GET"
+        authorization: "Capability"
+        response_entity: "message"
+      update:
+        method: "PUT"
+        request_entity: "message"
+        response_entity: "message"
+        authorization: "Capability"
+      delete:
+        method: "DELETE"
+        authorization: "Capability"

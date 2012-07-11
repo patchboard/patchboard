@@ -18,6 +18,9 @@ for pattern, rig of full_interface
   delete rig.resource
   client_interface[resource] = rig
 
+# write out the client interface for later inspection
+client_interface_json = JSON.stringify(client_interface, null, 2)
+fs.writeFileSync("examples/spire/client_interface.json", client_interface_json)
 string = fs.readFileSync("examples/spire/resource_schema.json")
 schema = JSON.parse(string)
 
@@ -72,7 +75,7 @@ test_subscriptions = (resources, channel_url) ->
       expected_response 201,
         (response, subscription) ->
           get_events(subscription)
-          #get_current_events(subscription)
+          get_current_events(subscription)
 
 get_events = (subscription) ->
   subscription.events
@@ -82,6 +85,7 @@ get_events = (subscription) ->
           test "Received expected message", ->
             assert.equal(events.messages.length, 1)
             assert.equal(events.messages[0].content, "bologna")
+            delete_message(events.messages[0])
           test "Subscription messages are wrapped", ->
             assert.equal(events.messages[0].constructor.resource_type, "message")
 
@@ -94,6 +98,13 @@ get_current_events = (subscription) ->
         (response, events) ->
           test "Received no messages", ->
             assert.equal(events.messages.length, 0)
+
+delete_message = (message) ->
+  message.delete
+    on:
+      expected_response 204,
+        (response, events) ->
+          test "Deleted message", ->
 
 # Set up the Rigger client
 client = new Rigger.Client "http://localhost:1337",

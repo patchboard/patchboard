@@ -81,6 +81,11 @@ module.exports =
       url: {type: "string"}
       capabilities: {type: "capability_dictionary"}
 
+  subscription_dictionary:
+    type: "dictionary"
+    media_type: "application/vnd.spire-io.subscriptions+json;version=1.0"
+    items: {type: "subscription"}
+
   event:
     type: "resource"
     media_type: "application/vnd.spire-io.event+json;version=1.0"
