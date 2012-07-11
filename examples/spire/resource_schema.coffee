@@ -96,7 +96,7 @@ module.exports =
     properties:
       first: {type: "number"}
       last: {type: "number"}
-      messages: {}
+      messages: {type: "message_list"}
       joins: {}
       parts: {}
 
@@ -109,4 +109,8 @@ module.exports =
       channel_name: {type: "string"}
       content: {type: "object"}
       timestamp: {type: "number"}
+
+  message_list:
+    type: "array"
+    items: {type: "message"}
 

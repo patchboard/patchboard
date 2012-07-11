@@ -42,17 +42,21 @@ class Client
         result = []
         for value in items
           result.push(rigger.wrap(item_type, value))
+        result
     out
 
   object_handler: (schema) ->
     rigger = @
-    (data) ->
-      for name, prop_def of schema.properties
-        raw = data[name]
-        type = prop_def.type
-        wrapped = rigger.wrap(type, raw)
-        data[name] = wrapped
-      data
+    out =
+      type: "object"
+      handle: (data) ->
+        for name, prop_def of schema.properties
+          raw = data[name]
+          type = prop_def.type
+          wrapped = rigger.wrap(type, raw)
+          data[name] = wrapped
+        data
+    out
 
 
   dictionary_wrapper: (resource_type, schema) ->
@@ -216,9 +220,9 @@ class Client
   create_wrapping_function: (schema) ->
     rigger = @
     if schema.type == "object"
-      @object_handler(schema)
+      @object_handler(schema).handle
     else if schema.type == "array"
-      @array_handler(schema)
+      @array_handler(schema).handle
     else if @wrappers[schema.type]
       (data) -> new rigger.wrappers[schema.type](data)
     else

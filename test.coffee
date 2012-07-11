@@ -72,6 +72,7 @@ test_subscriptions = (resources, channel_url) ->
       expected_response 201,
         (response, subscription) ->
           get_events(subscription)
+          #get_current_events(subscription)
 
 get_events = (subscription) ->
   subscription.events
@@ -81,7 +82,18 @@ get_events = (subscription) ->
           test "Received expected message", ->
             assert.equal(events.messages.length, 1)
             assert.equal(events.messages[0].content, "bologna")
+          test "Subscription messages are wrapped", ->
+            assert.equal(events.messages[0].constructor.resource_type, "message")
 
+get_current_events = (subscription) ->
+  subscription.events
+    query:
+      min_timestamp: "now"
+    on:
+      expected_response 200,
+        (response, events) ->
+          test "Received no messages", ->
+            assert.equal(events.messages.length, 0)
 
 # Set up the Rigger client
 client = new Rigger.Client "http://localhost:1337",
