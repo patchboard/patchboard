@@ -21,22 +21,46 @@ for pattern, rig of full_interface
 string = fs.readFileSync("examples/spire/resource_schema.json")
 schema = JSON.parse(string)
 
+expected_response = (status, callback) ->
+  callbacks =
+    response: (response) ->
+      throw "unexpected response status: #{response.status}"
+    error: (response) ->
+      throw "Error: #{response.status}"
+
+  callbacks[status] = callback
+  callbacks
+
 # Spire api tests
 test_channels = (channel_collection) ->
   channel_collection.create
     content:
       name: "monkey"
-    callback: (channel) ->
-      helpers.spire.validate_channel(channel)
-      channel_collection.all
-        callback: (channel_dict) ->
+    on:
+      expected_response 201,
+        (response, channel) ->
+          helpers.spire.validate_channel(channel)
+          list_channels(channel_collection)
+
+
+list_channels = (channel_collection) ->
+  channel_collection.all
+    on:
+      expected_response 200,
+        (response, channel_dict) ->
           helpers.rigger.validate_dictionary(channel_dict, "channel")
-          channel_dict.monkey.publish
-            content:
-              content: "bologna"
-            callback: (message) ->
-              test "Message is wrapped", ->
-                assert.equal(message.constructor.resource_type, "message")
+          publish_to_channel(channel_dict.monkey)
+
+publish_to_channel = (channel) ->
+  channel.publish
+    content:
+      content: "bologna"
+    on:
+      expected_response 201,
+        (response, message) ->
+          test "Message is wrapped", ->
+            assert.equal(message.constructor.resource_type, "message")
+
 
 
 # Set up the Rigger client
@@ -52,12 +76,15 @@ account_collection = new client.wrappers.account_collection
 account_collection.create
   content:
     email: "foo#{Math.random()}@bar.com", password: "monkeyshines",
-  callback: (session) ->
-    helpers.spire.validate_session(session)
-
-    channel_collection = session.resources.channels
-    helpers.spire.validate_channel_collection(channel_collection)
-
-    test_channels(channel_collection)
+  on:
+    201: (response, session) ->
+      helpers.spire.validate_session(session)
+      channel_collection = session.resources.channels
+      helpers.spire.validate_channel_collection(channel_collection)
+      test_channels(channel_collection)
+    response: (response) ->
+      throw "unexpected response status: #{response.status}"
+    error: (response) ->
+      throw "Error: #{response.status}"
 
 

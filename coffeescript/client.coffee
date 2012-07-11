@@ -106,6 +106,7 @@ class Client
     request: (name, options) ->
       req = @prepare_request(name, options)
       @rigger.shred.request(req)
+
     credential: (type, action) ->
       # TODO: figure out how to have pluggable authorization
       # handlers.  What should happen if the authorization type is
@@ -130,27 +131,40 @@ class Client
     authorization = definition.authorization
 
     (name, options) ->
-      callback = options.callback
-      req =
+      request =
         url: @url
         method: method
         headers: {}
         content: options.content
-        on:
-          response: (response) ->
-            wrapped = rigger.wrap(response_type, response.content.data)
-            callback(wrapped)
-          error: (r) ->
-            console.log "whoops"
+
+      request.on = {}
+      if error = options.on.error
+        request.on.error = error
+        delete options.on.error
+
+      if response = options.on.response
+        request.on.response = response
+        delete options.on.response
+
+      for status, handler of options.on
+        request.on[status] = (response) ->
+          wrapped = rigger.wrap(response_type, response.content.data)
+          handler(response, wrapped)
+
+      if options.query
+        request.query = options.query
       if request_type
-        req.headers["Content-Type"] = request_media_type
+        request.headers["Content-Type"] = request_media_type
       if response_type
-        req.headers["Accept"] = response_media_type
+        request.headers["Accept"] = response_media_type
       if authorization
         credential = @credential(authorization, name)
+        request.headers["Authorization"] = "#{authorization} #{credential}"
 
-        req.headers["Authorization"] = "#{authorization} #{credential}"
-      req
+      for name, value of options.headers
+        request.headers[name] = value
+
+      request
 
   property_spec: (name, property_schema) ->
     rigger = @
