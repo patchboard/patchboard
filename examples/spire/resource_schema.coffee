@@ -36,7 +36,7 @@ module.exports =
           account: {type: "account"}
           channels: {type: "channel_collection"}
           applications: {type: "object"}
-          subscriptions: {type: "object"}
+          subscriptions: {type: "subscription_collection"}
           notifications: {type: "object"}
           
   channel:
@@ -62,10 +62,47 @@ module.exports =
     media_type: "application/vnd.spire-io.channels+json;version=1.0"
     items: {type: "channel"}
 
+  subscription:
+    type: "resource"
+    media_type: "application/vnd.spire-io.subscription+json;version=1.0"
+    properties:
+      url: {type: "string"}
+      capabilities: {type: "capability_dictionary"}
+      application_key: {type: "string", readonly: true}
+      name: {type: "string"}
+      channels:
+        type: "array"
+        items: {"type": "string"}
+
+  subscription_collection:
+    type: "resource"
+    media_type: "application/vnd.spire-io.subscriptions+json;version=1.0"
+    properties:
+      url: {type: "string"}
+      capabilities: {type: "capability_dictionary"}
+
+  event:
+    type: "resource"
+    media_type: "application/vnd.spire-io.event+json;version=1.0"
+    properties:
+      channel_name: {type: "string"}
+      content: {type: "object"}
+      timestamp: {type: "number"}
+      reason: {type: "string"}
+
+  events:
+    type: "object"
+    media_type: "application/vnd.spire-io.events+json;version=1.0"
+    properties:
+      first: {type: "number"}
+      last: {type: "number"}
+      messages: {}
+      joins: {}
+      parts: {}
+
   message:
     type: "resource"
     media_type: "application/vnd.spire-io.message+json;version=1.0"
-    items: {type: "channel"}
     properties:
       url: {type: "string"}
       capabilities: {type: "capability_dictionary"}

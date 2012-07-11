@@ -27,14 +27,33 @@ class Client
         @wrappers[resource_type] = @resource_wrapper(resource_type, schema)
       else if schema.type == "dictionary"
         @wrappers[resource_type] = @dictionary_wrapper(resource_type, schema)
+      else if schema.type == "array"
+        # can't subclass array: must fake it
+        @wrappers[resource_type] = @array_handler(schema)
       else if schema.type == "object"
-        # This is here because I plan to experiment with defining schemas
-        # that aren't resources or dictionaries.  Object and Array are the
-        # obvious first candidates.
-        console.log(
-          "Not currently doing anything for an 'object' def:",
-          resource_type
-        )
+        @wrappers[resource_type] = @object_handler(schema)
+
+  array_handler: (schema) ->
+    rigger = @
+    item_type = schema.items.type
+    out =
+      type: "array"
+      handle: (items) ->
+        result = []
+        for value in items
+          result.push(rigger.wrap(item_type, value))
+    out
+
+  object_handler: (schema) ->
+    rigger = @
+    (data) ->
+      for name, prop_def of schema.properties
+        raw = data[name]
+        type = prop_def.type
+        wrapped = rigger.wrap(type, raw)
+        data[name] = wrapped
+      data
+
 
   dictionary_wrapper: (resource_type, schema) ->
     rigger = @
@@ -197,28 +216,22 @@ class Client
   create_wrapping_function: (schema) ->
     rigger = @
     if schema.type == "object"
-      @object_getter(schema)
+      @object_handler(schema)
+    else if schema.type == "array"
+      @array_handler(schema)
     else if @wrappers[schema.type]
       (data) -> new rigger.wrappers[schema.type](data)
     else
       (data) -> data
 
-  # When a resource property has type "object", we need to
-  # see if any of that property's properties should be wrapped
-  # as resources or dictionaries.
-  object_getter: (property_schema) ->
-    rigger = @
-    (data) ->
-      for name, prop_def of property_schema.properties
-        raw = data[name]
-        type = prop_def.type
-        wrapped = rigger.wrap(type, raw)
-        data[name] = wrapped
-      data
-
   wrap: (type, data) ->
-    if klass = @wrappers[type]
-      new klass(data)
+    if wrapper = @wrappers[type]
+      if typeof(wrapper) == "function"
+        new wrapper(data)
+      else if wrapper == "placeholder"
+        throw "No wrapper or handler defined for resource type: #{type}"
+      else
+        wrapper.handle(data)
     else
       data
   

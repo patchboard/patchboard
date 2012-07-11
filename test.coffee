@@ -33,26 +33,26 @@ expected_response = (status, callback) ->
   callbacks
 
 # Spire api tests
-test_channels = (channel_collection) ->
-  channel_collection.create
+test_channels = (resources) ->
+  resources.channels.create
     content:
       name: "monkey"
     on:
       expected_response 201,
         (response, channel) ->
           helpers.spire.validate_channel(channel)
-          list_channels(channel_collection)
+          list_channels(resources)
 
 
-list_channels = (channel_collection) ->
-  channel_collection.all
+list_channels = (resources) ->
+  resources.channels.all
     on:
       expected_response 200,
         (response, channel_dict) ->
           helpers.rigger.validate_dictionary(channel_dict, "channel")
-          publish_to_channel(channel_dict.monkey)
+          publish_to_channel(resources, channel_dict.monkey)
 
-publish_to_channel = (channel) ->
+publish_to_channel = (resources, channel) ->
   channel.publish
     content:
       content: "bologna"
@@ -61,7 +61,26 @@ publish_to_channel = (channel) ->
         (response, message) ->
           test "Message is wrapped", ->
             assert.equal(message.constructor.resource_type, "message")
+            test_subscriptions(resources, channel.url)
 
+
+test_subscriptions = (resources, channel_url) ->
+  resources.subscriptions.create
+    content:
+      channels: [channel_url]
+    on:
+      expected_response 201,
+        (response, subscription) ->
+          get_events(subscription)
+
+get_events = (subscription) ->
+  subscription.events
+    on:
+      expected_response 200,
+        (response, events) ->
+          test "Received expected message", ->
+            assert.equal(events.messages.length, 1)
+            assert.equal(events.messages[0].content, "bologna")
 
 
 # Set up the Rigger client
@@ -82,7 +101,7 @@ account_collection.create
       helpers.spire.validate_session(session)
       channel_collection = session.resources.channels
       helpers.spire.validate_channel_collection(channel_collection)
-      test_channels(channel_collection)
+      test_channels(session.resources)
     response: (response) ->
       throw "unexpected response status: #{response.status}"
     error: (response) ->

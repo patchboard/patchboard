@@ -89,5 +89,22 @@ module.exports =
         method: "DELETE"
         authorization: "Capability"
 
+  "/accounts/:account_id/subscriptions":
+    resource: "subscription_collection"
+    actions:
+      create:
+        method: "POST"
+        authorization: "Capability"
+        request_entity: "subscription"
+        response_entity: "subscription"
+
+  "/accounts/:account_id/subscriptions/:sub_id":
+    resource: "subscription"
+    actions:
+      events:
+        method: "GET"
+        authorization: "Capability"
+        response_entity: "events"
+
 
 
