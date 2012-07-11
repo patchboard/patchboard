@@ -104,8 +104,8 @@ class Client
         throw "No such action defined: #{name}"
 
     request: (name, options) ->
-      req = @prepare_request(name, options)
-      @rigger.shred.request(req)
+      request = @prepare_request(name, options)
+      @rigger.shred.request(request)
 
     credential: (type, action) ->
       # TODO: figure out how to have pluggable authorization
@@ -124,11 +124,16 @@ class Client
     rigger = @
 
     method = definition.method
+    default_headers = {}
     if request_type = definition.request_entity
       request_media_type = rigger.schemas[request_type].media_type
+      default_headers["Content-Type"] = request_media_type
     if response_type = definition.response_entity
       response_media_type = rigger.schemas[response_type].media_type
+      default_headers["Accept"] = response_media_type
     authorization = definition.authorization
+    if query = definition.query
+      required_params = query.required
 
     (name, options) ->
       request =
@@ -137,6 +142,27 @@ class Client
         headers: {}
         content: options.content
 
+      # set up headers
+      for key, value of default_headers
+        request.headers[key] = value
+
+      if authorization
+        credential = @credential(authorization, name)
+        request.headers["Authorization"] = "#{authorization} #{credential}"
+
+      for name, value of options.headers
+        request.headers[name] = value
+
+      if options.query
+        request.query = options.query
+
+      # verify presence of the required query params from the schema
+      for key, value of required_params
+        if !request.query[key]
+          throw "Missing required query param: #{key}"
+
+      # set up response handlers.  The error and default response handlers
+      # do NOT attempt to wrap the response entity per the resource schema.
       request.on = {}
       if error = options.on.error
         request.on.error = error
@@ -150,19 +176,6 @@ class Client
         request.on[status] = (response) ->
           wrapped = rigger.wrap(response_type, response.content.data)
           handler(response, wrapped)
-
-      if options.query
-        request.query = options.query
-      if request_type
-        request.headers["Content-Type"] = request_media_type
-      if response_type
-        request.headers["Accept"] = response_media_type
-      if authorization
-        credential = @credential(authorization, name)
-        request.headers["Authorization"] = "#{authorization} #{credential}"
-
-      for name, value of options.headers
-        request.headers[name] = value
 
       request
 

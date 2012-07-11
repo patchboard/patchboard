@@ -21,6 +21,7 @@ for pattern, rig of full_interface
 string = fs.readFileSync("examples/spire/resource_schema.json")
 schema = JSON.parse(string)
 
+# response handling helper
 expected_response = (status, callback) ->
   callbacks =
     response: (response) ->
