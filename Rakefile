@@ -20,11 +20,8 @@ rule ".json" => ".coffee" do |target|
 end
 
 task "build:examples" => %w[
-  examples/spire/api.json
-  examples/spire/directory.json
   examples/spire/resource_schema.json
   examples/spire/interface.json
-  examples/spire/map.json
 ]
 
 

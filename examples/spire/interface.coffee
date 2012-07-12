@@ -1,7 +1,6 @@
 module.exports =
 
-  "/accounts":
-    resource: "account_collection"
+  account_collection:
     description: "The collection of accounts"
     actions:
       create:
@@ -9,8 +8,7 @@ module.exports =
         request_entity: "account"
         response_entity: "session"
 
-  "/accounts/:account_id":
-    resource: "account"
+  account:
     description: "The account resource"
     actions:
       get:
@@ -29,8 +27,7 @@ module.exports =
         method: "DELETE"
         authorization: "Capability"
 
-  "/sessions":
-    resource: "session_collection"
+  session_collection:
     description: "The place to get sessions from"
     actions:
       create:
@@ -38,8 +35,7 @@ module.exports =
         request_entity: "account"
         response_entity: "session"
 
-  "/account/:account_id/session/:session_id":
-    resource: "session"
+  session:
     actions:
       get:
         method: "GET"
@@ -49,8 +45,7 @@ module.exports =
         method: "DELETE"
         authorization: "Capability"
 
-  "/accounts/:account_id/channels":
-    resource: "channel_collection"
+  channel_collection:
     description: "The collection of channels for a particular account"
     actions:
       get_by_name:
@@ -72,8 +67,7 @@ module.exports =
         response_entity: "channel"
         authorization: "Capability"
 
-  "/accounts/:account_id/channels/:channel_id":
-    resource: "channel"
+  channel:
     description: "The channel resource"
     actions:
       get:
@@ -89,8 +83,7 @@ module.exports =
         method: "DELETE"
         authorization: "Capability"
 
-  "/accounts/:account_id/subscriptions":
-    resource: "subscription_collection"
+  subscription_collection:
     actions:
       create:
         method: "POST"
@@ -111,16 +104,14 @@ module.exports =
         response_entity: "subscription"
         authorization: "Capability"
         
-  "/accounts/:account_id/subscriptions/:sub_id":
-    resource: "subscription"
+  subscription:
     actions:
       events:
         method: "GET"
         authorization: "Capability"
         response_entity: "events"
 
-  "/account/:accountID/channel/:channelID/messages/:messageID":
-    resource: "message"
+  message:
     actions:
       get:
         method: "GET"

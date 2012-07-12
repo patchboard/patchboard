@@ -28,7 +28,6 @@ class Client
       else if schema.type == "dictionary"
         @wrappers[resource_type] = @dictionary_wrapper(resource_type, schema)
       else if schema.type == "array"
-        # can't subclass array: must fake it
         @wrappers[resource_type] = @array_handler(schema)
       else if schema.type == "object"
         @wrappers[resource_type] = @object_handler(schema)

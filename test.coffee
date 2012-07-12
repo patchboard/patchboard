@@ -6,21 +6,9 @@ test = helpers.test
 fs = require("fs")
 Rigger = require("./coffeescript/rigger")
 
-# read the full interface (intended for use by the server side)
-# and create the filtered interface for use by clients.
-# In real use, the client will discover the interface and schema
-# via a request to the server.
 string = fs.readFileSync("examples/spire/interface.json")
-full_interface = JSON.parse(string)
-client_interface = {}
-for pattern, rig of full_interface
-  resource = rig.resource
-  delete rig.resource
-  client_interface[resource] = rig
+client_interface = JSON.parse(string)
 
-# write out the client interface for later inspection
-client_interface_json = JSON.stringify(client_interface, null, 2)
-fs.writeFileSync("examples/spire/client_interface.json", client_interface_json)
 string = fs.readFileSync("examples/spire/resource_schema.json")
 schema = JSON.parse(string)
 
