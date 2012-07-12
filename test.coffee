@@ -100,7 +100,7 @@ client = new Rigger.Client "http://localhost:1337",
   schema: schema
 
 # Fake out the discovery of public resources
-account_collection = new client.wrappers.account_collection
+account_collection = client.wrappers.account_collection
   url: "http://localhost:1337/accounts"
 
 # run actual tests

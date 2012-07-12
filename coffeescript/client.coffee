@@ -17,50 +17,38 @@ class Client
 
     @wrappers = {}
 
-    # Add placeholder values for all resource types, so the types seen
-    # earlier can rely on the existence of types seen later.
-    for type, def of @schemas
-      @wrappers[type] = "placeholder"
-
     for resource_type, schema of @schemas
       if schema.type == "resource"
         @wrappers[resource_type] = @resource_wrapper(resource_type, schema)
       else if schema.type == "dictionary"
         @wrappers[resource_type] = @dictionary_wrapper(resource_type, schema)
       else if schema.type == "array"
-        @wrappers[resource_type] = @array_handler(schema)
+        @wrappers[resource_type] = @array_wrapper(schema)
       else if schema.type == "object"
-        @wrappers[resource_type] = @object_handler(schema)
+        @wrappers[resource_type] = @object_wrapper(schema)
 
-  array_handler: (schema) ->
+  array_wrapper: (schema) ->
     rigger = @
     item_type = schema.items.type
-    out =
-      type: "array"
-      handle: (items) ->
-        result = []
-        for value in items
-          result.push(rigger.wrap(item_type, value))
-        result
-    out
+    (items) ->
+      result = []
+      for value in items
+        result.push(rigger.wrap(item_type, value))
+      result
 
-  object_handler: (schema) ->
+  object_wrapper: (schema) ->
     rigger = @
-    out =
-      type: "object"
-      handle: (data) ->
-        for name, prop_def of schema.properties
-          raw = data[name]
-          type = prop_def.type
-          wrapped = rigger.wrap(type, raw)
-          data[name] = wrapped
-        data
-    out
+    (data) ->
+      for name, prop_def of schema.properties
+        raw = data[name]
+        type = prop_def.type
+        wrapped = rigger.wrap(type, raw)
+        data[name] = wrapped
+      data
 
 
   dictionary_wrapper: (resource_type, schema) ->
     rigger = @
-
     item_type = schema.items.type
     constructor = (items) ->
       # wrap all members of the input object with the appropriate
@@ -70,36 +58,57 @@ class Client
         @[name] = rigger.wrap(item_type, raw)
       null
     constructor.resource_type = resource_type
-    constructor
+    (data) ->
+      new constructor(data)
 
 
   # Generate and store a resource class based on the schema
   # and interface
   resource_wrapper: (resource_type, schema) ->
     rigger = @
-
     constructor = @resource_constructor()
     # Because coffeescript won't give me Named Function Expressions.
     constructor.resource_type = resource_type
 
-    interface_def = @interface[resource_type]
-    if interface_def
-      for name, method of @resource_prototype
-        constructor.prototype[name] = method
-
-      # Set up the request-preparing and firing methods.
-      constructor.prototype.requests = {}
-      for name, definition of interface_def.actions
-        constructor.prototype.requests[name] = @request_creator(name, definition)
-        constructor.prototype[name] = @register_action(name)
+    if interface_def = @interface[resource_type]
+      @define_interface(constructor, interface_def.actions)
     else
       console.log "WARNING: No interface defined for resource type: #{resource_type}."
 
-    for property_name, prop_def of schema.properties
-      spec = @property_spec(property_name, prop_def)
-      Object.defineProperty(constructor.prototype, property_name, spec)
+    @define_properties(constructor, schema.properties)
+    (data) ->
+      new constructor(data)
 
-    constructor
+  define_interface: (constructor, actions) ->
+    constructor.prototype.requests = {}
+    for name, method of @resource_prototype
+      constructor.prototype[name] = method
+    for name, definition of actions
+      constructor.prototype.requests[name] = @request_creator(name, definition)
+      constructor.prototype[name] = @register_action(name)
+
+
+  define_properties: (constructor, properties) ->
+    rigger = @
+    for name, schema of properties
+      spec = @property_spec(name, schema)
+      Object.defineProperty(constructor.prototype, name, spec)
+
+
+  property_spec: (name, property_schema) ->
+    rigger = @
+    wrap_function = @create_wrapping_function(property_schema)
+
+    spec = {}
+    spec.get = () ->
+      val = @properties[name]
+      wrap_function(val)
+
+    if !property_schema.readonly
+      spec.set = (val) ->
+        # TODO: actually make use of schema def
+        @properties[name] = val
+    spec
 
   resource_constructor:  ->
     rigger = @
@@ -201,40 +210,20 @@ class Client
 
       request
 
-  property_spec: (name, property_schema) ->
-    rigger = @
-    wrap_function = @create_wrapping_function(property_schema)
-
-    spec = {}
-    spec.get = () ->
-      val = @properties[name]
-      wrap_function(val)
-
-    if !property_schema.readonly
-      spec.set = (val) ->
-        # TODO: actually make use of schema def
-        @properties[name] = val
-    spec
-
   create_wrapping_function: (schema) ->
     rigger = @
     if schema.type == "object"
-      @object_handler(schema).handle
+      @object_wrapper(schema)
     else if schema.type == "array"
-      @array_handler(schema).handle
+      @array_wrapper(schema)
     else if @wrappers[schema.type]
-      (data) -> new rigger.wrappers[schema.type](data)
+      (data) -> rigger.wrap(schema.type, data)
     else
       (data) -> data
 
   wrap: (type, data) ->
     if wrapper = @wrappers[type]
-      if typeof(wrapper) == "function"
-        new wrapper(data)
-      else if wrapper == "placeholder"
-        throw "No wrapper or handler defined for resource type: #{type}"
-      else
-        wrapper.handle(data)
+      wrapper(data)
     else
       data
   

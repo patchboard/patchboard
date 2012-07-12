@@ -11,6 +11,7 @@ task "build:node" do
 end
 
 
+desc "Run tests"
 task "test" => "build" do
   sh "#{$COFFEE} test.coffee"
 end
