@@ -84,9 +84,11 @@ class AuthorizationMatcher extends BasicMatcher
   match: (input) ->
     if @value == "none"
       true
-    else
+    else if input
       scheme = input.split(" ")[0]
       scheme == @value
+    else
+      false
 
 class ContentTypeMatcher extends BasicMatcher
   # TODO: handle mediatypes in a better way than simple string match
