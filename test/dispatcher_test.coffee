@@ -12,74 +12,67 @@ dispatcher = new Rigger.Dispatcher
   schema: helpers.schema
   map: helpers.map
 
+matchers = require("../coffeescript/service/matchers")
 
+PathMatcher = matchers.Path
 
-test "unpacking path patterns", ->
+test "Path matching", ->
+  matcher = new PathMatcher("/accounts/:account_id")
   assert.deepEqual(
-    dispatcher.unpack_url_pattern("/accounts/:account_id"),
+    matcher.value,
     ["accounts", {name: "account_id"}]
   )
-  assert.deepEqual(
-    dispatcher.unpack_url_pattern("/accounts/:account_id/channels"),
-    ["accounts", {name: "account_id"}, "channels"]
-  )
-
-  assert.deepEqual(
-    dispatcher.unpack_url_pattern("/accounts/:account_id/channels/:channel_id"),
-    ["accounts", {name: "account_id"}, "channels", {name: "channel_id"}]
-  )
-
-test "Matching path patterns", ->
-  result = dispatcher.match_path(
-    "/accounts/54321",
-    ["accounts", {name: "account_id"}]
-  )
+  result = matcher.match("/accounts/54321",)
   assert.deepEqual(
     result,
     {account_id: "54321"}
   )
+  assert.equal(
+    matcher.match("/bogus/12345"),
+    false
+  )
+  assert.equal(
+    matcher.match("/accounts/12345/channels"),
+    false
+  )
 
-  result = dispatcher.match_path(
-    "/accounts/54321/channels/abcdefg",
+  matcher = new PathMatcher("/accounts/:account_id/channels")
+  assert.deepEqual(
+    matcher.value,
+    ["accounts", {name: "account_id"}, "channels"]
+  )
+
+  matcher = new PathMatcher("/accounts/:account_id/channels/:channel_id")
+  assert.deepEqual(
+    matcher.value,
     ["accounts", {name: "account_id"}, "channels", {name: "channel_id"}]
   )
   assert.deepEqual(
-    result,
+    matcher.match("/accounts/54321/channels/abcdefg"),
     {account_id: "54321", channel_id: "abcdefg"}
   )
 
-  result = dispatcher.match_path(
-    "/bogus/54321",
-    ["accounts", {name: "account_id"}]
-  )
-  assert.equal(result, false)
 
-  result = dispatcher.match_path(
-    "/accounts/54321/channels",
-    ["accounts", {name: "account_id"}]
-  )
-  assert.equal(result, false)
+class MockRequest
 
+  constructor: (options) ->
+    @url = options.url
+    @method = options.method
+    @headers = options.headers
 
-#class MockRequest
+media_type = (type) ->
+  "application/vnd.spire-io.#{type}+json;version=1.0"
 
-  #constructor: (options) ->
-    #@url = options.url
-    #@method = options.method
-    #@headers = options.headers
-
-#media_type = (type) ->
-  #"application/vnd.spire-io.#{type}+json;version=1.0"
-
-#request = new MockRequest
-  #url: "http://localhost:1337/accounts"
-  #method: "POST"
-  #headers:
+request = new MockRequest
+  url: "http://localhost:1337/accounts/12345"
+  method: "GET"
+  headers:
     #"Content-Type": media_type("account")
-    #"Accept": media_type("session")
+    "Accept": media_type("account")
+    "Authorization": "Capability monkeys"
 
-#result = dispatcher.dispatch(request)
-#test "correctness", ->
-  #assert.equal(result.resource_type, "account")
-  #assert.equal(result.action_name, "create")
+result = dispatcher.dispatch(request)
+test "correctness", ->
+  assert.equal(result.resource_type, "account")
+  assert.equal(result.action_name, "get")
 
