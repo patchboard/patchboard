@@ -12,46 +12,8 @@ dispatcher = new Rigger.Dispatcher
   schema: helpers.schema
   map: helpers.map
 
-matchers = require("../coffeescript/service/matchers")
-
-PathMatcher = matchers.Path
-
-test "Path matching", ->
-  matcher = new PathMatcher("/accounts/:account_id")
-  assert.deepEqual(
-    matcher.value,
-    ["accounts", {name: "account_id"}]
-  )
-  result = matcher.match("/accounts/54321",)
-  assert.deepEqual(
-    result,
-    {account_id: "54321"}
-  )
-  assert.equal(
-    matcher.match("/bogus/12345"),
-    false
-  )
-  assert.equal(
-    matcher.match("/accounts/12345/channels"),
-    false
-  )
-
-  matcher = new PathMatcher("/accounts/:account_id/channels")
-  assert.deepEqual(
-    matcher.value,
-    ["accounts", {name: "account_id"}, "channels"]
-  )
-
-  matcher = new PathMatcher("/accounts/:account_id/channels/:channel_id")
-  assert.deepEqual(
-    matcher.value,
-    ["accounts", {name: "account_id"}, "channels", {name: "channel_id"}]
-  )
-  assert.deepEqual(
-    matcher.match("/accounts/54321/channels/abcdefg"),
-    {account_id: "54321", channel_id: "abcdefg"}
-  )
-
+media_type = (type) ->
+  "application/vnd.spire-io.#{type}+json;version=1.0"
 
 class MockRequest
 
@@ -60,32 +22,40 @@ class MockRequest
     @method = options.method
     @headers = options.headers
 
+test_dispatch = (resource, action, options) ->
+  request = new MockRequest(options)
+  result = dispatcher.dispatch(request)
+  test "Dispatching for #{resource}, #{action}", ->
+    assert.equal(result.resource_type, resource)
+    assert.equal(result.action_name, action)
 
-media_type = (type) ->
-  "application/vnd.spire-io.#{type}+json;version=1.0"
+test_dispatch "account_collection", "create",
+  url: "http://host/accounts"
+  method: "POST"
+  headers:
+    "Content-Type": media_type("account")
+    "Accept": media_type("session")
 
-request = new MockRequest
+test_dispatch "account", "get",
   url: "http://localhost:1337/account/12345"
   method: "GET"
   headers:
     "Accept": media_type("account")
-    "Authorization": "Capability monkeys"
+    "Authorization": "Capability <token>"
 
-result = dispatcher.dispatch(request)
-test "simple dispatch", ->
-  assert.equal(result.resource_type, "account")
-  assert.equal(result.action_name, "get")
+test_dispatch "channel_collection", "create",
+  url: "http://host/account/12345/channels"
+  method: "POST"
+  headers:
+    "Content-Type": media_type("channel")
+    "Accept": media_type("channel")
+    "Authorization": "Capability <token>"
 
-
-request = new MockRequest
+test_dispatch "channel_collection", "get_by_name",
   url: "http://localhost:1337/account/12345/channels?name=smurf"
   method: "GET"
   headers:
     "Accept": media_type("channels")
-    "Authorization": "Capability monkeys"
+    "Authorization": "Capability <token>"
 
-result = dispatcher.dispatch(request)
-test "query matching", ->
-  assert(result)
-  assert.equal(result.resource_type, "channel_collection")
-  assert.equal(result.action_name, "get_by_name")
+

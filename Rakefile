@@ -12,12 +12,20 @@ end
 
 
 desc "Run tests"
-task "test" => "build" do
+task "test" => %w[
+  build test:dispatcher test:matching
+]
+
+task "test:client" => "build" do
   sh "#{$COFFEE} test/spire_client_test.coffee"
 end
 
 task "test:dispatcher" => "build" do
   sh "#{$COFFEE} test/dispatcher_test.coffee"
+end
+
+task "test:matching" => "build" do
+  sh "#{$COFFEE} test/path_matcher_test.coffee"
 end
 
 rule ".json" => ".coffee" do |target|
