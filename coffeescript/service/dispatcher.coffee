@@ -1,5 +1,5 @@
 util = require("util")
-url = require("url")
+URL = require("url")
 matchers = require("./matchers")
 
 class Dispatcher
@@ -21,13 +21,20 @@ class Dispatcher
       paths = mapping.paths
       for path in paths
         path_matcher = @matchers[path] ||= new matchers.Path(path)
-        path_matcher.matchers.type = "method"
 
         for action_name, definition of resource.actions
 
           # collect all the values from the interface description
           # that we will need to match against.
           method = definition.method
+
+          if definition.query?.required
+            query_spec = definition.query.required
+            query_ident = Object.keys(query_spec).sort().join("&")
+          else
+            query_ident = query_spec = "none"
+
+
           authorization = definition.authorization || "none"
 
           if request_entity = definition.request_entity
@@ -49,19 +56,18 @@ class Dispatcher
           # create matchers and add to the tree
           path_matcher.matchers[method] ||= new matchers.Method(method)
           method_matcher = path_matcher.matchers[method]
-          method_matcher.matchers.type = "authorization"
 
           #TODO: query matching
+          method_matcher.matchers[query_ident] ||= new matchers.Query(query_spec)
+          query_matcher = method_matcher.matchers[query_ident]
 
-          method_matcher.matchers[authorization] ||=
+          query_matcher.matchers[authorization] ||=
             new matchers.Authorization(authorization)
-          auth_matcher = method_matcher.matchers[authorization]
-          auth_matcher.matchers.type = "content_type"
+          auth_matcher = query_matcher.matchers[authorization]
 
           auth_matcher.matchers[content_type] ||=
             new matchers.ContentType(content_type)
           ctype_matcher = auth_matcher.matchers[content_type]
-          ctype_matcher.matchers.type = "accept"
 
           ctype_matcher.matchers[accept] ||=
             new matchers.Accept(accept, payload)
@@ -70,16 +76,25 @@ class Dispatcher
   
 
   dispatch: (request) ->
-    url = url.parse(request.url)
+    url = URL.parse(request.url)
     path = url.pathname
     method = request.method
     authorization = request.headers["Authorization"]
     content_type = request.headers["Content-Type"]
     accept = request.headers["Accept"]
+    if url.query
+      query_parts = url.query.split("&")
+      query = {}
+      for part in query_parts
+        [key, value] = part.split("=")
+        query[key] = value
+    else
+      query = {}
 
     request_sequence = [
       path,
       method,
+      query,
       authorization,
       content_type,
       accept
@@ -87,13 +102,16 @@ class Dispatcher
     console.log("request:", request_sequence)
     list = @try_sequence(request_sequence)
     matches = @compile_matches(list)
+    console.log("Matches:", matches)
     match = matches[0]
-    console.log("Match:", match)
-    payload = match.payload
-    delete match.payload
-    for key, value of payload
-      match[key] = value
-    match
+    if match
+      payload = match.payload
+      delete match.payload
+      for key, value of payload
+        match[key] = value
+      match
+    else
+      false
 
   # this code was stolen and adapted from Djinn, which 
   # is why it looks so hideous.  Not that Djinn is hideous,
@@ -109,6 +127,7 @@ class Dispatcher
       while (tracker = current.shift())
         for identifier, matcher of tracker.stage
           data = matcher.match(val)
+          #console.log matcher.type, identifier, val,  data
           if data
             if matcher.matchers
               next.push(tracker.track(matcher.matchers, matcher.type, data))

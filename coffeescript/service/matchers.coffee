@@ -35,6 +35,28 @@ class PathMatcher
     else
       false
 
+class QueryMatcher
+  #name:
+    #description: "The exact name of the subscription"
+    #type: "string"
+  constructor: (query_spec) ->
+    @type = "query"
+    @value = query_spec
+    @matchers = {}
+
+  match: (input) ->
+    if @value == "none"
+      true
+    else
+      out = {}
+      for key, spec of @value
+        if input[key]
+          out[key] = input[key]
+        else
+          return false
+      out
+
+
 class BasicMatcher
   constructor: (@value) ->
     @matchers = {}
@@ -52,6 +74,7 @@ class MethodMatcher extends BasicMatcher
 
   match: (input) ->
     input == @value
+
 
 class AuthorizationMatcher extends BasicMatcher
   constructor: (authorization) ->
@@ -86,6 +109,7 @@ class AcceptMatcher
 module.exports =
   Path: PathMatcher
   Method: MethodMatcher
+  Query: QueryMatcher
   Authorization: AuthorizationMatcher
   ContentType: ContentTypeMatcher
   Accept: AcceptMatcher

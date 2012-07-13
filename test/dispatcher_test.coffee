@@ -60,19 +60,32 @@ class MockRequest
     @method = options.method
     @headers = options.headers
 
+
 media_type = (type) ->
   "application/vnd.spire-io.#{type}+json;version=1.0"
 
 request = new MockRequest
-  url: "http://localhost:1337/accounts/12345"
+  url: "http://localhost:1337/account/12345"
   method: "GET"
   headers:
-    #"Content-Type": media_type("account")
     "Accept": media_type("account")
     "Authorization": "Capability monkeys"
 
 result = dispatcher.dispatch(request)
-test "correctness", ->
+test "simple dispatch", ->
   assert.equal(result.resource_type, "account")
   assert.equal(result.action_name, "get")
 
+
+request = new MockRequest
+  url: "http://localhost:1337/account/12345/channels?name=smurf"
+  method: "GET"
+  headers:
+    "Accept": media_type("channels")
+    "Authorization": "Capability monkeys"
+
+result = dispatcher.dispatch(request)
+test "query matching", ->
+  assert(result)
+  assert.equal(result.resource_type, "channel_collection")
+  assert.equal(result.action_name, "get_by_name")

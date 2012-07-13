@@ -6,7 +6,7 @@
   },
   "account": {
     "paths": [
-      "/accounts/:account_id"
+      "/account/:account_id"
     ]
   },
   "session_collection": {

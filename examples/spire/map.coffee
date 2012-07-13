@@ -4,7 +4,7 @@ module.exports =
     paths: ["/accounts"]
 
   account:
-    paths: ["/accounts/:account_id"]
+    paths: ["/account/:account_id"]
 
   session_collection:
     paths: ["/sessions"]
