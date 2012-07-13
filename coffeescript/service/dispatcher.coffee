@@ -95,6 +95,9 @@ class Dispatcher
       match[key] = value
     match
 
+  # this code was stolen and adapted from Djinn, which 
+  # is why it looks so hideous.  Not that Djinn is hideous,
+  # just that you're seeing it out of context.
   try_sequence: (sequence) ->
     stage = @matchers
     current = [new MatchTracker(null, stage)]
