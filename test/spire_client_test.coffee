@@ -1,16 +1,12 @@
 assert = require("assert")
 
-helpers = require("./test/helpers")
+helpers = require("./helpers")
 test = helpers.test
+client_interface = helpers.interface
+schema = helpers.schema
 
-fs = require("fs")
-Rigger = require("./coffeescript/rigger")
+Rigger = require("../coffeescript/rigger")
 
-string = fs.readFileSync("examples/spire/interface.json")
-client_interface = JSON.parse(string)
-
-string = fs.readFileSync("examples/spire/resource_schema.json")
-schema = JSON.parse(string)
 
 # response handling helper
 expected_response = (status, callback) ->
