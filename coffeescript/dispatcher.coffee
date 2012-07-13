@@ -8,9 +8,9 @@ class Dispatcher
     
     @matchers = {}
     @process_map(@map)
-    string = util.inspect(@matchers, false, 10)
     #string = JSON.stringify(@matchers, null, 2)
-    console.log(string)
+    #string = util.inspect(@matchers, false, 10)
+    #console.log(string)
 
 
   process_map: (map) ->
@@ -19,11 +19,6 @@ class Dispatcher
       paths = mapping.paths
       for path in paths
         path_matcher = @matchers[path] ||= new PathMatcher(path)
-        #pattern = @unpack_url_pattern(path)
-        #path_matcher = @matchers[path] ||=
-          #type: "path"
-          #pattern: pattern
-          #matchers: {}
 
         for action_name, definition of resource.actions
           method = definition.method

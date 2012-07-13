@@ -1,4 +1,5 @@
 
-exports.Client = require("./client")
-exports.Dispatcher = require("./dispatcher")
+module.exports =
+  Client: require("./client")
+  Dispatcher: require("./dispatcher")
 
