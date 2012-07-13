@@ -11,9 +11,6 @@ class Dispatcher
     
     @matchers = {}
     @process(@map)
-    #string = JSON.stringify(@matchers, null, 2)
-    #string = util.inspect(@matchers, false, 12)
-    #console.log(string)
 
   process: (map) ->
     for resource_type, mapping of map
@@ -99,10 +96,10 @@ class Dispatcher
       content_type,
       accept
     ]
-    console.log("request:", request_sequence)
+    #console.log("request:", request_sequence)
     list = @try_sequence(request_sequence)
     matches = @compile_matches(list)
-    console.log("Matches:", matches)
+    #console.log("Matches:", matches)
     match = matches[0]
     if match
       payload = match.payload
