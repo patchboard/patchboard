@@ -34,9 +34,10 @@ class Dispatcher
             action_name: action_name
 
 
+  # collect all the values from the interface description
+  # that we will need to match against.
    create_match_sequence: (path, action_name, definition) ->
-    # collect all the values from the interface description
-    # that we will need to match against.
+
     method = definition.method
 
     if definition.query
@@ -110,6 +111,14 @@ class Dispatcher
       results
     else
       matches = @compile_matches(results)
+      if matches.length > 1
+        payloads = (match.payload for match in matches)
+        console.log """
+        Dispatching found more than one candidate, so we're using the first.
+        Match payloads:
+        """
+        for payload in payloads
+          console.log(payload)
       # first match, obviously. compile_matches is a good place
       # to sort the matches based on whatever criteria we decide
       # to use.
