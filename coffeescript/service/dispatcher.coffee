@@ -17,32 +17,34 @@ class Dispatcher
       resource = @interface[resource_type]
       paths = mapping.paths
       for path in paths
-        path_matcher = @matchers[path] ||= new matchers.Path(path)
 
         for action_name, definition of resource.actions
+
 
           # collect all the values from the interface description
           # that we will need to match against.
           method = definition.method
 
-          if definition.query?.required
-            query_spec = definition.query.required
+          if definition.query
+          #if definition.query?.required
+            query_spec = definition.query
             query_ident = Object.keys(query_spec).sort().join("&")
           else
-            query_ident = query_spec = "none"
+            query_spec = {}
+            query_ident = "none"
 
 
-          authorization = definition.authorization || "none"
+          authorization = definition.authorization || "pass"
 
           if request_entity = definition.request_entity
             content_type = @schema[request_entity].media_type
           else
-            content_type = "none"
+            content_type = "pass"
 
           if response_entity = definition.response_entity
             accept = @schema[response_entity].media_type
           else
-            accept = "none"
+            accept = "pass"
 
           # identifies the resource and action. will be stowed
           # in the last matcher
@@ -51,6 +53,8 @@ class Dispatcher
             action_name: action_name
 
           # create matchers and add to the tree
+          path_matcher = @matchers[path] ||= new matchers.Path(path)
+
           path_matcher.matchers[method] ||= new matchers.Method(method)
           method_matcher = path_matcher.matchers[method]
 
@@ -89,26 +93,26 @@ class Dispatcher
       query = {}
 
     request_sequence = [
-      path,
-      method,
-      query,
-      authorization,
-      content_type,
-      accept
+      ["path", path],
+      ["method", method],
+      ["query", query],
+      ["authorization", authorization],
+      ["content_type", content_type],
+      ["accept", accept]
     ]
     #console.log("request:", request_sequence)
-    list = @try_sequence(request_sequence)
-    matches = @compile_matches(list)
-    #console.log("Matches:", matches)
-    match = matches[0]
-    if match
+    results = @try_sequence(request_sequence)
+    if results.error
+      results
+    else
+      matches = @compile_matches(results)
+      #console.log("Matches:", matches)
+      match = matches[0]
       payload = match.payload
       delete match.payload
       for key, value of payload
         match[key] = value
       match
-    else
-      false
 
   # this code was stolen and adapted from Djinn, which 
   # is why it looks so hideous.  Not that Djinn is hideous,
@@ -117,35 +121,41 @@ class Dispatcher
     stage = @matchers
     current = [new MatchTracker(null, stage)]
 
-    sequence_length = sequence.length - 1
-    for i in [0..sequence_length]
-      val = sequence[i]
+    last_index = sequence.length - 1
+    for i in [0..last_index]
+      [type, val] = sequence[i]
       next = []
       while (tracker = current.shift())
         for identifier, matcher of tracker.stage
           data = matcher.match(val)
-          #console.log matcher.type, identifier, val,  data
           if data
             if matcher.matchers
               next.push(tracker.track(matcher.matchers, matcher.type, data))
             else if matcher.payload
-              next.push(tracker.track({}, "payload", matcher.payload))
-      if i == sequence_length
+              # This is a hack necessitated by the nature of the code adapted
+              # from Djinn.  The whole sequence-matching and match-compiling
+              # logic should be reworked for appropriateness to this project.
+              t = tracker.track({}, matcher.type, data)
+              next.push(t.track({}, "payload", matcher.payload))
+      if i == last_index
+        if next.length == 0
+          return {error: type}
         return next
       else if next.length == 0
-        return false
+        return {error: type}
       else
         current = next
 
   compile_matches: (list, val) ->
     matches = []
     for tracker in list
-      path = [tracker.val]
       out = {}
-      out[tracker.type] = tracker.val
+      if tracker.val != true
+        out[tracker.type] = tracker.val
       while (tracker = tracker.parent)
         if tracker.type
-          out[tracker.type] = tracker.val
+          if tracker.val != true
+            out[tracker.type] = tracker.val
       matches.push(out)
     matches
 

@@ -62,6 +62,7 @@ map = JSON.parse(string)
 
 module.exports =
   test: test
+  partial_equal: partial_equal
   spire: spire
   rigger: rigger
   interface: client_interface

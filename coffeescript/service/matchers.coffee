@@ -1,7 +1,7 @@
 class PathMatcher
   constructor: (pattern) ->
     @type = "path"
-    @value = @parse_pattern(pattern)
+    @pattern = @parse_pattern(pattern)
     @matchers = {}
 
   parse_pattern: (pattern) ->
@@ -21,17 +21,17 @@ class PathMatcher
   match: (path) ->
     # TODO: uri escaping, if not handled by node http lib
     path_parts = path.slice(1).split("/")
-    if path_parts.length == @value.length
-      out = {}
+    if path_parts.length == @pattern.length
+      captured = {}
       for got, index in path_parts
-        want = @value[index]
+        want = @pattern[index]
         if want.constructor == String
           if got != want
             return false
         else
-          out[want.name] = got
+          captured[want.name] = got
 
-      out
+      captured
     else
       false
 
@@ -41,20 +41,21 @@ class QueryMatcher
     #type: "string"
   constructor: (query_spec) ->
     @type = "query"
-    @value = query_spec
     @matchers = {}
 
+    @spec = query_spec
+    @spec.required ||= {}
+    @spec.optional ||= {}
+
   match: (input) ->
-    if @value == "none"
-      true
-    else
-      out = {}
-      for key, spec of @value
-        if input[key]
-          out[key] = input[key]
-        else
-          return false
-      out
+    for key, value of input
+      if !@spec.required[key] && !@spec.optional[key]
+        return false
+    for key, spec of @spec.required
+      if !input[key]
+        return false
+    true
+
 
 
 class BasicMatcher
@@ -62,7 +63,7 @@ class BasicMatcher
     @matchers = {}
 
   match: (input) ->
-    if @value == "none"
+    if @value == "pass"
       true
     else
       input == @value
@@ -82,7 +83,7 @@ class AuthorizationMatcher extends BasicMatcher
     super(authorization)
 
   match: (input) ->
-    if @value == "none"
+    if @value == "pass"
       true
     else if input
       scheme = input.split(" ")[0]
@@ -103,10 +104,13 @@ class AcceptMatcher
     #@matchers = {}
 
   match: (input) ->
-    if @value == "none"
+    if @value == "pass"
       true
     else
-      input == @value
+      if input == @value
+        input
+      else
+        false
 
 module.exports =
   Path: PathMatcher
