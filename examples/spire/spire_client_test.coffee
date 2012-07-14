@@ -5,7 +5,7 @@ test = helpers.test
 client_interface = helpers.interface
 schema = helpers.schema
 
-Rigger = require("../coffeescript/rigger")
+Rigger = helpers.Rigger
 
 
 # response handling helper

@@ -1,4 +1,4 @@
-$COFFEE = "node_modules/coffee-script/bin/coffee"
+$COFFEE = File.expand_path("node_modules/coffee-script/bin/coffee")
 
 task "build" => %w[
   rigger-schema.json
@@ -13,16 +13,20 @@ end
 
 desc "Run tests"
 task "test" => %w[
-  build test:dispatcher test:matching
+  build
+  test:matching
 ]
 
-task "test:client" => "build" do
-  sh "#{$COFFEE} test/spire_client_test.coffee"
+task "test:spire" => "build" do
+  Dir.chdir("examples/spire") do
+    sh "#{$COFFEE} spire_client_test.coffee"
+    sh "#{$COFFEE} dispatcher_test.coffee"
+  end
 end
 
-task "test:dispatcher" => "build" do
-  sh "#{$COFFEE} test/dispatcher_test.coffee"
-end
+#task "test:dispatcher" => "build" do
+  #sh "#{$COFFEE} test/dispatcher_test.coffee"
+#end
 
 task "test:matching" => "build" do
   sh "#{$COFFEE} test/path_matcher_test.coffee"

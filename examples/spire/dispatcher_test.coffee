@@ -3,7 +3,7 @@ assert = require("assert")
 helpers = require("./helpers")
 test = helpers.test
 
-Rigger = require("../coffeescript/rigger")
+Rigger = helpers.Rigger
 
 dispatcher = new Rigger.Dispatcher
   interface: helpers.interface
