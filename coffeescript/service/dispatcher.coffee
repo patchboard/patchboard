@@ -110,7 +110,11 @@ class Dispatcher
       results
     else
       matches = @compile_matches(results)
+      # first match, obviously. compile_matches is a good place
+      # to sort the matches based on whatever criteria we decide
+      # to use.
       match = matches[0]
+      # Move the payload properties into the main object. HACKY.
       payload = match.payload
       delete match.payload
       for key, value of payload
@@ -119,7 +123,11 @@ class Dispatcher
 
   # this code was stolen and adapted from Djinn, which 
   # is why it looks so hideous.  Not that Djinn is hideous,
-  # just that you're seeing it out of context.
+  # just that you're seeing it out of context. It's a messy,
+  # arguably perverted, variant of the famous Thompson algorithm for
+  # testing NFA acceptance.
+  # See http://swtch.com/~rsc/regexp/regexp1.html, specifically the
+  # section with heading "Implementation: Simulating the NFA"
   match_request_sequence: (sequence) ->
     stage = @matchers
     current = [new MatchTracker(null, stage)]
@@ -149,6 +157,10 @@ class Dispatcher
       else
         current = next
 
+  # Given a list of MatchTrackers which represent the leaf nodes
+  # of successful matches, traverse each parent-ward, collecting
+  # any data left behind by each matcher (e.g. the parameters
+  # captured by path-matching).
   compile_matches: (list, val) ->
     matches = []
     for tracker in list
@@ -162,6 +174,7 @@ class Dispatcher
       matches.push(out)
     matches
 
+# Trivial helper class.
 class MatchTracker
   constructor: (@parent, @stage, @type, @val) ->
 
