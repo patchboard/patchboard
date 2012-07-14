@@ -1,81 +1,83 @@
 util = require("util")
 URL = require("url")
-matchers = require("./matchers")
+Matchers = require("./matchers")
 
 class Dispatcher
 
   constructor: (options) ->
     @schema = options.schema
-    @interface = options.interface
+    @http_interface = options.interface
     @map = options.map
     
     @matchers = {}
-    @process(@map)
+    @process(@map, @http_interface)
 
-  process: (map) ->
+  # Given URL map and HTTP interface objects, set up the matching
+  # structures required for dispatching an HTTP request.
+  process: (map, http_interface) ->
     for resource_type, mapping of map
-      resource = @interface[resource_type]
+      resource = http_interface[resource_type]
       paths = mapping.paths
       for path in paths
 
         for action_name, definition of resource.actions
+          match_sequence = @create_match_sequence(path, action_name, definition)
 
+          matchers = @matchers
+          for item in match_sequence
+            matchers[item.ident] ||= new item.klass(item.spec)
+            matcher = matchers[item.ident]
+            matchers = matcher.matchers
 
-          # collect all the values from the interface description
-          # that we will need to match against.
-          method = definition.method
-
-          if definition.query
-          #if definition.query?.required
-            query_spec = definition.query
-            query_ident = Object.keys(query_spec).sort().join("&")
-          else
-            query_spec = {}
-            query_ident = "none"
-
-
-          authorization = definition.authorization || "pass"
-
-          if request_entity = definition.request_entity
-            content_type = @schema[request_entity].media_type
-          else
-            content_type = "pass"
-
-          if response_entity = definition.response_entity
-            accept = @schema[response_entity].media_type
-          else
-            accept = "pass"
-
-          # identifies the resource and action. will be stowed
-          # in the last matcher
-          payload =
+          matcher.payload =
             resource_type: resource_type
             action_name: action_name
 
-          # create matchers and add to the tree
-          path_matcher = @matchers[path] ||= new matchers.Path(path)
 
-          path_matcher.matchers[method] ||= new matchers.Method(method)
-          method_matcher = path_matcher.matchers[method]
+   create_match_sequence: (path, action_name, definition) ->
+    # collect all the values from the interface description
+    # that we will need to match against.
+    method = definition.method
 
-          #TODO: query matching
-          method_matcher.matchers[query_ident] ||= new matchers.Query(query_spec)
-          query_matcher = method_matcher.matchers[query_ident]
+    if definition.query
+      query_spec = definition.query
+      # create a string that uniquely identifies the query spec
+      required_keys = (key for key, val of query_spec.required).sort()
+      optional_keys = (key for key, val of query_spec.optional).sort()
+      query_ident = "r:#{required_keys.join("&")},o:#{optional_keys.join("&")}"
+    else
+      query_spec = {}
+      query_ident = "none"
 
-          query_matcher.matchers[authorization] ||=
-            new matchers.Authorization(authorization)
-          auth_matcher = query_matcher.matchers[authorization]
+    authorization = definition.authorization || "pass"
 
-          auth_matcher.matchers[content_type] ||=
-            new matchers.ContentType(content_type)
-          ctype_matcher = auth_matcher.matchers[content_type]
+    if request_entity = definition.request_entity
+      content_type = @schema[request_entity].media_type
+    else
+      content_type = "pass"
 
-          ctype_matcher.matchers[accept] ||=
-            new matchers.Accept(accept, payload)
-          accept_matcher = ctype_matcher.matchers[accept]
+    if response_entity = definition.response_entity
+      accept = @schema[response_entity].media_type
+    else
+      accept = "pass"
 
-  
+    # NOTE: matching depends on the order of this match sequence
+    # being consistent with the order of the request sequence. If
+    # you change one, you must change the other.
+    [
+      {klass: Matchers.Path, ident: path, spec: path},
+      {klass: Matchers.Method, ident: method, spec: method},
+      {klass: Matchers.Query, ident: query_ident, spec: query_spec},
+      {klass: Matchers.Authorization, ident: authorization, spec: authorization},
+      {klass: Matchers.ContentType, ident: content_type, spec: content_type},
+      {klass: Matchers.Accept, ident: accept, spec: accept},
+    ]
 
+
+  # Given an HTTP request, returns either an error or a result object.
+  # The result object contains properties indicating the resource_type
+  # and action_name which should handle the request.  Users of this method
+  # may then find and use handler functions as they see fit.
   dispatch: (request) ->
     url = URL.parse(request.url)
     path = url.pathname
@@ -92,6 +94,9 @@ class Dispatcher
     else
       query = {}
 
+    # the request sequence uses pseudo-tuples so that we can
+    # tell at what stage match failures occur.  This is crucial 
+    # to the determination of the appropriate error code (404, 406, etc.)
     request_sequence = [
       ["path", path],
       ["method", method],
@@ -100,13 +105,11 @@ class Dispatcher
       ["content_type", content_type],
       ["accept", accept]
     ]
-    #console.log("request:", request_sequence)
-    results = @try_sequence(request_sequence)
+    results = @match_request_sequence(request_sequence)
     if results.error
       results
     else
       matches = @compile_matches(results)
-      #console.log("Matches:", matches)
       match = matches[0]
       payload = match.payload
       delete match.payload
@@ -117,7 +120,7 @@ class Dispatcher
   # this code was stolen and adapted from Djinn, which 
   # is why it looks so hideous.  Not that Djinn is hideous,
   # just that you're seeing it out of context.
-  try_sequence: (sequence) ->
+  match_request_sequence: (sequence) ->
     stage = @matchers
     current = [new MatchTracker(null, stage)]
 

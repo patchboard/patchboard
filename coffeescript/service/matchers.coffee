@@ -5,21 +5,23 @@ class PathMatcher
     @matchers = {}
 
   parse_pattern: (pattern) ->
-    out = []
-    # for now, we assume that all patterns begin with "/".
-    # I'm not sure there's any value to allowing it otherwise.
+    captures = []
+    # remove the initial "/"
     pattern = pattern.slice(1)
     components = pattern.split("/")
     for component in components
       if component.indexOf(":") == 0
+        # path components that begin with ":" are parameter-capturers
         name = component.slice(1)
-        out.push({name: name})
+        captures.push({name: name})
       else
-        out.push(component)
-    out
+        # all other path components are exact matchers
+        captures.push(component)
+    captures
 
   match: (path) ->
     # TODO: uri escaping, if not handled by node http lib
+
     path_parts = path.slice(1).split("/")
     if path_parts.length == @pattern.length
       captured = {}
@@ -36,9 +38,6 @@ class PathMatcher
       false
 
 class QueryMatcher
-  #name:
-    #description: "The exact name of the subscription"
-    #type: "string"
   constructor: (query_spec) ->
     @type = "query"
     @matchers = {}
@@ -47,6 +46,8 @@ class QueryMatcher
     @spec.required ||= {}
     @spec.optional ||= {}
 
+  # The query keys specified as required and optional
+  # constitute a whitelist of allowed keys.
   match: (input) ->
     for key, value of input
       if !@spec.required[key] && !@spec.optional[key]
