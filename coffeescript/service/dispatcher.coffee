@@ -123,12 +123,11 @@ class Dispatcher
       # to sort the matches based on whatever criteria we decide
       # to use.
       match = matches[0]
-      # Move the payload properties into the main object. HACKY.
-      payload = match.payload
+      out = { match: match.payload }
       delete match.payload
-      for key, value of payload
-        match[key] = value
-      match
+      out.data = match
+      console.log out
+      out
 
   # this code was stolen and adapted from Djinn, which 
   # is why it looks so hideous.  Not that Djinn is hideous,
@@ -138,56 +137,71 @@ class Dispatcher
   # See http://swtch.com/~rsc/regexp/regexp1.html, specifically the
   # section with heading "Implementation: Simulating the NFA"
   match_request_sequence: (sequence) ->
-    stage = @matchers
-    current = [new MatchTracker(null, stage)]
+    root_tracker = new MatchTracker(null, matchers: @matchers)
+    current = [root_tracker]
 
+    # breadth-first traversal
     last_index = sequence.length - 1
-    for i in [0..last_index]
-      [type, val] = sequence[i]
+    # `type` here describes what part of the request we're matching against
+    for [type, value], i in sequence
       next = []
-      while (tracker = current.shift())
-        for identifier, matcher of tracker.stage
-          data = matcher.match(val)
-          if data
+      for tracker in current
+        for _identifier, matcher of tracker.matchers
+          match_data = matcher.match(value)
+          if match_data
             if matcher.matchers
-              next.push(tracker.track(matcher.matchers, matcher.type, data))
+              t = tracker.child
+                matchers: matcher.matchers
+                type: matcher.type
+                data: match_data
+              next.push(t)
             else if matcher.payload
-              # This is a hack necessitated by the nature of the code adapted
-              # from Djinn.  The whole sequence-matching and match-compiling
-              # logic should be reworked for appropriateness to this project.
-              t = tracker.track({}, matcher.type, data)
-              next.push(t.track({}, "payload", matcher.payload))
-      if i == last_index
-        if next.length == 0
-          return {error: type}
-        return next
-      else if next.length == 0
+              next.push tracker.child(
+                matchers: {}, type: matcher.type,
+                data: match_data, payload: matcher.payload
+              )
+            else
+              throw "Sentinel: a matcher should have a payload or more matchers"
+      if next.length == 0
+        # we need to know at what stage the request classification failed
+        # so that we can respond with the proper status code.
         return {error: type}
+      else if i == last_index
+        # if we're on the last element in the request sequence, then the
+        # presence of trackers in the next array indicates successful matches.
+        return next
       else
+        # get set for the next stage
         current = next
 
-  # Given a list of MatchTrackers which represent the leaf nodes
-  # of successful matches, traverse each parent-ward, collecting
-  # any data left behind by each matcher (e.g. the parameters
-  # captured by path-matching).
+
   compile_matches: (list, val) ->
     matches = []
     for tracker in list
       out = {}
-      if tracker.val != true
-        out[tracker.type] = tracker.val
+      out.payload = tracker.payload
+      if tracker.data != true
+        out[tracker.type] = tracker.data
       while (tracker = tracker.parent)
         if tracker.type
-          if tracker.val != true
-            out[tracker.type] = tracker.val
+          if tracker.data != true
+            out[tracker.type] = tracker.data
       matches.push(out)
     matches
 
-# Trivial helper class.
+# while attempting to match the request, we're going to construct
+# a tree containing all the matchers that match facets of the request.
+# Then at the end, we can take the remaining leaf nodes and pop back
+# up, parent-wise, to gather the data collected for each successful
+# classification.
 class MatchTracker
-  constructor: (@parent, @stage, @type, @val) ->
+  constructor: (@parent, options) ->
+    @matchers = options.matchers
+    @type = options.type
+    @data = options.data
+    @payload = options.payload
 
-  track: (stage, type, val) ->
-    new MatchTracker(@, stage, type, val)
+  child: (options) ->
+    new MatchTracker(@, options)
 
 module.exports = Dispatcher

@@ -27,7 +27,9 @@ test_dispatch = (name, want, options) ->
     helpers.partial_equal(result, want)
 
 test_dispatch "Dispatching for account_collection.create",
-  {resource_type: "account_collection", action_name: "create"},
+  {
+    match: {resource_type: "account_collection", action_name: "create"}
+  },
   url: "http://host/accounts"
   method: "POST"
   headers:
@@ -35,7 +37,9 @@ test_dispatch "Dispatching for account_collection.create",
     "Accept": media_type("session")
 
 test_dispatch "Dispatching for account.get",
-  {resource_type: "account", action_name: "get"},
+  {
+    match: {resource_type: "account", action_name: "get"}
+  },
   url: "http://localhost:1337/account/12345"
   method: "GET"
   headers:
@@ -43,7 +47,9 @@ test_dispatch "Dispatching for account.get",
     "Authorization": "Capability <token>"
 
 test_dispatch "Dispatching for channel_collection.create",
-  {resource_type: "channel_collection", action_name: "create"},
+  {
+    match: {resource_type: "channel_collection", action_name: "create"}
+  },
   url: "http://host/account/12345/channels"
   method: "POST"
   headers:
@@ -52,7 +58,9 @@ test_dispatch "Dispatching for channel_collection.create",
     "Authorization": "Capability <token>"
 
 test_dispatch "Dispatching for channel_collection.get_by_name",
-  {resource_type: "channel_collection", action_name: "get_by_name"},
+  {
+    match: {resource_type: "channel_collection", action_name: "get_by_name"}
+  },
   url: "http://localhost:1337/account/12345/channels?name=smurf"
   method: "GET"
   headers:
