@@ -126,7 +126,6 @@ class Dispatcher
       out = { match: match.payload }
       delete match.payload
       out.data = match
-      console.log out
       out
 
   # this code was stolen and adapted from Djinn, which 

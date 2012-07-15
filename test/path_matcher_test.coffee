@@ -10,7 +10,7 @@ PathMatcher = matchers.Path
 test "Path matching", ->
   matcher = new PathMatcher("/accounts/:account_id")
   assert.deepEqual(
-    matcher.value,
+    matcher.pattern,
     ["accounts", {name: "account_id"}]
   )
   result = matcher.match("/accounts/54321",)
@@ -29,13 +29,13 @@ test "Path matching", ->
 
   matcher = new PathMatcher("/accounts/:account_id/channels")
   assert.deepEqual(
-    matcher.value,
+    matcher.pattern,
     ["accounts", {name: "account_id"}, "channels"]
   )
 
   matcher = new PathMatcher("/accounts/:account_id/channels/:channel_id")
   assert.deepEqual(
-    matcher.value,
+    matcher.pattern,
     ["accounts", {name: "account_id"}, "channels", {name: "channel_id"}]
   )
   assert.deepEqual(

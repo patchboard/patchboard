@@ -7,8 +7,9 @@
     "type": "git",
     "url": "https://github.com/automatthew/quern/"
   },
-  "main": "./node/quern.js",
+  "main": "./node/rigger.js",
   "dependencies": {
+    "JSV": "4.0.x",
     "shred": "0.8.x"
   },
   "devDependencies": {
