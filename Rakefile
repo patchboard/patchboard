@@ -39,7 +39,6 @@ end
 
 desc "Run tests"
 task "test" => %w[
-  test:spire
   test:service
 ]
 

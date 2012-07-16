@@ -1,20 +1,25 @@
 {
+  "capability": {
+    "type": "string"
+  },
   "capability_dictionary": {
     "type": "dictionary",
     "items": {
       "type": "string"
     }
   },
-  "account": {
-    "type": "resource",
-    "media_type": "application/vnd.spire-io.account+json;version=1.0",
+  "resource": {
+    "extends": "rigger#resource",
     "properties": {
-      "url": {
-        "type": "string"
-      },
       "capabilities": {
         "type": "capability_dictionary"
-      },
+      }
+    }
+  },
+  "account": {
+    "extends": "resource",
+    "media_type": "application/vnd.spire-io.account+json;version=1.0",
+    "properties": {
       "id": {
         "type": "string",
         "readonly": true
@@ -43,21 +48,13 @@
     ]
   },
   "account_collection": {
-    "type": "resource",
-    "media_type": "application/vnd.spire-io.accounts+json;version=1.0",
-    "properties": {
-      "url": {
-        "type": "string"
-      }
-    }
+    "extends": "resource",
+    "media_type": "application/vnd.spire-io.accounts+json;version=1.0"
   },
   "session": {
-    "type": "resource",
+    "extends": "resource",
     "media_type": "application/vnd.spire-io.session+json;version=1.0",
     "properties": {
-      "url": {
-        "type": "string"
-      },
       "capabilities": {
         "type": "capability_dictionary"
       },
@@ -92,12 +89,9 @@
     }
   },
   "channel": {
-    "type": "resource",
+    "extends": "resource",
     "media_type": "application/vnd.spire-io.channel+json;version=1.0",
     "properties": {
-      "url": {
-        "type": "string"
-      },
       "capabilities": {
         "type": "capability_dictionary"
       },
@@ -117,16 +111,8 @@
     ]
   },
   "channel_collection": {
-    "type": "resource",
-    "media_type": "application/vnd.spire-io.channels+json;version=1.0",
-    "properties": {
-      "url": {
-        "type": "string"
-      },
-      "capabilities": {
-        "type": "capability_dictionary"
-      }
-    }
+    "extends": "resource",
+    "media_type": "application/vnd.spire-io.channels+json;version=1.0"
   },
   "channel_dictionary": {
     "type": "dictionary",
@@ -136,15 +122,9 @@
     }
   },
   "subscription": {
-    "type": "resource",
+    "extends": "resource",
     "media_type": "application/vnd.spire-io.subscription+json;version=1.0",
     "properties": {
-      "url": {
-        "type": "string"
-      },
-      "capabilities": {
-        "type": "capability_dictionary"
-      },
       "application_key": {
         "type": "string",
         "readonly": true
@@ -161,16 +141,8 @@
     }
   },
   "subscription_collection": {
-    "type": "resource",
-    "media_type": "application/vnd.spire-io.subscriptions+json;version=1.0",
-    "properties": {
-      "url": {
-        "type": "string"
-      },
-      "capabilities": {
-        "type": "capability_dictionary"
-      }
-    }
+    "extends": "resource",
+    "media_type": "application/vnd.spire-io.subscriptions+json;version=1.0"
   },
   "subscription_dictionary": {
     "type": "dictionary",
@@ -180,7 +152,7 @@
     }
   },
   "event": {
-    "type": "resource",
+    "extends": "resource",
     "media_type": "application/vnd.spire-io.event+json;version=1.0",
     "properties": {
       "channel_name": {
@@ -215,15 +187,9 @@
     }
   },
   "message": {
-    "type": "resource",
+    "extends": "resource",
     "media_type": "application/vnd.spire-io.message+json;version=1.0",
     "properties": {
-      "url": {
-        "type": "string"
-      },
-      "capabilities": {
-        "type": "capability_dictionary"
-      },
       "channel_name": {
         "type": "string"
       },

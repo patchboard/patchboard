@@ -73,7 +73,7 @@ test_classification = (name, want, options) ->
 
 test_classification "Action with Accept",
   {
-    match: {resource_type: "resource_collection", action_name: "list"}
+    resource_type: "resource_collection", action_name: "list"
   },
   url: "http://hostname.com/resource"
   method: "GET"
@@ -82,7 +82,7 @@ test_classification "Action with Accept",
 
 test_classification "Action with Content-Type and Accept",
   {
-    match: {resource_type: "resource_collection", action_name: "create"}
+    resource_type: "resource_collection", action_name: "create"
   },
   url: "http://hostname.com/resource"
   method: "POST"
@@ -92,10 +92,9 @@ test_classification "Action with Content-Type and Accept",
 
 test_classification "Action with path capture",
   {
-    match: {resource_type: "resource_instance", action_name: "get"},
-    data:
-      path: {id: "monkey"}
-      accept: "patchboard.resource_instance"
+    resource_type: "resource_instance", action_name: "get",
+    path: {id: "monkey"},
+    accept: "patchboard.resource_instance"
   },
   url: "http://hostname.com/resource/monkey"
   method: "GET"
@@ -104,7 +103,7 @@ test_classification "Action with path capture",
 
 test_classification "Action with Authorization",
   {
-    match: {resource_type: "resource_instance", action_name: "delete"},
+    resource_type: "resource_instance", action_name: "delete"
   },
   url: "http://hostname.com/resource/monkey"
   method: "DELETE"
@@ -114,7 +113,7 @@ test_classification "Action with Authorization",
 
 test_classification "Action with query",
   {
-    match: {resource_type: "resource_collection", action_name: "search"}
+    resource_type: "resource_collection", action_name: "search"
   },
   url: "http://hostname.com/resource?name=monk"
   method: "GET"
@@ -125,14 +124,26 @@ test_classification "Action with query",
 
 
 test_classification "failure to match Accept header",
-  {error: "accept"},
+  {
+    error: {
+      status: 406,
+      message: "Not Acceptable",
+      description: "you goofed"
+    }
+  },
   url: "http://hostname.com/resource/monkey"
   method: "GET"
   headers:
     "Accept": "bogus"
 
 test_classification "failure to match Content-Type header",
-  {error: "content_type"},
+  {
+    error: {
+      status: 415,
+      message: "Unsupported Media Type",
+      description: "you goofed"
+    }
+  },
   url: "http://hostname.com/resource"
   method: "POST"
   headers:
@@ -140,7 +151,13 @@ test_classification "failure to match Content-Type header",
     "Content-Type": "bogus"
 
 test_classification "failure to match method",
-  {error: "method"},
+  {
+    error: {
+      status: 405,
+      message: "Method Not Allowed",
+      description: "you goofed"
+    }
+  },
   url: "http://hostname.com/resource/monkey"
   method: "PUT"
   headers:
@@ -149,7 +166,13 @@ test_classification "failure to match method",
 
 
 test_classification "failure to match authorization scheme",
-  {error: "authorization"},
+  {
+    error: {
+      status: 401,
+      message: "Unauthorized",
+      description: "you goofed"
+    }
+  },
   url: "http://hostname.com/resource/monkey"
   method: "DELETE"
   headers:
