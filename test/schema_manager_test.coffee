@@ -13,23 +13,6 @@ schemas = JSON.parse(string)
 app_schema =
   id: "spire"
   properties:
-    resource:
-      id: "#resource"
-      extends: {$ref: "rigger#resource"}
-      properties:
-        capabilities:
-          $ref: "spire#capability_dictionary"
-
-    account:
-      id: "#account"
-      extends: {$ref: "spire#resource"}
-      properties:
-        id: {type: "string", readonly: true}
-        secret: {type: "string", readonly: true}
-        created_at: {type: "number", readonly: true}
-        email: {type: "string", required: true}
-        password: {type: "string", required: true}
-        name: {type: "string"}
 
     capability:
       id: "#capability"
@@ -40,31 +23,27 @@ app_schema =
       type: "object"
       additionalProperties: {$ref: "spire#capability"}
 
+    resource:
+      id: "#resource"
+      extends: {$ref: "rigger#resource"}
+      properties:
+        capabilities:
+          $ref: "spire#capability_dictionary"
 
-#t = {}
-#t.id = "spire"
-#t.properties = {}
+    account:
+      id: "#account"
+      media_type: "application/vnd.spire-io.account+json;version=1.0"
+      extends: {$ref: "spire#resource"}
+      properties:
+        id: {type: "string", readonly: true}
+        secret: {type: "string", readonly: true}
+        created_at: {type: "number", readonly: true}
+        email: {type: "string", required: true}
+        password: {type: "string", required: true}
+        name: {type: "string"}
 
-#for name, schema of schemas
-  #trans = { id: "##{name}"}
-  #if schema.type == "resource"
-    #delete schema.type
-    #trans.extends = {$ref: "rigger#resource"}
-  #delete schema.media_type
-  #required = schema.required
-  #delete schema.required
-  #for key, value of schema
-    #trans[key] = value
-  #if required
-    #for key in required
-      #trans.properties[key].required = true
-  #t.properties[name] = trans
 
-#console.log(JSON.stringify(t.properties.account, null, 2))
 
-#assert.deepEqual(t.properties.account.properties, app_schema.properties.account.properties)
-
-#process.exit()
 
 
 SchemaManager = require("../coffeescript/service/schema_manager")

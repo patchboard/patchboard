@@ -1,15 +1,21 @@
 module.exports =
 
+  capability:
+    type: "string"
+
   capability_dictionary:
     type: "dictionary"
     items: {type: "string"}
 
+  resource:
+    extends: "rigger#resource"
+    properties:
+      capabilities: {type: "capability_dictionary"}
+
   account:
-    type: "resource"
+    extends: "resource"
     media_type: "application/vnd.spire-io.account+json;version=1.0"
     properties:
-      url: {type: "string"}
-      capabilities: {type: "capability_dictionary"}
       id: {type: "string", readonly: true}
       secret: {type: "string", readonly: true}
       created_at: {type: "number", readonly: true}
@@ -19,17 +25,13 @@ module.exports =
     required: ["email", "password"]
 
   account_collection:
-    type: "resource"
+    extends: "resource"
     media_type: "application/vnd.spire-io.accounts+json;version=1.0"
-    properties:
-      url: {type: "string"}
 
   session:
-    type: "resource"
+    extends: "resource"
     media_type: "application/vnd.spire-io.session+json;version=1.0"
     properties:
-      url: {type: "string"}
-      capabilities: {type: "capability_dictionary"}
       resources:
         type: "object"
         properties:
@@ -40,22 +42,18 @@ module.exports =
           notifications: {type: "object"}
           
   channel:
-    type: "resource"
+    extends: "resource"
     media_type: "application/vnd.spire-io.channel+json;version=1.0"
     properties:
-      url: {type: "string"}
-      capabilities: {type: "capability_dictionary"}
       name: {type: "string"}
       application_key: {type: "string", readonly: true}
       limit: {type: "number"}
     required: ["name"]
 
   channel_collection:
-    type: "resource"
+    extends: "resource"
     media_type: "application/vnd.spire-io.channels+json;version=1.0"
     properties:
-      url: {type: "string"}
-      capabilities: {type: "capability_dictionary"}
 
   channel_dictionary:
     type: "dictionary"
@@ -63,11 +61,9 @@ module.exports =
     items: {type: "channel"}
 
   subscription:
-    type: "resource"
+    extends: "resource"
     media_type: "application/vnd.spire-io.subscription+json;version=1.0"
     properties:
-      url: {type: "string"}
-      capabilities: {type: "capability_dictionary"}
       application_key: {type: "string", readonly: true}
       name: {type: "string"}
       channels:
@@ -75,11 +71,9 @@ module.exports =
         items: {"type": "string"}
 
   subscription_collection:
-    type: "resource"
+    extends: "resource"
     media_type: "application/vnd.spire-io.subscriptions+json;version=1.0"
     properties:
-      url: {type: "string"}
-      capabilities: {type: "capability_dictionary"}
 
   subscription_dictionary:
     type: "dictionary"
@@ -87,7 +81,7 @@ module.exports =
     items: {type: "subscription"}
 
   event:
-    type: "resource"
+    extends: "resource"
     media_type: "application/vnd.spire-io.event+json;version=1.0"
     properties:
       channel_name: {type: "string"}
@@ -106,11 +100,9 @@ module.exports =
       parts: {}
 
   message:
-    type: "resource"
+    extends: "resource"
     media_type: "application/vnd.spire-io.message+json;version=1.0"
     properties:
-      url: {type: "string"}
-      capabilities: {type: "capability_dictionary"}
       channel_name: {type: "string"}
       content: {type: "object"}
       timestamp: {type: "number"}
