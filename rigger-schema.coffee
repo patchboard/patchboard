@@ -1,8 +1,13 @@
 module.exports =
-  # TODO: figure out how to define a "dictionary" type
-  resource:
-    id: "resource"
-    extends: { $ref: "http://json-schema.org/draft-04/schema#" }
-    properties:
-      url: {type: "string"}
-    required: ["url"]
+  id: "rigger"
+  properties:
+    resource:
+      id: "#resource"
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          format: "uri"
+          readonly: true
+
+

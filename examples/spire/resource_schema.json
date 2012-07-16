@@ -24,7 +24,8 @@
         "readonly": true
       },
       "created_at": {
-        "type": "number"
+        "type": "number",
+        "readonly": true
       },
       "email": {
         "type": "string"

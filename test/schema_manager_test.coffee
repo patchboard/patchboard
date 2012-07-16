@@ -2,36 +2,27 @@ assert = require("assert")
 
 helpers = require("./helpers")
 test = helpers.test
-
-SchemaManager = require("../coffeescript/service/schema_manager")
-
-#fs = require("fs")
-#string = fs.readFileSync("examples/spire/resource_schema.json")
-#schemas = JSON.parse(string)
+util = require("util")
 
 
-schema =
+fs = require("fs")
+string = fs.readFileSync("examples/spire/resource_schema.json")
+schemas = JSON.parse(string)
+
+
+app_schema =
   id: "spire"
   properties:
-    capability:
-      id: "capability"
-      type: "string"
-
-    capability_dictionary:
-      id: "capability_dictionary"
-      type: "object"
-      additionalProperties: {$ref: "capability"}
-
     resource:
-      id: "resource"
-      type: "object"
+      id: "#resource"
+      extends: {$ref: "rigger#resource"}
       properties:
-        url: {type: "string", readonly: true}
-        capabilities: {$ref: "capability_dictionary"}
+        capabilities:
+          $ref: "spire#capability_dictionary"
 
     account:
-      id: "account"
-      extends: {$ref: "resource"}
+      id: "#account"
+      extends: {$ref: "spire#resource"}
       properties:
         id: {type: "string", readonly: true}
         secret: {type: "string", readonly: true}
@@ -40,20 +31,83 @@ schema =
         password: {type: "string", required: true}
         name: {type: "string"}
 
-jsv = JSV.createEnvironment()
+    capability:
+      id: "#capability"
+      type: "string"
 
-data =
-  account:
+    capability_dictionary:
+      id: "#capability_dictionary"
+      type: "object"
+      additionalProperties: {$ref: "spire#capability"}
+
+
+#t = {}
+#t.id = "spire"
+#t.properties = {}
+
+#for name, schema of schemas
+  #trans = { id: "##{name}"}
+  #if schema.type == "resource"
+    #delete schema.type
+    #trans.extends = {$ref: "rigger#resource"}
+  #delete schema.media_type
+  #required = schema.required
+  #delete schema.required
+  #for key, value of schema
+    #trans[key] = value
+  #if required
+    #for key in required
+      #trans.properties[key].required = true
+  #t.properties[name] = trans
+
+#console.log(JSON.stringify(t.properties.account, null, 2))
+
+#assert.deepEqual(t.properties.account.properties, app_schema.properties.account.properties)
+
+#process.exit()
+
+
+SchemaManager = require("../coffeescript/service/schema_manager")
+sm = new SchemaManager(app_schema)
+
+
+assert_no_errors = (errors) ->
+  if errors.length > 0
+    console.log(errors)
+    assert.equal(errors.length, 0)
+
+test "pass for minimal correct data", ->
+  result = sm.validate "account",
     url: "foo"
     email: "me@me.com"
     password: "strongpassword"
     capabilities:
       get: "foo"
       update: "bar"
-
-test "transform of schema for validation with JSV", ->
-  result = jsv.validate(data, schema)
-  assert.deepEqual result.errors, []
+  assert_no_errors(result.errors)
 
 
+test "fail when capability is not a string", ->
+  result = sm.validate "account",
+    url: "foo"
+    email: "me@me.com"
+    password: "strongpassword"
+    capabilities:
+      get: 3
+      update: "bar"
+  assert.equal(result.errors.length, 1)
+  helpers.partial_equal result.errors[0],
+    schemaUri: "urn:spire#capability"
+    attribute: "type"
 
+test "fail when email is missing", ->
+  result = sm.validate "account",
+    url: "foo"
+    password: "strongpassword"
+    capabilities:
+      get: "foo"
+      update: "bar"
+  assert.equal(result.errors.length, 1)
+  helpers.partial_equal result.errors[0],
+    schemaUri: "urn:spire#account/properties/email"
+    attribute: "required"

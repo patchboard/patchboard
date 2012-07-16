@@ -1,16 +1,22 @@
 JSV = require("JSV").JSV
-
-#amanda = require("amanda")
+rigger_schema = require("../../rigger-schema")
 
 class SchemaManager
 
-  constructor: (@schemas) ->
-    @validator = JSV.createEnvironment()
+  constructor: (@application_schema) ->
+    @jsv = JSV.createEnvironment("json-schema-draft-03")
+    @register_schema(rigger_schema)
+    @register_schema(@application_schema)
+
+  register_schema: (schema) ->
+    @jsv.createSchema(schema, false, schema.id)
+
 
   validate: (type, data) ->
-    schema = @schemas[type]
+    schema_url = "urn:#{@application_schema.id}##{type}"
+    schema = @jsv.findSchema(schema_url)
     if schema
-      @validator.validate data, schema, (error) ->
+      @jsv.validate data, schema, (error) ->
         console.log(error)
     else
       throw "unknown schema type: #{type}"

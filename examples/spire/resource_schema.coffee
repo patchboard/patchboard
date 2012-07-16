@@ -12,7 +12,7 @@ module.exports =
       capabilities: {type: "capability_dictionary"}
       id: {type: "string", readonly: true}
       secret: {type: "string", readonly: true}
-      created_at: {type: "number"}
+      created_at: {type: "number", readonly: true}
       email: {type: "string"}
       name: {type: "string"}
       password: {type: "string"}

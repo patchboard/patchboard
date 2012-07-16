@@ -5,7 +5,7 @@ test = helpers.test
 
 Rigger = helpers.Rigger
 
-dispatcher = new Rigger.Dispatcher
+classifier = new Rigger.Classifier
   interface: helpers.interface
   schema: helpers.schema
   map: helpers.map
@@ -20,13 +20,13 @@ class MockRequest
     @method = options.method
     @headers = options.headers
 
-test_dispatch = (name, want, options) ->
+test_classification = (name, want, options) ->
   test name, ->
     request = new MockRequest(options)
-    result = dispatcher.dispatch(request)
+    result = classifier.classify(request)
     helpers.partial_equal(result, want)
 
-test_dispatch "Dispatching for account_collection.create",
+test_classification "Classifying account_collection.create",
   {
     match: {resource_type: "account_collection", action_name: "create"}
   },
@@ -36,7 +36,7 @@ test_dispatch "Dispatching for account_collection.create",
     "Content-Type": media_type("account")
     "Accept": media_type("session")
 
-test_dispatch "Dispatching for account.get",
+test_classification "Classifying account.get",
   {
     match: {resource_type: "account", action_name: "get"}
   },
@@ -46,7 +46,7 @@ test_dispatch "Dispatching for account.get",
     "Accept": media_type("account")
     "Authorization": "Capability <token>"
 
-test_dispatch "Dispatching for channel_collection.create",
+test_classification "Classifying channel_collection.create",
   {
     match: {resource_type: "channel_collection", action_name: "create"}
   },
@@ -57,7 +57,7 @@ test_dispatch "Dispatching for channel_collection.create",
     "Accept": media_type("channel")
     "Authorization": "Capability <token>"
 
-test_dispatch "Dispatching for channel_collection.get_by_name",
+test_classification "Classifying channel_collection.get_by_name",
   {
     match: {resource_type: "channel_collection", action_name: "get_by_name"}
   },
@@ -67,7 +67,7 @@ test_dispatch "Dispatching for channel_collection.get_by_name",
     "Accept": media_type("channels")
     "Authorization": "Capability <token>"
 
-test_dispatch "failure to match Accept header",
+test_classification "failure to match Accept header",
   {error: "accept"},
   url: "http://localhost:1337/account/12345/channels"
   method: "GET"
@@ -75,7 +75,7 @@ test_dispatch "failure to match Accept header",
     "Accept": "bogus"
     "Authorization": "Capability <token>"
 
-test_dispatch "failure to match Content-Type header",
+test_classification "failure to match Content-Type header",
   {error: "content_type"},
   url: "http://localhost:1337/account/12345/channels"
   method: "POST"
@@ -84,14 +84,14 @@ test_dispatch "failure to match Content-Type header",
     "Content-Type": "bogus"
     "Authorization": "Capability <token>"
 
-test_dispatch "failure to match method",
+test_classification "failure to match method",
   {error: "method"},
   url: "http://localhost:1337/account/12345/channels"
   method: "PUT"
   headers:
     "Authorization": "Capability <token>"
 
-test_dispatch "failure to match authorization scheme",
+test_classification "failure to match authorization scheme",
   {error: "authorization"},
   url: "http://localhost:1337/account/12345/channels"
   method: "GET"

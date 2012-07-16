@@ -1,16 +1,16 @@
 {
-  "resource": {
-    "id": "resource",
-    "extends": {
-      "$ref": "http://json-schema.org/draft-04/schema#"
-    },
-    "properties": {
-      "url": {
-        "type": "string"
+  "id": "rigger",
+  "properties": {
+    "resource": {
+      "id": "#resource",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "readonly": true
+        }
       }
-    },
-    "required": [
-      "url"
-    ]
+    }
   }
 }

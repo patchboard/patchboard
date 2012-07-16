@@ -2,7 +2,7 @@ util = require("util")
 URL = require("url")
 Matchers = require("./matchers")
 
-class Dispatcher
+class Classifier
 
   constructor: (options) ->
     @schema = options.schema
@@ -13,7 +13,7 @@ class Dispatcher
     @process(@map, @http_interface)
 
   # Given URL map and HTTP interface objects, set up the matching
-  # structures required for dispatching an HTTP request.
+  # structures required for classifying an HTTP request.
   process: (map, http_interface) ->
     for resource_type, mapping of map
       resource = http_interface[resource_type]
@@ -79,7 +79,7 @@ class Dispatcher
   # The result object contains properties indicating the resource_type
   # and action_name which should handle the request.  Users of this method
   # may then find and use handler functions as they see fit.
-  dispatch: (request) ->
+  classify: (request) ->
     url = URL.parse(request.url)
     path = url.pathname
     method = request.method
@@ -203,4 +203,4 @@ class MatchTracker
   child: (options) ->
     new MatchTracker(@, options)
 
-module.exports = Dispatcher
+module.exports = Classifier
