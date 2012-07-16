@@ -27,17 +27,11 @@ spire_tests =
       assert.equal(channel.limit.constructor, Number)
 
 
-fs = require("fs")
 Rigger = require("../../coffeescript/rigger")
 
-string = fs.readFileSync("./interface.json")
-client_interface = JSON.parse(string)
-
-string = fs.readFileSync("./resource_schema.json")
-schema = JSON.parse(string)
-
-string = fs.readFileSync("./map.json")
-map = JSON.parse(string)
+client_interface = require("./interface")
+schema = require("./resource_schema")
+map = require("./map")
 
 module.exports =
   test: helpers.test
