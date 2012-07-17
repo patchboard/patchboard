@@ -1,11 +1,11 @@
 {
-  "name": "quern",
+  "name": "rigger",
   "description": "Self-assembling HTTP APIs",
   "author": "Matthew King",
   "version": "0.1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/automatthew/quern/"
+    "url": "https://github.com/automatthew/rigger/"
   },
   "main": "./node/rigger.js",
   "dependencies": {
