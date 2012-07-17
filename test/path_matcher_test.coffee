@@ -3,7 +3,7 @@ assert = require("assert")
 helpers = require("./helpers")
 test = helpers.test
 
-matchers = require("../coffeescript/service/matchers")
+matchers = require("../src/service/matchers")
 
 PathMatcher = matchers.Path
 

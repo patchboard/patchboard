@@ -67,7 +67,7 @@ app_schema =
 #process.exit()
 
 
-SchemaManager = require("../coffeescript/service/schema_manager")
+SchemaManager = require("../src/service/schema_manager")
 sm = new SchemaManager(app_schema)
 
 

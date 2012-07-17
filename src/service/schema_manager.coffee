@@ -1,5 +1,15 @@
 JSV = require("JSV").JSV
-rigger_schema = require("../../rigger-schema")
+rigger_schema =
+  id: "rigger"
+  properties:
+    resource:
+      id: "#resource"
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          format: "uri"
+          readonly: true
 
 class SchemaManager
 

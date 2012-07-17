@@ -4,6 +4,8 @@ assert = require "assert"
 helpers = require("../../test/helpers")
 test = helpers.test
 
+Rigger = require("../../src/rigger")
+
 spire_tests =
   validate_session: (session) ->
     test "Session is wrapped", ->
@@ -27,7 +29,6 @@ spire_tests =
       assert.equal(channel.limit.constructor, Number)
 
 
-Rigger = require("../../coffeescript/rigger")
 
 client_interface = require("./interface")
 schema = require("./resource_schema")

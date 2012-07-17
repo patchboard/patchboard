@@ -1,13 +1,12 @@
-$COFFEE = File.expand_path("node_modules/coffee-script/bin/coffee")
+$COFFEE = File.expand_path("node_modules/.bin/coffee")
 
 task "build" => %w[
-  rigger-schema.json
-  build:node
+  coffeescript
   build:examples
 ]
 
-task "build:node" do
-  sh "#{$COFFEE} --compile --bare --output node/ coffeescript/"
+task "coffeescript" do
+  sh "#{$COFFEE} --compile --bare --output build/ src/"
 end
 
 
