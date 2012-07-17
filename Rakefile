@@ -46,7 +46,14 @@ task "test" => %w[
 
 task "test:spire" => "build" do
   Dir.chdir("examples/spire") do
-    sh "#{$COFFEE} spire_client_test.coffee"
+    sh "#{$COFFEE} dispatcher_test.coffee"
+    sh "#{$COFFEE} classifier_test.coffee"
+  end
+end
+
+task "test:spire" => "build" do
+  Dir.chdir("examples/spire") do
+    sh "#{$COFFEE} dispatcher_test.coffee"
     sh "#{$COFFEE} classifier_test.coffee"
   end
 end

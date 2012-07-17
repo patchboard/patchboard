@@ -9,7 +9,7 @@ class Client
   #
   # options.interface represents the actions available
   # via HTTP requests to the API service.
-  constructor: (@service_url, options) ->
+  constructor: (options) ->
     @shred = new Shred()
     # Dictionary of wrapper classes
     @schemas = options.schema

@@ -19,8 +19,6 @@ dispatcher = new Patchboard.Dispatcher
 
 
 
-
-
 media_type = (type) ->
   "application/vnd.spire-io.#{type}+json;version=1.0"
 

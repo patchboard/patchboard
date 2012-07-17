@@ -91,7 +91,7 @@ delete_message = (message) ->
           test "Deleted message", ->
 
 # Set up the Patchboard client
-client = new Patchboard.Client "http://localhost:1337",
+client = new Patchboard.Client
   interface: client_interface
   schema: schema
 
