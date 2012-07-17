@@ -1,14 +1,14 @@
-# Rigger
+# Patchboard
 
-Rigger is (or will be) a set of libraries that allow you to construct an HTTP API around simple, sensible JSON descriptions of the resource types and of the HTTP interface.  The initial implementation will be Javascript for Node.js and browsers.
+Patchboard is (or will be) a set of libraries that allow you to construct an HTTP API around simple, sensible JSON descriptions of the resource types and of the HTTP interface.  The initial implementation will be Javascript for Node.js and browsers.
 
-**Rigger is currently pre-alpha.**
+**Patchboard is currently pre-alpha.**
 
 The Big Idea is that if you define the surfaces of an HTTP API using JSON (a schema to describe resources and a special structure to define the HTTP actions), almost the entire API client and a substantial chunk of the API backend can emerge, ready-to-use, through runtime code generation in any language with such facilities.
 
-On the client side, this would mean that once you've written the resource schemas and HTTP interface, you can immediately begin using self-assembling HTTP clients in any language Rigger has implemented.  These will be very basic clients; resource composition, blocking operations, etc. would need to be implemented according to the needs of the application.  But the basic needs of an API client constitute the majority of the work, and the more languages you try to support, the more work it is to keep everything in sync.
+On the client side, this would mean that once you've written the resource schemas and HTTP interface, you can immediately begin using self-assembling HTTP clients in any language Patchboard has implemented.  These will be very basic clients; resource composition, blocking operations, etc. would need to be implemented according to the needs of the application.  But the basic needs of an API client constitute the majority of the work, and the more languages you try to support, the more work it is to keep everything in sync.
 
-On the server side, Rigger can provide libraries that use the HTTP interface spec to generate routing/dispatching logic.  The resource schemas can be used to validate request data, and possibly to automate the process of marshalling and masking resources.
+On the server side, Patchboard can provide libraries that use the HTTP interface spec to generate routing/dispatching logic.  The resource schemas can be used to validate request data, and possibly to automate the process of marshalling and masking resources.
 
 In the API backends I've previously worked on, dispatching, validating, and marshalling were the areas which suffered the most from the need for repetitiveness and the brittleness that inevitably accompanies it.  Any distributed backend can benefit from a shared definition of resources; backends that use HTTP forward caches can benefit from the shared definition of the interface.
 
@@ -41,7 +41,7 @@ The interface is not a JSON schema.  It could be described by one, or perhaps it
 
 ### Code generation
 
-Given a data schema, Rigger automatically defines wrapper classes for each of the keys at the top level. Top-level schemas are currently presumed to be one of two types: "resource" or "dictionary".
+Given a data schema, Patchboard automatically defines wrapper classes for each of the keys at the top level. Top-level schemas are currently presumed to be one of two types: "resource" or "dictionary".
 
 For resource wrappers, the associated schema is used to define getter/setter methods, so that all possible properties of the resource are themselves appropriately wrapped upon access.
 
@@ -50,7 +50,7 @@ instantiation time.  They also do something smart for sub-properties with
 defined schemas, so that objects deep in a data structure can be
 wrapped as needed.
 
-Using an HTTP interface description, Rigger defines action methods for the resource wrapper instances.  These methods handle all the work required to make an HTTP request to the API service.
+Using an HTTP interface description, Patchboard defines action methods for the resource wrapper instances.  These methods handle all the work required to make an HTTP request to the API service.
 
 
 ## Example (using the spire.io API)
@@ -59,12 +59,12 @@ The example schema and interface are written in CoffeeScript and converted to JS
 using Rake (polyglossolalia FTW).  In normal usage, the API service would provide
 both the schema and interface to the client via some sort of discovery request.
 
-The data-description schema: https://github.com/automatthew/rigger/blob/master/examples/spire/resource_schema.coffee
+The data-description schema: https://github.com/automatthew/patchboard/blob/master/examples/spire/resource_schema.coffee
 
 This is very similar to the schema actually served by spire.io during discovery, but I have modified it where necessary to make it usable for automagical wrapper generation.
 
 The HTTP interface: 
-https://github.com/automatthew/rigger/blob/master/examples/spire/interface.coffee
+https://github.com/automatthew/patchboard/blob/master/examples/spire/interface.coffee
 
 This file currently is in the form intended for use by the API
 service: i.e., the top level keys represent path-patterns for use in the
