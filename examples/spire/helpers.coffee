@@ -4,7 +4,7 @@ assert = require "assert"
 helpers = require("../../test/helpers")
 test = helpers.test
 
-Rigger = require("../../src/rigger")
+Patchboard = require("../../src/patchboard")
 
 spire_tests =
   validate_session: (session) ->
@@ -37,8 +37,8 @@ map = require("./map")
 module.exports =
   test: helpers.test
   partial_equal: helpers.partial_equal
-  Rigger: Rigger
-  rigger: helpers.rigger
+  Patchboard: Patchboard
+  patchboard: helpers.patchboard
   spire: spire_tests
   interface: client_interface
   schema: schema

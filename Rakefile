@@ -1,25 +1,24 @@
 $COFFEE = File.expand_path("node_modules/.bin/coffee")
 
 $BROWSERIFY = File.expand_path("node_modules/.bin/browserify")
-$BROWSERIFY_OPTIONS = "-i zlib --prelude false -o browser/rigger.js"
+$BROWSERIFY_OPTIONS = "-i zlib --prelude false -o browser/patchboard.js"
 
 
 desc "Build and compile EVERYTHING"
 task "build" => %w[
   coffeescript
-  browser/rigger.min.js
+  browser/patchboard.min.js
   build:examples
 ]
 
-task "build:browser" => %w[browser/rigger.min.js]
+task "build:browser" => %w[browser/patchboard.min.js]
 
-file "browser/rigger.js" => "lib/client.js" do |target|
-  sh "#{$BROWSERIFY} lib/client.js " +
-    "-i zlib --prelude false -o browser/rigger.js"
+file "browser/patchboard.js" => "lib/client.js" do |target|
+  sh "#{$BROWSERIFY} lib/client.js -i zlib --prelude false -o browser/patchboard.js"
 end
 
-file "browser/rigger.min.js" => "browser/rigger.js" do |target|
-  sh "node_modules/.bin/uglifyjs -o #{target.name} browser/rigger.js"
+file "browser/patchboard.min.js" => "browser/patchboard.js" do |target|
+  sh "node_modules/.bin/uglifyjs -o #{target.name} browser/patchboard.js"
 end
 
 
@@ -41,7 +40,6 @@ end
 
 desc "Run tests"
 task "test" => %w[
-  build
   test:spire
   test:service
 ]

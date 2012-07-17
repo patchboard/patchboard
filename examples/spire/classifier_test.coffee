@@ -3,9 +3,9 @@ assert = require("assert")
 helpers = require("./helpers")
 test = helpers.test
 
-Rigger = helpers.Rigger
+Patchboard = helpers.Patchboard
 
-classifier = new Rigger.Classifier
+classifier = new Patchboard.Classifier
   interface: helpers.interface
   schema: helpers.schema
   map: helpers.map

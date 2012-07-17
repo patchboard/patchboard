@@ -18,7 +18,7 @@ partial_equal = (actual, expected) ->
   for key, val of expected
     assert.deepEqual(actual[key], val)
 
-rigger =
+patchboard =
   validate_dictionary: (dictionary, type) ->
     test "Dictionary contains items of type #{type}", ->
       for name in Object.keys(dictionary)
@@ -29,4 +29,4 @@ rigger =
 module.exports =
   test: test
   partial_equal: partial_equal
-  rigger: rigger
+  patchboard: patchboard

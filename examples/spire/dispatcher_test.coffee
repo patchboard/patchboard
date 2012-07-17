@@ -1,7 +1,7 @@
 assert = require("assert")
 helpers = require("./helpers")
 test = helpers.test
-Rigger = helpers.Rigger
+Patchboard = helpers.Patchboard
 
 handlers =
   account_collection:
@@ -11,7 +11,7 @@ handlers =
     update: (request, response, match_data) ->
       console.log "account update"
 
-dispatcher = new Rigger.Dispatcher
+dispatcher = new Patchboard.Dispatcher
   interface: helpers.interface
   schema: helpers.schema
   map: helpers.map

@@ -1,6 +1,6 @@
 JSV = require("JSV").JSV
-rigger_schema =
-  id: "rigger"
+patchboard_schema =
+  id: "patchboard"
   properties:
     resource:
       id: "#resource"
@@ -15,7 +15,7 @@ class SchemaManager
 
   constructor: (@application_schema) ->
     @jsv = JSV.createEnvironment("json-schema-draft-03")
-    @register_schema(rigger_schema)
+    @register_schema(patchboard_schema)
     @register_schema(@application_schema)
 
   register_schema: (schema) ->

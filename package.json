@@ -1,13 +1,13 @@
 {
-  "name": "rigger",
+  "name": "patchboard",
   "description": "Self-assembling HTTP APIs",
   "author": "Matthew King",
   "version": "0.1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/automatthew/rigger/"
+    "url": "https://github.com/automatthew/patchboard/"
   },
-  "main": "./lib/rigger.js",
+  "main": "./lib/patchboard.js",
   "files": [
     "lib",
     "test"

@@ -5,7 +5,7 @@ test = helpers.test
 client_interface = helpers.interface
 schema = helpers.schema
 
-Rigger = helpers.Rigger
+Patchboard = helpers.Patchboard
 
 
 # response handling helper
@@ -36,7 +36,7 @@ list_channels = (resources) ->
     on:
       expected_response 200,
         (response, channel_dict) ->
-          helpers.rigger.validate_dictionary(channel_dict, "channel")
+          helpers.patchboard.validate_dictionary(channel_dict, "channel")
           publish_to_channel(resources, channel_dict.monkey)
 
 publish_to_channel = (resources, channel) ->
@@ -90,8 +90,8 @@ delete_message = (message) ->
         (response, events) ->
           test "Deleted message", ->
 
-# Set up the Rigger client
-client = new Rigger.Client "http://localhost:1337",
+# Set up the Patchboard client
+client = new Patchboard.Client "http://localhost:1337",
   interface: client_interface
   schema: schema
 

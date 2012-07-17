@@ -15,7 +15,7 @@ app_schema =
   properties:
     resource:
       id: "#resource"
-      extends: {$ref: "rigger#resource"}
+      extends: {$ref: "patchboard#resource"}
       properties:
         capabilities:
           $ref: "spire#capability_dictionary"
@@ -49,7 +49,7 @@ app_schema =
   #trans = { id: "##{name}"}
   #if schema.type == "resource"
     #delete schema.type
-    #trans.extends = {$ref: "rigger#resource"}
+    #trans.extends = {$ref: "patchboard#resource"}
   #delete schema.media_type
   #required = schema.required
   #delete schema.required

@@ -28,34 +28,34 @@ class Client
         @wrappers[resource_type] = @object_wrapper(schema)
 
   array_wrapper: (schema) ->
-    rigger = @
+    client = @
     item_type = schema.items.type
     (items) ->
       result = []
       for value in items
-        result.push(rigger.wrap(item_type, value))
+        result.push(client.wrap(item_type, value))
       result
 
   object_wrapper: (schema) ->
-    rigger = @
+    client = @
     (data) ->
       for name, prop_def of schema.properties
         raw = data[name]
         type = prop_def.type
-        wrapped = rigger.wrap(type, raw)
+        wrapped = client.wrap(type, raw)
         data[name] = wrapped
       data
 
 
   dictionary_wrapper: (resource_type, schema) ->
-    rigger = @
+    client = @
     item_type = schema.items.type
     constructor = (items) ->
       # wrap all members of the input object with the appropriate
       # resource class.
       for name, value of items
         raw = items[name]
-        @[name] = rigger.wrap(item_type, raw)
+        @[name] = client.wrap(item_type, raw)
       null
     constructor.resource_type = resource_type
     (data) ->
@@ -65,7 +65,7 @@ class Client
   # Generate and store a resource class based on the schema
   # and interface
   resource_wrapper: (resource_type, schema) ->
-    rigger = @
+    client = @
     constructor = @resource_constructor()
     # Because coffeescript won't give me Named Function Expressions.
     constructor.resource_type = resource_type
@@ -89,14 +89,14 @@ class Client
 
 
   define_properties: (constructor, properties) ->
-    rigger = @
+    client = @
     for name, schema of properties
       spec = @property_spec(name, schema)
       Object.defineProperty(constructor.prototype, name, spec)
 
 
   property_spec: (name, property_schema) ->
-    rigger = @
+    client = @
     wrap_function = @create_wrapping_function(property_schema)
 
     spec = {}
@@ -111,11 +111,11 @@ class Client
     spec
 
   resource_constructor:  ->
-    rigger = @
+    client = @
     (properties) ->
-      # Using Object.defineProperty to hide the rigger from console.log
-      Object.defineProperty @, "rigger",
-        value: rigger
+      # Using Object.defineProperty to hide the client from console.log
+      Object.defineProperty @, "client",
+        value: client
         enumerable: false
       @properties = properties
       null # bless coffeescript.  bless it's little heart.
@@ -136,7 +136,7 @@ class Client
 
     request: (name, options) ->
       request = @prepare_request(name, options)
-      @rigger.shred.request(request)
+      @client.shred.request(request)
 
     credential: (type, action) ->
       # TODO: figure out how to have pluggable authorization
@@ -152,15 +152,15 @@ class Client
   # Returns a function intended to be used as a method on a
   # Resource wrapper instance.
   request_creator: (name, definition) ->
-    rigger = @
+    client = @
 
     method = definition.method
     default_headers = {}
     if request_type = definition.request_entity
-      request_media_type = rigger.schemas[request_type].media_type
+      request_media_type = client.schemas[request_type].media_type
       default_headers["Content-Type"] = request_media_type
     if response_type = definition.response_entity
-      response_media_type = rigger.schemas[response_type].media_type
+      response_media_type = client.schemas[response_type].media_type
       default_headers["Accept"] = response_media_type
     authorization = definition.authorization
     if query = definition.query
@@ -205,19 +205,19 @@ class Client
 
       for status, handler of options.on
         request.on[status] = (response) ->
-          wrapped = rigger.wrap(response_type, response.content.data)
+          wrapped = client.wrap(response_type, response.content.data)
           handler(response, wrapped)
 
       request
 
   create_wrapping_function: (schema) ->
-    rigger = @
+    client = @
     if schema.type == "object"
       @object_wrapper(schema)
     else if schema.type == "array"
       @array_wrapper(schema)
     else if @wrappers[schema.type]
-      (data) -> rigger.wrap(schema.type, data)
+      (data) -> client.wrap(schema.type, data)
     else
       (data) -> data
 
