@@ -42,7 +42,7 @@ class SimpleDispatcher
       throw "No such resource: #{match.resource_type}"
 
   default_error_handler: (error, response) ->
-    response.writeHead status,
+    response.writeHead error.status,
       "Content-Type": "application/json"
     response.end JSON.stringify(error)
 
