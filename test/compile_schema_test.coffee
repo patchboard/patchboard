@@ -2,17 +2,40 @@ assert = require("assert")
 
 helpers = require("./helpers")
 test = helpers.test
-util = require("util")
+
+patchboard_schemas =
+  account:
+    extends: "resource"
+    media_type: "patchboard.account"
+    properties:
+      id: {type: "string", readonly: true}
+      secret: {type: "string", readonly: true}
+      created_at: {type: "number", readonly: true}
+      email: {type: "string"}
+      name: {type: "string"}
+      password: {type: "string"}
+    required: ["email", "password"]
+
+  account_collection:
+    extends: "resource"
+    media_type: "patchboard.accounts"
+
+  session:
+    extends: "resource"
+    media_type: "patchboard.session"
+    properties:
+      resources:
+        type: "object"
+        properties:
+          account: {type: "account"}
+          channels: {type: "channel_collection"}
+          applications: {type: "object"}
+          subscriptions: {type: "subscription_collection"}
+          notifications: {type: "object"}
 
 
-#fs = require("fs")
-#string = fs.readFileSync("examples/spire/resource_schema.json")
-#schemas = JSON.parse(string)
-schemas = require("../examples/spire/resource_schema")
-
-
-app_schema =
-  id: "spire"
+correct_schema =
+  id: "api"
   properties:
 
     capability:
@@ -22,19 +45,19 @@ app_schema =
     capability_dictionary:
       id: "#capability_dictionary"
       type: "object"
-      additionalProperties: {$ref: "spire#capability"}
+      additionalProperties: {$ref: "api#capability"}
 
     resource:
       id: "#resource"
       extends: {$ref: "rigger#resource"}
       properties:
         capabilities:
-          $ref: "spire#capability_dictionary"
+          $ref: "api#capability_dictionary"
 
     account:
       id: "#account"
-      mediaType: "application/vnd.spire-io.account+json;version=1.0"
-      extends: {$ref: "spire#resource"}
+      mediaType: "patchboard.account"
+      extends: {$ref: "api#resource"}
       properties:
         id: {type: "string", readonly: true}
         secret: {type: "string", readonly: true}
@@ -45,62 +68,34 @@ app_schema =
 
     session:
       id: "#session"
-      media_type: "application/vnd.spire-io.session+json;version=1.0"
-      extends: {$ref: "resource"}
+      mediaType: "patchboard.session"
+      extends: {$ref: "api#resource"}
       properties:
         resources:
           type: "object"
           properties:
-            account: {$ref: "spire#account"}
-            channels: {$ref: "spire#channel_collection"}
-            applications: {$ref: "object"}
-            subscriptions: {$ref: "spire#subscription_collection"}
-            notifications: {$ref: "object"}
+            account: {$ref: "api#account"}
+            channels: {$ref: "api#channel_collection"}
+            applications: {type: "object"}
+            subscriptions: {$ref: "api#subscription_collection"}
+            notifications: {type: "object"}
 
 
-primitives =
-  "string": true
-  "object": true
-  "array": true
-  "boolean": true
-  "number": true
 
+SchemaManager = require("../src/service/schema_manager")
+transformed = SchemaManager.transform_schemas(patchboard_schemas)
 
-convert_types = (schema) ->
-  for key, value in schema.properties
-    if value.type && !primitive[value.type]
-      schema[key] = {$ref: "spire##{value.type}"}
+test "One layer schema transformed", ->
+  #console.log(JSON.stringify(transformed.properties.account, null, 2))
+  assert.deepEqual(transformed.properties.account, correct_schema.properties.account)
 
-t = {}
-t.id = "spire"
-t.properties = {}
+test "Deeply nested schema transformed", ->
+  #console.log(JSON.stringify(transformed.properties.session, null, 2))
+  #console.log(JSON.stringify(correct_schema.properties.session, null, 2))
+  assert.deepEqual(
+    transformed.properties.session,
+    correct_schema.properties.session
+  )
 
-for name, schema of schemas
-  trans = { id: "##{name}"}
-  if extender = schema.extends
-    delete schema.extends
-    if extender.indexOf("rigger#") == 0
-      trans.extends = {$ref: extender}
-    else
-      trans.extends = {$ref: "spire##{extender}"}
-  required = schema.required
-  delete schema.required
-
-  if schema.media_type
-    trans.mediaType = schema.media_type
-    delete schema.media_type
-  for key, value of schema
-    trans[key] = value
-  if required
-    for key in required
-      trans.properties[key].required = true
-  t.properties[name] = trans
-
-#console.log(JSON.stringify(t.properties.account, null, 2))
-#assert.deepEqual(t.properties.account, app_schema.properties.account)
-console.log(JSON.stringify(t.properties.session, null, 2))
-assert.deepEqual(t.properties.session, app_schema.properties.session)
-
-process.exit()
 
 
