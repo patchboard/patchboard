@@ -1,7 +1,8 @@
 assert = require("assert")
 helpers = require("./helpers")
 test = helpers.test
-Patchboard = helpers.Patchboard
+
+Patchboard = require("patchboard"
 
 handlers =
   account_collection:

@@ -5,7 +5,7 @@ test = helpers.test
 client_interface = helpers.interface
 schema = helpers.schema
 
-Patchboard = helpers.Patchboard
+Client = require("patchboard/lib/client")
 
 
 # response handling helper
@@ -27,7 +27,7 @@ test_channels = (resources) ->
     on:
       expected_response 201,
         (response, channel) ->
-          helpers.spire.validate_channel(channel)
+          helpers.validate.channel(channel)
           list_channels(resources)
 
 
@@ -36,7 +36,6 @@ list_channels = (resources) ->
     on:
       expected_response 200,
         (response, channel_dict) ->
-          helpers.patchboard.validate_dictionary(channel_dict, "channel")
           publish_to_channel(resources, channel_dict.monkey)
 
 publish_to_channel = (resources, channel) ->
@@ -91,7 +90,7 @@ delete_message = (message) ->
           test "Deleted message", ->
 
 # Set up the Patchboard client
-client = new Patchboard.Client
+client = new Client
   interface: client_interface
   schema: schema
 
@@ -105,13 +104,28 @@ account_collection.create
     email: "foo#{Math.random()}@bar.com", password: "monkeyshines",
   on:
     201: (response, session) ->
-      helpers.spire.validate_session(session)
-      channel_collection = session.resources.channels
-      helpers.spire.validate_channel_collection(channel_collection)
-      test_channels(session.resources)
+      helpers.validate.session(session)
+
+      session_collection = client.wrappers.session_collection
+        url: "http://localhost:1337/sessions"
+
+      session_collection.create
+        content:
+          secret: session.resources.account.secret
+        on:
+          201: (response, session) ->
+            channel_collection = session.resources.channels
+            helpers.validate.channel_collection(channel_collection)
+            test_channels(session.resources)
+          response: (response) ->
+            throw "unexpected response status: #{response.status}"
+          error: (response) ->
+            throw "Error: #{response.status}"
+
     response: (response) ->
       throw "unexpected response status: #{response.status}"
     error: (response) ->
       throw "Error: #{response.status}"
+
 
 

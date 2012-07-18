@@ -39,6 +39,13 @@ module.exports =
           subscriptions: {type: "subscription_collection"}
           notifications: {type: "object"}
           
+  session_collection:
+    type: "resource"
+    properties:
+      url: {type: "string"}
+
+
+
   channel:
     type: "resource"
     media_type: "application/vnd.spire-io.channel+json;version=1.0"

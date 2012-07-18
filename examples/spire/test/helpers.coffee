@@ -1,17 +1,28 @@
-colors = require "colors"
 assert = require "assert"
 
-helpers = require("../../test/helpers")
-test = helpers.test
+test = (name, fn) ->
+  try
+    fn()
+    console.log("Pass: '#{name}'")
+  catch error
+    if error.name == "AssertionError"
+      console.log("Fail: '#{name}':", error)
+      console.log(error.stack)
+    else
+      console.log("Error: '#{name}':", error)
+      console.log(error.stack)
+    process.exit()
 
-Patchboard = require("../../src/patchboard")
+partial_equal = (actual, expected) ->
+  for key, val of expected
+    assert.deepEqual(actual[key], val)
 
-spire_tests =
-  validate_session: (session) ->
+validate =
+  session: (session) ->
     test "Session is wrapped", ->
       assert.equal(session.constructor.resource_type, "session")
 
-  validate_channel_collection: (channel_collection) ->
+  channel_collection: (channel_collection) ->
     test "Channel collection is wrapped", ->
       assert.equal(
         channel_collection.constructor.resource_type,
@@ -20,7 +31,7 @@ spire_tests =
       assert(channel_collection.url)
       assert(channel_collection.capabilities.create)
 
-  validate_channel: (channel) ->
+  channel: (channel) ->
     test "Channel is wrapped", ->
       assert.equal(channel.constructor.resource_type, "channel")
     test "Channel has correct getters", ->
@@ -29,17 +40,10 @@ spire_tests =
       assert.equal(channel.limit.constructor, Number)
 
 
-
-client_interface = require("./interface")
-schema = require("./resource_schema")
-map = require("./map")
-
 module.exports =
-  test: helpers.test
-  partial_equal: helpers.partial_equal
-  Patchboard: Patchboard
-  patchboard: helpers.patchboard
-  spire: spire_tests
-  interface: client_interface
-  schema: schema
-  map: map
+  test: test
+  partial_equal: partial_equal
+  validate: validate
+  interface: require("../api/interface")
+  schema: require("../api/schema")
+  map: require("../api/map")
