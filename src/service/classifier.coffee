@@ -83,9 +83,10 @@ class Classifier
     url = URL.parse(request.url)
     path = url.pathname
     method = request.method
-    authorization = request.headers["authorization"]
-    content_type = request.headers["content-Type"]
-    accept = request.headers["accept"]
+    headers = request.headers
+    authorization = headers["authorization"] || headers["Authorization"]
+    content_type = headers["content-Type"] || headers["Content-Type"]
+    accept = headers["accept"] || headers["Accept"]
     if url.query
       query_parts = url.query.split("&")
       query = {}
