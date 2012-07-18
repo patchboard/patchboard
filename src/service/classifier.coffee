@@ -1,3 +1,4 @@
+http = require("http")
 util = require("util")
 URL = require("url")
 Matchers = require("./matchers")
@@ -124,10 +125,11 @@ class Classifier
       # to sort the matches based on whatever criteria we decide
       # to use.
       match = matches[0]
-      out = { match: match.payload }
+      # TODO: this is ugly; can we improve?
+      for k,v of match.payload
+        match[k] = v
       delete match.payload
-      out.data = match
-      out
+      match
 
   # this code was stolen and adapted from Djinn, which 
   # is why it looks so hideous.  Not that Djinn is hideous,
@@ -165,7 +167,8 @@ class Classifier
       if next.length == 0
         # we need to know at what stage the request classification failed
         # so that we can respond with the proper status code.
-        return {error: type}
+        return {error: @create_error(type)}
+        #return {error: type}
       else if i == last_index
         # if we're on the last element in the request sequence, then the
         # presence of trackers in the next array indicates successful matches.
@@ -173,6 +176,21 @@ class Classifier
       else
         # get set for the next stage
         current = next
+
+  create_error: (kind) ->
+    status = @statuses[kind] || 400
+    error =
+      status: status
+      message: http.STATUS_CODES[status]
+      description: "you goofed"
+
+  statuses:
+    "authorization": 401
+    "path": 404
+    "query": 404
+    "method": 405
+    "accept": 406
+    "content_type": 415
 
 
   compile_matches: (list, val) ->

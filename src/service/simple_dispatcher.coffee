@@ -26,22 +26,25 @@ class SimpleDispatcher
       else
         console.error "WARN:", "No handler group for resource type: #{resource}"
 
+  class Context
+    constructor: (@request, @response, @match) ->
+
+  create_handler: () ->
+    dispatcher = @
+    (request, response) ->
+      dispatcher.dispatch(request, response)
 
   dispatch: (request, response) ->
     result = @classifier.classify(request)
     if result.error
       @classification_error(result.error, request, response)
     else
-      handler = @find_handler(result.match)
-      handler(request, response, result.data)
+      handler = @find_handler(result)
+      console.log(result)
+      context = new Context(request, response, result)
+      handler(context)
 
-  classification_error: (kind, request, response) ->
-    status = @statuses[kind] || 400
-    error =
-      status: status
-      error: http.STATUS_CODES[status]
-      description: "you goofed"
-
+  classification_error: (error, request, response) ->
     if @error_handler
       @error_handler(error)
     else
@@ -61,12 +64,6 @@ class SimpleDispatcher
       "Content-Type": "application/json"
     response.end JSON.stringify(error)
 
-  statuses:
-    "authorization": 401
-    "path": 404
-    "query": 404
-    "method": 405
-    "accept": 406
-    "content_type": 415
+
 
 module.exports = SimpleDispatcher
