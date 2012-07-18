@@ -8,8 +8,23 @@ class SimpleDispatcher
     @http_interface = options.interface
     @map = options.map
     @handlers = options.handlers
+    @verify_handlers()
+
     @classifier = new Classifier(options)
     @error_handler = options.error_handler
+
+  verify_handlers: () ->
+    for resource, definition of @http_interface
+      actions = Object.keys(definition.actions)
+      handler = @handlers[resource]
+      if handler
+        for action in actions
+          if handler[action]
+          else
+            console.error "WARN:", "Missing #{action} handler for #{resource}"
+
+      else
+        console.error "WARN:", "No handler group for resource type: #{resource}"
 
 
   dispatch: (request, response) ->
