@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/automatthew/patchboard/"
   },
-  "main": "./lib/patchboard.js",
+  "main": "./src/patchboard.coffee",
   "files": [
     "lib",
     "test"
