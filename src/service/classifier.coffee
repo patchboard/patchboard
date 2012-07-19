@@ -182,7 +182,7 @@ class Classifier
     error =
       status: status
       message: http.STATUS_CODES[status]
-      description: "you goofed"
+      description: "Problem with request"
 
   statuses:
     "authorization": 401
