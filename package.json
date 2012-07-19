@@ -7,13 +7,14 @@
     "type": "git",
     "url": "https://github.com/automatthew/patchboard/"
   },
-  "main": "./src/patchboard.coffee",
+  "main": "./lib/patchboard.js",
   "files": [
     "lib",
     "test"
   ],
   "dependencies": {
     "JSV": "4.0.x",
+    "connect": "2.3.x",
     "shred": "https://github.com/automatthew/shred/tarball/master"
   },
   "devDependencies": {

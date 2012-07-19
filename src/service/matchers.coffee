@@ -98,6 +98,15 @@ class ContentTypeMatcher extends BasicMatcher
     @type = "content_type"
     super(content_type)
 
+  match: (input) ->
+    if @value == "pass"
+      true
+    else
+      if input == @value
+        input
+      else
+        false
+
 class AcceptMatcher
   # TODO: handle mediatypes in a better way than simple string match
   constructor: (@value, @payload) ->

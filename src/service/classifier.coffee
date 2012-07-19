@@ -20,9 +20,11 @@ class Classifier
       resource = http_interface[resource_type]
       paths = mapping.paths
       for path in paths
+        supported_methods = {}
 
         for action_name, definition of resource.actions
-          match_sequence = @create_match_sequence(path, action_name, definition)
+          supported_methods[definition.method] = true
+          match_sequence = @create_match_sequence(path, definition)
 
           matchers = @matchers
           for item in match_sequence
@@ -34,10 +36,24 @@ class Classifier
             resource_type: resource_type
             action_name: action_name
 
+        # setup OPTIONS handling
+        match_sequence = @create_match_sequence path,
+          method: "OPTIONS"
+        matchers = @matchers
+        for item in match_sequence
+          matchers[item.ident] ||= new item.klass(item.spec)
+          matcher = matchers[item.ident]
+          matchers = matcher.matchers
+
+        matcher.payload =
+          resource_type: "meta"
+          action_name: "options"
+          allow: Object.keys(supported_methods)
+
 
   # collect all the values from the interface description
   # that we will need to match against.
-   create_match_sequence: (path, action_name, definition) ->
+   create_match_sequence: (path, definition) ->
 
     method = definition.method
 
@@ -84,9 +100,10 @@ class Classifier
     url = URL.parse(request.url)
     path = url.pathname
     method = request.method
+    console.log(method)
     headers = request.headers
     authorization = headers["authorization"] || headers["Authorization"]
-    content_type = headers["content-Type"] || headers["Content-Type"]
+    content_type = headers["content-type"] || headers["Content-Type"]
     accept = headers["accept"] || headers["Accept"]
     if url.query
       query_parts = url.query.split("&")
