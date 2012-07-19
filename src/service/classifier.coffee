@@ -6,7 +6,7 @@ Matchers = require("./matchers")
 class Classifier
 
   constructor: (options) ->
-    @schema = options.schema
+    @schema = options.schema.properties
     @http_interface = options.interface
     @map = options.map
     
@@ -54,12 +54,12 @@ class Classifier
     authorization = definition.authorization || "pass"
 
     if request_entity = definition.request_entity
-      content_type = @schema[request_entity].media_type
+      content_type = @schema[request_entity].mediaType
     else
       content_type = "pass"
 
     if response_entity = definition.response_entity
-      accept = @schema[response_entity].media_type
+      accept = @schema[response_entity].mediaType
     else
       accept = "pass"
 

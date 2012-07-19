@@ -109,7 +109,7 @@ module.exports =
       events:
         method: "GET"
         authorization: "Capability"
-        response_entity: "events"
+        response_entity: "event_list"
 
   message:
     actions:

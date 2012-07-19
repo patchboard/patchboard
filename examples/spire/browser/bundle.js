@@ -377,8 +377,6 @@ require.define("/test/client_test.coffee",function(require,module,exports,__dirn
 
   schema = helpers.schema;
 
-  Client = require("patchboard/lib/client");
-
   expected_response = function(status, callback) {
     var callbacks;
     callbacks = {
@@ -468,12 +466,15 @@ require.define("/test/client_test.coffee",function(require,module,exports,__dirn
   };
 
   delete_message = function(message) {
+    assert.equal(message.constructor.resource_type, "message");
     return message["delete"]({
       on: expected_response(204, function(response, events) {
         return test("Deleted message", function() {});
       })
     });
   };
+
+  Client = require("patchboard/src/client");
 
   client = new Client({
     "interface": client_interface,
@@ -2598,9 +2599,9 @@ require.define("/test/helpers.coffee",function(require,module,exports,__dirname,
     test: test,
     partial_equal: partial_equal,
     validate: validate,
-    "interface": require("../api/interface"),
-    schema: require("../api/schema"),
-    map: require("../api/map")
+    "interface": require("../api/interface.coffee"),
+    schema: require("../api/schema.coffee"),
+    map: require("../api/map.coffee")
   };
 
 }).call(this);
@@ -2748,7 +2749,7 @@ require.define("/api/interface.coffee",function(require,module,exports,__dirname
         events: {
           method: "GET",
           authorization: "Capability",
-          response_entity: "events"
+          response_entity: "event_list"
         }
       }
     },
@@ -2779,241 +2780,223 @@ require.define("/api/interface.coffee",function(require,module,exports,__dirname
 require.define("/api/schema.coffee",function(require,module,exports,__dirname,__filename,process){(function() {
 
   module.exports = {
-    capability_dictionary: {
-      type: "dictionary",
-      items: {
+    id: "spire.io",
+    properties: {
+      capability: {
         type: "string"
-      }
-    },
-    account: {
-      type: "resource",
-      media_type: "application/vnd.spire-io.account+json;version=1.0",
-      properties: {
-        url: {
-          type: "string"
-        },
-        capabilities: {
-          type: "capability_dictionary"
-        },
-        id: {
-          type: "string",
-          readonly: true
-        },
-        secret: {
-          type: "string",
-          readonly: true
-        },
-        created_at: {
-          type: "number",
-          readonly: true
-        },
-        email: {
-          type: "string"
-        },
-        name: {
-          type: "string"
-        },
-        password: {
-          type: "string"
+      },
+      capability_dictionary: {
+        type: "object",
+        additionalProperties: {
+          $ref: "spire#capability"
         }
       },
-      required: ["email", "password"]
-    },
-    account_collection: {
-      type: "resource",
-      media_type: "application/vnd.spire-io.accounts+json;version=1.0",
-      properties: {
-        url: {
-          type: "string"
+      resource: {
+        "extends": {
+          $ref: "patchboard#resource"
+        },
+        properties: {
+          capabilities: {
+            $ref: "spire#capability_dictionary"
+          }
         }
-      }
-    },
-    session: {
-      type: "resource",
-      media_type: "application/vnd.spire-io.session+json;version=1.0",
-      properties: {
-        url: {
-          type: "string"
+      },
+      account: {
+        "extends": {
+          $ref: "#resource"
         },
-        capabilities: {
-          type: "capability_dictionary"
+        media_type: "application/vnd.spire-io.account+json;version=1.0",
+        properties: {
+          id: {
+            type: "string",
+            readonly: true
+          },
+          secret: {
+            type: "string",
+            readonly: true
+          },
+          created_at: {
+            type: "number",
+            readonly: true
+          },
+          email: {
+            type: "string",
+            required: true
+          },
+          password: {
+            type: "string",
+            required: true
+          },
+          name: {
+            type: "string"
+          }
+        }
+      },
+      account_collection: {
+        "extends": {
+          $ref: "#resource"
         },
-        resources: {
-          type: "object",
-          properties: {
-            account: {
-              type: "account"
-            },
-            channels: {
-              type: "channel_collection"
-            },
-            applications: {
-              type: "object"
-            },
-            subscriptions: {
-              type: "subscription_collection"
-            },
-            notifications: {
-              type: "object"
+        media_type: "application/vnd.spire-io.accounts+json;version=1.0"
+      },
+      session: {
+        "extends": {
+          $ref: "#resource"
+        },
+        media_type: "application/vnd.spire-io.session+json;version=1.0",
+        properties: {
+          resources: {
+            type: "object",
+            properties: {
+              account: {
+                $ref: "#account"
+              },
+              channels: {
+                $ref: "#channel_collection"
+              },
+              subscriptions: {
+                $ref: "#subscription_collection"
+              },
+              applications: {
+                type: "object"
+              },
+              notifications: {
+                type: "object"
+              }
             }
           }
         }
-      }
-    },
-    session_collection: {
-      type: "resource",
-      properties: {
-        url: {
-          type: "string"
-        }
-      }
-    },
-    channel: {
-      type: "resource",
-      media_type: "application/vnd.spire-io.channel+json;version=1.0",
-      properties: {
-        url: {
-          type: "string"
-        },
-        capabilities: {
-          type: "capability_dictionary"
-        },
-        name: {
-          type: "string"
-        },
-        application_key: {
-          type: "string",
-          readonly: true
-        },
-        limit: {
-          type: "number"
+      },
+      session_collection: {
+        "extends": {
+          $ref: "#resource"
         }
       },
-      required: ["name"]
-    },
-    channel_collection: {
-      type: "resource",
-      media_type: "application/vnd.spire-io.channels+json;version=1.0",
-      properties: {
-        url: {
-          type: "string"
+      channel: {
+        "extends": {
+          $ref: "#resource"
         },
-        capabilities: {
-          type: "capability_dictionary"
+        media_type: "application/vnd.spire-io.channel+json;version=1.0",
+        properties: {
+          name: {
+            type: "string",
+            required: true
+          },
+          application_key: {
+            type: "string",
+            readonly: true
+          },
+          limit: {
+            type: "number"
+          }
+        },
+        required: ["name"]
+      },
+      channel_collection: {
+        "extends": {
+          $ref: "#resource"
+        },
+        media_type: "application/vnd.spire-io.channels+json;version=1.0"
+      },
+      channel_dictionary: {
+        type: "object",
+        media_type: "application/vnd.spire-io.channels+json;version=1.0",
+        additionalProperties: {
+          $ref: "#channel"
         }
-      }
-    },
-    channel_dictionary: {
-      type: "dictionary",
-      media_type: "application/vnd.spire-io.channels+json;version=1.0",
-      items: {
-        type: "channel"
-      }
-    },
-    subscription: {
-      type: "resource",
-      media_type: "application/vnd.spire-io.subscription+json;version=1.0",
-      properties: {
-        url: {
-          type: "string"
+      },
+      subscription: {
+        "extends": {
+          $ref: "#resource"
         },
-        capabilities: {
-          type: "capability_dictionary"
-        },
-        application_key: {
-          type: "string",
-          readonly: true
-        },
-        name: {
-          type: "string"
-        },
-        channels: {
-          type: "array",
-          items: {
-            "type": "string"
+        media_type: "application/vnd.spire-io.subscription+json;version=1.0",
+        properties: {
+          application_key: {
+            type: "string",
+            readonly: true
+          },
+          name: {
+            type: "string"
+          },
+          channels: {
+            type: "array",
+            items: {
+              "type": "string"
+            }
           }
         }
-      }
-    },
-    subscription_collection: {
-      type: "resource",
-      media_type: "application/vnd.spire-io.subscriptions+json;version=1.0",
-      properties: {
-        url: {
-          type: "string"
+      },
+      subscription_collection: {
+        "extends": {
+          $ref: "#resource"
         },
-        capabilities: {
-          type: "capability_dictionary"
+        media_type: "application/vnd.spire-io.subscriptions+json;version=1.0"
+      },
+      subscription_dictionary: {
+        type: "object",
+        media_type: "application/vnd.spire-io.subscriptions+json;version=1.0",
+        additionalProperties: {
+          $ref: "subscription"
         }
-      }
-    },
-    subscription_dictionary: {
-      type: "dictionary",
-      media_type: "application/vnd.spire-io.subscriptions+json;version=1.0",
-      items: {
-        type: "subscription"
-      }
-    },
-    event: {
-      type: "resource",
-      media_type: "application/vnd.spire-io.event+json;version=1.0",
-      properties: {
-        channel_name: {
-          type: "string"
+      },
+      event: {
+        "extends": {
+          $ref: "#resource"
         },
-        content: {
-          type: "object"
-        },
-        timestamp: {
-          type: "number"
-        },
-        reason: {
-          type: "string"
+        media_type: "application/vnd.spire-io.event+json;version=1.0",
+        properties: {
+          channel_name: {
+            type: "string"
+          },
+          content: {
+            type: "object"
+          },
+          timestamp: {
+            type: "number"
+          },
+          reason: {
+            type: "string"
+          }
         }
-      }
-    },
-    events: {
-      type: "object",
-      media_type: "application/vnd.spire-io.events+json;version=1.0",
-      properties: {
-        first: {
-          type: "number"
-        },
-        last: {
-          type: "number"
-        },
-        messages: {
-          type: "message_list"
-        },
-        joins: {},
-        parts: {}
-      }
-    },
-    message: {
-      type: "resource",
-      media_type: "application/vnd.spire-io.message+json;version=1.0",
-      properties: {
-        url: {
-          type: "string"
-        },
-        capabilities: {
-          type: "capability_dictionary"
-        },
-        channel_name: {
-          type: "string"
-        },
-        content: {
-          type: "object"
-        },
-        timestamp: {
-          type: "number"
+      },
+      event_list: {
+        type: "object",
+        media_type: "application/vnd.spire-io.events+json;version=1.0",
+        properties: {
+          first: {
+            type: "number"
+          },
+          last: {
+            type: "number"
+          },
+          messages: {
+            $ref: "#message_list"
+          },
+          joins: {},
+          parts: {}
         }
-      }
-    },
-    message_list: {
-      type: "array",
-      items: {
-        type: "message"
+      },
+      message: {
+        "extends": {
+          $ref: "#resource"
+        },
+        media_type: "application/vnd.spire-io.message+json;version=1.0",
+        properties: {
+          channel_name: {
+            type: "string"
+          },
+          content: {
+            type: "object"
+          },
+          timestamp: {
+            type: "number"
+          }
+        }
+      },
+      message_list: {
+        type: "array",
+        items: {
+          $ref: "#message"
+        }
       }
     }
   };
@@ -3056,291 +3039,361 @@ require.define("/api/map.coffee",function(require,module,exports,__dirname,__fil
 }).call(this);
 });
 
-require.define("/node_modules/patchboard/lib/client.js",function(require,module,exports,__dirname,__filename,process){// Generated by CoffeeScript 1.3.3
-var Client, Shred;
+require.define("/node_modules/patchboard/src/client.coffee",function(require,module,exports,__dirname,__filename,process){(function() {
+  var Client, Shred, patchboard_schema;
 
-Shred = require("shred");
+  Shred = require("shred");
 
-Client = (function() {
-
-  function Client(options) {
-    var resource_type, schema, _ref;
-    this.shred = new Shred();
-    this.schemas = options.schema;
-    this["interface"] = options["interface"];
-    this.wrappers = {};
-    _ref = this.schemas;
-    for (resource_type in _ref) {
-      schema = _ref[resource_type];
-      if (schema.type === "resource") {
-        this.wrappers[resource_type] = this.resource_wrapper(resource_type, schema);
-      } else if (schema.type === "dictionary") {
-        this.wrappers[resource_type] = this.dictionary_wrapper(resource_type, schema);
-      } else if (schema.type === "array") {
-        this.wrappers[resource_type] = this.array_wrapper(schema);
-      } else if (schema.type === "object") {
-        this.wrappers[resource_type] = this.object_wrapper(schema);
-      }
-    }
-  }
-
-  Client.prototype.array_wrapper = function(schema) {
-    var client, item_type;
-    client = this;
-    item_type = schema.items.type;
-    return function(items) {
-      var result, value, _i, _len;
-      result = [];
-      for (_i = 0, _len = items.length; _i < _len; _i++) {
-        value = items[_i];
-        result.push(client.wrap(item_type, value));
-      }
-      return result;
-    };
-  };
-
-  Client.prototype.object_wrapper = function(schema) {
-    var client;
-    client = this;
-    return function(data) {
-      var name, prop_def, raw, type, wrapped, _ref;
-      _ref = schema.properties;
-      for (name in _ref) {
-        prop_def = _ref[name];
-        raw = data[name];
-        type = prop_def.type;
-        wrapped = client.wrap(type, raw);
-        data[name] = wrapped;
-      }
-      return data;
-    };
-  };
-
-  Client.prototype.dictionary_wrapper = function(resource_type, schema) {
-    var client, constructor, item_type;
-    client = this;
-    item_type = schema.items.type;
-    constructor = function(items) {
-      var name, raw, value;
-      for (name in items) {
-        value = items[name];
-        raw = items[name];
-        this[name] = client.wrap(item_type, raw);
-      }
-      return null;
-    };
-    constructor.resource_type = resource_type;
-    return function(data) {
-      return new constructor(data);
-    };
-  };
-
-  Client.prototype.resource_wrapper = function(resource_type, schema) {
-    var client, constructor, interface_def;
-    client = this;
-    constructor = this.resource_constructor();
-    constructor.resource_type = resource_type;
-    if (interface_def = this["interface"][resource_type]) {
-      this.define_interface(constructor, interface_def.actions);
-    } else {
-      console.log("WARNING: No interface defined for resource type: " + resource_type + ".");
-    }
-    this.define_properties(constructor, schema.properties);
-    return function(data) {
-      return new constructor(data);
-    };
-  };
-
-  Client.prototype.define_interface = function(constructor, actions) {
-    var definition, method, name, _ref, _results;
-    constructor.prototype.requests = {};
-    _ref = this.resource_prototype;
-    for (name in _ref) {
-      method = _ref[name];
-      constructor.prototype[name] = method;
-    }
-    _results = [];
-    for (name in actions) {
-      definition = actions[name];
-      constructor.prototype.requests[name] = this.request_creator(name, definition);
-      _results.push(constructor.prototype[name] = this.register_action(name));
-    }
-    return _results;
-  };
-
-  Client.prototype.define_properties = function(constructor, properties) {
-    var client, name, schema, spec, _results;
-    client = this;
-    _results = [];
-    for (name in properties) {
-      schema = properties[name];
-      spec = this.property_spec(name, schema);
-      _results.push(Object.defineProperty(constructor.prototype, name, spec));
-    }
-    return _results;
-  };
-
-  Client.prototype.property_spec = function(name, property_schema) {
-    var client, spec, wrap_function;
-    client = this;
-    wrap_function = this.create_wrapping_function(property_schema);
-    spec = {};
-    spec.get = function() {
-      var val;
-      val = this.properties[name];
-      return wrap_function(val);
-    };
-    if (!property_schema.readonly) {
-      spec.set = function(val) {
-        return this.properties[name] = val;
-      };
-    }
-    return spec;
-  };
-
-  Client.prototype.resource_constructor = function() {
-    var client;
-    client = this;
-    return function(properties) {
-      Object.defineProperty(this, "client", {
-        value: client,
-        enumerable: false
-      });
-      this.properties = properties;
-      return null;
-    };
-  };
-
-  Client.prototype.resource_prototype = {
-    prepare_request: function(name, options) {
-      var prepper;
-      prepper = this.requests[name];
-      if (prepper) {
-        return prepper.call(this, name, options);
-      } else {
-        throw "No such action defined: " + name;
-      }
-    },
-    request: function(name, options) {
-      var request;
-      request = this.prepare_request(name, options);
-      return this.client.shred.request(request);
-    },
-    credential: function(type, action) {
-      var cap;
-      if (type === "Capability") {
-        return cap = this.properties.capabilities[action];
-      }
-    }
-  };
-
-  Client.prototype.register_action = function(name) {
-    return function(data) {
-      return this.request(name, data);
-    };
-  };
-
-  Client.prototype.request_creator = function(name, definition) {
-    var authorization, client, default_headers, method, query, request_media_type, request_type, required_params, response_media_type, response_type;
-    client = this;
-    method = definition.method;
-    default_headers = {};
-    if (request_type = definition.request_entity) {
-      request_media_type = client.schemas[request_type].media_type;
-      default_headers["Content-Type"] = request_media_type;
-    }
-    if (response_type = definition.response_entity) {
-      response_media_type = client.schemas[response_type].media_type;
-      default_headers["Accept"] = response_media_type;
-    }
-    authorization = definition.authorization;
-    if (query = definition.query) {
-      required_params = query.required;
-    }
-    return function(name, options) {
-      var credential, error, handler, key, request, response, status, value, _ref, _ref1;
-      request = {
-        url: this.url,
-        method: method,
-        headers: {},
-        content: options.content
-      };
-      for (key in default_headers) {
-        value = default_headers[key];
-        request.headers[key] = value;
-      }
-      if (authorization) {
-        credential = this.credential(authorization, name);
-        request.headers["Authorization"] = "" + authorization + " " + credential;
-      }
-      _ref = options.headers;
-      for (name in _ref) {
-        value = _ref[name];
-        request.headers[name] = value;
-      }
-      if (options.query) {
-        request.query = options.query;
-      }
-      for (key in required_params) {
-        value = required_params[key];
-        if (!request.query[key]) {
-          throw "Missing required query param: " + key;
+  patchboard_schema = {
+    id: "patchboard",
+    properties: {
+      resource: {
+        id: "#resource",
+        type: "object",
+        properties: {
+          url: {
+            type: "string",
+            format: "uri",
+            readonly: true
+          }
         }
       }
-      request.on = {};
-      if (error = options.on.error) {
-        request.on.error = error;
-        delete options.on.error;
-      }
-      if (response = options.on.response) {
-        request.on.response = response;
-        delete options.on.response;
-      }
-      _ref1 = options.on;
-      for (status in _ref1) {
-        handler = _ref1[status];
-        request.on[status] = function(response) {
-          var wrapped;
-          wrapped = client.wrap(response_type, response.content.data);
-          return handler(response, wrapped);
-        };
-      }
-      return request;
-    };
+    }
   };
 
-  Client.prototype.create_wrapping_function = function(schema) {
-    var client;
-    client = this;
-    if (schema.type === "object") {
-      return this.object_wrapper(schema);
-    } else if (schema.type === "array") {
-      return this.array_wrapper(schema);
-    } else if (this.wrappers[schema.type]) {
-      return function(data) {
-        return client.wrap(schema.type, data);
+  Client = (function() {
+
+    function Client(options) {
+      var absolute_name, key, merged, name, parent, parent_type, resource_type, schema, value, _ref, _ref1, _ref2, _ref3;
+      this.shred = new Shred();
+      this.schema_id = options.schema.id;
+      this.schemas = options.schema.properties;
+      _ref = patchboard_schema.properties;
+      for (name in _ref) {
+        schema = _ref[name];
+        absolute_name = "" + patchboard_schema.id + "#" + name;
+        this.schemas[absolute_name] = schema;
+      }
+      this["interface"] = options["interface"];
+      this.wrappers = {};
+      _ref1 = this.schemas;
+      for (resource_type in _ref1) {
+        schema = _ref1[resource_type];
+        if (resource_type === "patchboard#resource") {
+          continue;
+        }
+        if (schema["extends"]) {
+          parent_type = schema["extends"].$ref;
+          if ((parent_type != null ? parent_type.indexOf("#") : void 0) === 0) {
+            parent = this.schemas[parent_type.slice(1)];
+          } else {
+            parent = this.schemas[parent_type];
+          }
+          merged = {
+            properties: {}
+          };
+          _ref2 = parent.properties;
+          for (key in _ref2) {
+            value = _ref2[key];
+            merged.properties[key] = value;
+          }
+          _ref3 = schema.properties;
+          for (key in _ref3) {
+            value = _ref3[key];
+            merged.properties[key] = value;
+          }
+          schema.properties = merged.properties;
+          if (parent_type.indexOf("#") === 0) {
+            this.wrappers[resource_type] = this.resource_wrapper(resource_type, schema);
+          }
+        } else if (schema.type === "array") {
+          this.wrappers[resource_type] = this.array_wrapper(schema);
+        } else if (schema.type === "object") {
+          this.wrappers[resource_type] = this.object_wrapper(schema);
+        }
+      }
+    }
+
+    Client.prototype.array_wrapper = function(schema) {
+      var client, item_type;
+      client = this;
+      item_type = this.munge_type(schema.items);
+      return function(items) {
+        var result, value, _i, _len;
+        result = [];
+        for (_i = 0, _len = items.length; _i < _len; _i++) {
+          value = items[_i];
+          result.push(client.wrap(item_type, value));
+        }
+        return result;
       };
-    } else {
+    };
+
+    Client.prototype.munge_type = function(schema) {
+      if (schema.$ref) {
+        return schema.$ref.slice(1);
+      } else if (schema.type) {
+        return schema.type;
+      }
+    };
+
+    Client.prototype.object_wrapper = function(schema) {
+      var client;
+      client = this;
       return function(data) {
+        var name, prop_def, raw, type, wrapped, _ref;
+        _ref = schema.properties;
+        for (name in _ref) {
+          prop_def = _ref[name];
+          raw = data[name];
+          type = client.munge_type(prop_def);
+          if (type) {
+            wrapped = client.wrap(type, raw);
+          } else {
+            wrapped = raw;
+          }
+          data[name] = wrapped;
+        }
+        if (schema.additionalProperties) {
+          type = client.munge_type(schema.additionalProperties);
+          if (type) {
+            for (name in data) {
+              raw = data[name];
+              if (!(schema.properties && schema.properties[name])) {
+                data[name] = client.wrap(type, raw);
+              }
+            }
+          }
+        }
         return data;
       };
-    }
-  };
+    };
 
-  Client.prototype.wrap = function(type, data) {
-    var wrapper;
-    if (wrapper = this.wrappers[type]) {
-      return wrapper(data);
-    } else {
-      return data;
-    }
-  };
+    Client.prototype.dictionary_wrapper = function(resource_type, schema) {
+      var client, constructor, item_type;
+      client = this;
+      item_type = schema.items.type;
+      constructor = function(items) {
+        var name, raw, value;
+        for (name in items) {
+          value = items[name];
+          raw = items[name];
+          this[name] = client.wrap(item_type, raw);
+        }
+        return null;
+      };
+      constructor.resource_type = resource_type;
+      return function(data) {
+        return new constructor(data);
+      };
+    };
 
-  return Client;
+    Client.prototype.resource_wrapper = function(resource_type, schema) {
+      var client, constructor, interface_def;
+      client = this;
+      constructor = this.resource_constructor();
+      constructor.resource_type = resource_type;
+      if (interface_def = this["interface"][resource_type]) {
+        this.define_interface(constructor, interface_def.actions);
+      }
+      this.define_properties(constructor, schema.properties);
+      return function(data) {
+        return new constructor(data);
+      };
+    };
 
-})();
+    Client.prototype.define_interface = function(constructor, actions) {
+      var definition, method, name, _ref, _results;
+      constructor.prototype.requests = {};
+      _ref = this.resource_prototype;
+      for (name in _ref) {
+        method = _ref[name];
+        constructor.prototype[name] = method;
+      }
+      _results = [];
+      for (name in actions) {
+        definition = actions[name];
+        constructor.prototype.requests[name] = this.request_creator(name, definition);
+        _results.push(constructor.prototype[name] = this.register_action(name));
+      }
+      return _results;
+    };
 
-module.exports = Client;
+    Client.prototype.define_properties = function(constructor, properties) {
+      var client, name, schema, spec, _results;
+      client = this;
+      _results = [];
+      for (name in properties) {
+        schema = properties[name];
+        spec = this.property_spec(name, schema);
+        _results.push(Object.defineProperty(constructor.prototype, name, spec));
+      }
+      return _results;
+    };
+
+    Client.prototype.property_spec = function(name, property_schema) {
+      var client, spec, wrap_function;
+      client = this;
+      wrap_function = this.create_wrapping_function(name, property_schema);
+      spec = {};
+      spec.get = function() {
+        var val;
+        val = this.properties[name];
+        return wrap_function(val);
+      };
+      if (!property_schema.readonly) {
+        spec.set = function(val) {
+          return this.properties[name] = val;
+        };
+      }
+      return spec;
+    };
+
+    Client.prototype.resource_constructor = function() {
+      var client;
+      client = this;
+      return function(properties) {
+        Object.defineProperty(this, "client", {
+          value: client,
+          enumerable: false
+        });
+        this.properties = properties;
+        return null;
+      };
+    };
+
+    Client.prototype.resource_prototype = {
+      prepare_request: function(name, options) {
+        var prepper;
+        prepper = this.requests[name];
+        if (prepper) {
+          return prepper.call(this, name, options);
+        } else {
+          throw "No such action defined: " + name;
+        }
+      },
+      request: function(name, options) {
+        var request;
+        request = this.prepare_request(name, options);
+        return this.client.shred.request(request);
+      },
+      credential: function(type, action) {
+        var cap;
+        if (type === "Capability") {
+          return cap = this.properties.capabilities[action];
+        }
+      }
+    };
+
+    Client.prototype.register_action = function(name) {
+      return function(data) {
+        return this.request(name, data);
+      };
+    };
+
+    Client.prototype.request_creator = function(name, definition) {
+      var authorization, client, default_headers, method, query, request_media_type, request_type, required_params, response_media_type, response_type;
+      client = this;
+      method = definition.method;
+      default_headers = {};
+      if (request_type = definition.request_entity) {
+        request_media_type = client.schemas[request_type].media_type;
+        default_headers["Content-Type"] = request_media_type;
+      }
+      if (response_type = definition.response_entity) {
+        response_media_type = client.schemas[response_type].media_type;
+        default_headers["Accept"] = response_media_type;
+      }
+      authorization = definition.authorization;
+      if (query = definition.query) {
+        required_params = query.required;
+      }
+      return function(name, options) {
+        var credential, error, handler, key, request, response, status, value, _ref, _ref1;
+        request = {
+          url: this.url,
+          method: method,
+          headers: {},
+          content: options.content
+        };
+        for (key in default_headers) {
+          value = default_headers[key];
+          request.headers[key] = value;
+        }
+        if (authorization) {
+          credential = this.credential(authorization, name);
+          request.headers["Authorization"] = "" + authorization + " " + credential;
+        }
+        _ref = options.headers;
+        for (name in _ref) {
+          value = _ref[name];
+          request.headers[name] = value;
+        }
+        if (options.query) {
+          request.query = options.query;
+        }
+        for (key in required_params) {
+          value = required_params[key];
+          if (!request.query[key]) {
+            throw "Missing required query param: " + key;
+          }
+        }
+        request.on = {};
+        if (error = options.on.error) {
+          request.on.error = error;
+          delete options.on.error;
+        }
+        if (response = options.on.response) {
+          request.on.response = response;
+          delete options.on.response;
+        }
+        _ref1 = options.on;
+        for (status in _ref1) {
+          handler = _ref1[status];
+          request.on[status] = function(response) {
+            var wrapped;
+            wrapped = client.wrap(response_type, response.content.data);
+            return handler(response, wrapped);
+          };
+        }
+        return request;
+      };
+    };
+
+    Client.prototype.create_wrapping_function = function(name, schema) {
+      var client;
+      client = this;
+      if (schema.type === "object") {
+        return this.object_wrapper(schema);
+      } else if (schema.type === "array") {
+        return this.array_wrapper(schema);
+      } else if (this.wrappers[schema.type]) {
+        return function(data) {
+          return client.wrap(schema.type, data);
+        };
+      } else {
+        return function(data) {
+          return data;
+        };
+      }
+    };
+
+    Client.prototype.wrap = function(type, data) {
+      var wrapper;
+      if (wrapper = this.wrappers[type]) {
+        return wrapper(data);
+      } else {
+        return data;
+      }
+    };
+
+    return Client;
+
+  })();
+
+  module.exports = Client;
+
+}).call(this);
 });
 
 require.define("/node_modules/patchboard/node_modules/shred/package.json",function(require,module,exports,__dirname,__filename,process){module.exports = {"main":"./lib/shred.js"}});

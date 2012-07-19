@@ -1,120 +1,147 @@
 module.exports =
+  id: "spire.io"
+  properties:
 
-  capability:
-    type: "string"
+    capability:
+      #id: "#capability"
+      type: "string"
 
-  capability_dictionary:
-    type: "dictionary"
-    items: {type: "string"}
+    capability_dictionary:
+      #id: "#capability_dictionary"
+      type: "object"
+      additionalProperties: {$ref: "spire#capability"}
 
-  resource:
-    extends: "rigger#resource"
-    properties:
-      capabilities: {type: "capability_dictionary"}
+    resource:
+      #id: "#resource"
+      extends: {$ref: "patchboard#resource"}
+      properties:
+        capabilities:
+          $ref: "spire#capability_dictionary"
 
-  account:
-    extends: "resource"
-    media_type: "application/vnd.spire-io.account+json;version=1.0"
-    properties:
-      id: {type: "string", readonly: true}
-      secret: {type: "string", readonly: true}
-      created_at: {type: "number", readonly: true}
-      email: {type: "string"}
-      name: {type: "string"}
-      password: {type: "string"}
-    required: ["email", "password"]
+    account:
+      #id: "#account"
+      extends: {$ref: "#resource"}
+      media_type: "application/vnd.spire-io.account+json;version=1.0"
+      properties:
+        id:
+          type: "string"
+          readonly: true
+        secret:
+          type: "string"
+          readonly: true
+        created_at:
+          type: "number"
+          readonly: true
+        email:
+          type: "string"
+          required: true
+        password:
+          type: "string"
+          required: true
+        name: {type: "string"}
 
-  account_collection:
-    extends: "resource"
-    media_type: "application/vnd.spire-io.accounts+json;version=1.0"
+    account_collection:
+      extends: {$ref: "#resource"}
+      media_type: "application/vnd.spire-io.accounts+json;version=1.0"
 
-  session:
-    extends: "resource"
-    media_type: "application/vnd.spire-io.session+json;version=1.0"
-    properties:
-      resources:
-        type: "object"
-        properties:
-          account: {type: "account"}
-          channels: {type: "channel_collection"}
-          applications: {type: "object"}
-          subscriptions: {type: "subscription_collection"}
-          notifications: {type: "object"}
-          
-  session_collection:
-    type: "resource"
-    properties:
-      url: {type: "string"}
+    session:
+      #id: "#session"
+      extends: {$ref: "#resource"}
+      media_type: "application/vnd.spire-io.session+json;version=1.0"
+      properties:
+        resources:
+          type: "object"
+          properties:
+            account: {$ref: "#account"}
+            channels: {$ref: "#channel_collection"}
+            subscriptions: {$ref: "#subscription_collection"}
+            applications: {type: "object"}
+            notifications: {type: "object"}
+            
+    session_collection:
+      #id: "#session_collection"
+      extends: {$ref: "#resource"}
 
+    channel:
+      #id: "#channel"
+      extends: {$ref: "#resource"}
+      media_type: "application/vnd.spire-io.channel+json;version=1.0"
+      properties:
+        name:
+          type: "string"
+          required: true
+        application_key:
+          type: "string"
+          readonly: true
+        limit: {type: "number"}
+      required: ["name"]
 
+    channel_collection:
+      #id: "#channel_collection"
+      extends: {$ref: "#resource"}
+      media_type: "application/vnd.spire-io.channels+json;version=1.0"
 
-  channel:
-    extends: "resource"
-    media_type: "application/vnd.spire-io.channel+json;version=1.0"
-    properties:
-      name: {type: "string"}
-      application_key: {type: "string", readonly: true}
-      limit: {type: "number"}
-    required: ["name"]
+    channel_dictionary:
+      type: "object"
+      media_type: "application/vnd.spire-io.channels+json;version=1.0"
+      additionalProperties: {$ref: "#channel"}
 
-  channel_collection:
-    extends: "resource"
-    media_type: "application/vnd.spire-io.channels+json;version=1.0"
-    properties:
+    subscription:
+      #id: "#subscription"
+      extends: {$ref: "#resource"}
+      media_type: "application/vnd.spire-io.subscription+json;version=1.0"
+      properties:
+        application_key:
+          type: "string"
+          readonly: true
+        name: {type: "string"}
+        channels:
+          type: "array"
+          items: {"type": "string"}
 
-  channel_dictionary:
-    type: "dictionary"
-    media_type: "application/vnd.spire-io.channels+json;version=1.0"
-    items: {type: "channel"}
+    subscription_collection:
+      #id: "#subscription_collection"
+      extends: {$ref: "#resource"}
+      media_type: "application/vnd.spire-io.subscriptions+json;version=1.0"
 
-  subscription:
-    extends: "resource"
-    media_type: "application/vnd.spire-io.subscription+json;version=1.0"
-    properties:
-      application_key: {type: "string", readonly: true}
-      name: {type: "string"}
-      channels:
-        type: "array"
-        items: {"type": "string"}
+    subscription_dictionary:
+      #id: "#subscription_dictionary"
+      type: "object"
+      media_type: "application/vnd.spire-io.subscriptions+json;version=1.0"
+      additionalProperties: {$ref: "subscription"}
 
-  subscription_collection:
-    extends: "resource"
-    media_type: "application/vnd.spire-io.subscriptions+json;version=1.0"
-    properties:
+    event:
+      #id: "#event"
+      extends: {$ref: "#resource"}
+      media_type: "application/vnd.spire-io.event+json;version=1.0"
+      properties:
+        channel_name: {type: "string"}
+        content: {type: "object"}
+        timestamp: {type: "number"}
+        reason: {type: "string"}
 
-  subscription_dictionary:
-    type: "dictionary"
-    media_type: "application/vnd.spire-io.subscriptions+json;version=1.0"
-    items: {type: "subscription"}
+    event_list:
+      #id: "#event_list"
+      type: "object"
+      media_type: "application/vnd.spire-io.events+json;version=1.0"
+      properties:
+        first: {type: "number"}
+        last: {type: "number"}
+        messages: {$ref: "#message_list"}
+        joins: {}
+        parts: {}
 
-  event:
-    extends: "resource"
-    media_type: "application/vnd.spire-io.event+json;version=1.0"
-    properties:
-      channel_name: {type: "string"}
-      content: {type: "object"}
-      timestamp: {type: "number"}
-      reason: {type: "string"}
+    message:
+      #id: "#message"
+      extends: {$ref: "#resource"}
+      media_type: "application/vnd.spire-io.message+json;version=1.0"
+      properties:
+        channel_name: {type: "string"}
+        content: {type: "object"}
+        timestamp: {type: "number"}
 
-  events:
-    type: "object"
-    media_type: "application/vnd.spire-io.events+json;version=1.0"
-    properties:
-      first: {type: "number"}
-      last: {type: "number"}
-      messages: {type: "message_list"}
-      joins: {}
-      parts: {}
-
-  message:
-    extends: "resource"
-    media_type: "application/vnd.spire-io.message+json;version=1.0"
-    properties:
-      channel_name: {type: "string"}
-      content: {type: "object"}
-      timestamp: {type: "number"}
-
-  message_list:
-    type: "array"
-    items: {type: "message"}
+    message_list:
+      #id: "#message_list"
+      type: "array"
+      items: {$ref: "#message"}
 

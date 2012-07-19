@@ -5,7 +5,6 @@ test = helpers.test
 client_interface = helpers.interface
 schema = helpers.schema
 
-Client = require("patchboard/lib/client")
 
 
 # response handling helper
@@ -83,16 +82,20 @@ get_current_events = (subscription) ->
             assert.equal(events.messages.length, 0)
 
 delete_message = (message) ->
+  assert.equal(message.constructor.resource_type, "message")
   message.delete
     on:
       expected_response 204,
         (response, events) ->
           test "Deleted message", ->
 
+#
+Client = require("patchboard/src/client")
 # Set up the Patchboard client
 client = new Client
   interface: client_interface
   schema: schema
+
 
 # Fake out the discovery of public resources
 account_collection = client.wrappers.account_collection

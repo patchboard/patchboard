@@ -1,6 +1,18 @@
 # HTTP client library
 Shred = require("shred")
 
+patchboard_schema =
+  id: "patchboard"
+  properties:
+    resource:
+      id: "#resource"
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          format: "uri"
+          readonly: true
+
 class Client
 
   # options.schema describes the data structures of
@@ -12,54 +24,81 @@ class Client
   constructor: (options) ->
     @shred = new Shred()
     # Dictionary of wrapper classes
-    @schemas = options.schema
+    @schema_id = options.schema.id
+    @schemas = options.schema.properties
+    # add the base schema
+    for name, schema of patchboard_schema.properties
+      absolute_name = "#{patchboard_schema.id}##{name}"
+      @schemas[absolute_name] = schema
     @interface = options.interface
 
     @wrappers = {}
 
     for resource_type, schema of @schemas
-      if schema.type == "resource"
-        @wrappers[resource_type] = @resource_wrapper(resource_type, schema)
-      else if schema.type == "dictionary"
-        @wrappers[resource_type] = @dictionary_wrapper(resource_type, schema)
+      continue if resource_type == "patchboard#resource"
+
+      if schema.extends
+        parent_type = schema.extends.$ref
+        if parent_type?.indexOf("#") == 0
+          parent = @schemas[parent_type.slice(1)]
+        else
+          parent = @schemas[parent_type]
+        merged = {properties: {}}
+        for key, value of parent.properties
+          merged.properties[key] = value
+        for key, value of schema.properties
+          merged.properties[key] = value
+        schema.properties = merged.properties
+        # only define a wrapper if it inherits from a local schema.  ???
+        # FIXME: think of a better way to handle this.
+        if parent_type.indexOf("#") == 0
+          @wrappers[resource_type] = @resource_wrapper(resource_type, schema)
+
       else if schema.type == "array"
         @wrappers[resource_type] = @array_wrapper(schema)
       else if schema.type == "object"
         @wrappers[resource_type] = @object_wrapper(schema)
 
+  register_schemas: (schemas) ->
+    id = schemas.id
+    for name, schema of schemas.properties
+      absolute_name = "#{patchboard_schema.id}##{name}"
+
   array_wrapper: (schema) ->
     client = @
-    item_type = schema.items.type
+    item_type = @munge_type(schema.items)
     (items) ->
       result = []
       for value in items
         result.push(client.wrap(item_type, value))
       result
 
+  munge_type: (schema) ->
+    if schema.$ref
+      schema.$ref.slice(1)
+    else if schema.type
+      schema.type
+
   object_wrapper: (schema) ->
     client = @
     (data) ->
       for name, prop_def of schema.properties
         raw = data[name]
-        type = prop_def.type
-        wrapped = client.wrap(type, raw)
+        type = client.munge_type(prop_def)
+        if type
+          wrapped = client.wrap(type, raw)
+        else
+          wrapped = raw
         data[name] = wrapped
+      if schema.additionalProperties
+        type = client.munge_type(schema.additionalProperties)
+        if type
+          for name, raw of data
+            # we only want to wrap additional properties
+            if !(schema.properties && schema.properties[name])
+              data[name] = client.wrap(type, raw)
+
       data
-
-
-  dictionary_wrapper: (resource_type, schema) ->
-    client = @
-    item_type = schema.items.type
-    constructor = (items) ->
-      # wrap all members of the input object with the appropriate
-      # resource class.
-      for name, value of items
-        raw = items[name]
-        @[name] = client.wrap(item_type, raw)
-      null
-    constructor.resource_type = resource_type
-    (data) ->
-      new constructor(data)
 
 
   # Generate and store a resource class based on the schema
@@ -72,8 +111,6 @@ class Client
 
     if interface_def = @interface[resource_type]
       @define_interface(constructor, interface_def.actions)
-    else
-      console.log "WARNING: No interface defined for resource type: #{resource_type}."
 
     @define_properties(constructor, schema.properties)
     (data) ->
@@ -97,7 +134,7 @@ class Client
 
   property_spec: (name, property_schema) ->
     client = @
-    wrap_function = @create_wrapping_function(property_schema)
+    wrap_function = @create_wrapping_function(name, property_schema)
 
     spec = {}
     spec.get = () ->
@@ -210,7 +247,7 @@ class Client
 
       request
 
-  create_wrapping_function: (schema) ->
+  create_wrapping_function: (name, schema) ->
     client = @
     if schema.type == "object"
       @object_wrapper(schema)

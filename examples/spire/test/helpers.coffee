@@ -44,6 +44,6 @@ module.exports =
   test: test
   partial_equal: partial_equal
   validate: validate
-  interface: require("../api/interface")
-  schema: require("../api/schema")
-  map: require("../api/map")
+  interface: require("../api/interface.coffee")
+  schema: require("../api/schema.coffee")
+  map: require("../api/map.coffee")
