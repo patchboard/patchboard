@@ -40,7 +40,6 @@ class SimpleDispatcher
       @classification_error(result.error, request, response)
     else
       handler = @find_handler(result)
-      console.log(result)
       context = new Context(request, response, result)
       handler(context)
 

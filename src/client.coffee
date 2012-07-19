@@ -194,10 +194,10 @@ class Client
     method = definition.method
     default_headers = {}
     if request_type = definition.request_entity
-      request_media_type = client.schemas[request_type].media_type
+      request_media_type = client.schemas[request_type].mediaType
       default_headers["Content-Type"] = request_media_type
     if response_type = definition.response_entity
-      response_media_type = client.schemas[response_type].media_type
+      response_media_type = client.schemas[response_type].mediaType
       default_headers["Accept"] = response_media_type
     authorization = definition.authorization
     if query = definition.query

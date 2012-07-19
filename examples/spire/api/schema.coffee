@@ -21,7 +21,7 @@ module.exports =
     account:
       #id: "#account"
       extends: {$ref: "#resource"}
-      media_type: "application/vnd.spire-io.account+json;version=1.0"
+      mediaType: "application/vnd.spire-io.account+json;version=1.0"
       properties:
         id:
           type: "string"
@@ -42,12 +42,12 @@ module.exports =
 
     account_collection:
       extends: {$ref: "#resource"}
-      media_type: "application/vnd.spire-io.accounts+json;version=1.0"
+      mediaType: "application/vnd.spire-io.accounts+json;version=1.0"
 
     session:
       #id: "#session"
       extends: {$ref: "#resource"}
-      media_type: "application/vnd.spire-io.session+json;version=1.0"
+      mediaType: "application/vnd.spire-io.session+json;version=1.0"
       properties:
         resources:
           type: "object"
@@ -65,7 +65,7 @@ module.exports =
     channel:
       #id: "#channel"
       extends: {$ref: "#resource"}
-      media_type: "application/vnd.spire-io.channel+json;version=1.0"
+      mediaType: "application/vnd.spire-io.channel+json;version=1.0"
       properties:
         name:
           type: "string"
@@ -79,17 +79,17 @@ module.exports =
     channel_collection:
       #id: "#channel_collection"
       extends: {$ref: "#resource"}
-      media_type: "application/vnd.spire-io.channels+json;version=1.0"
+      mediaType: "application/vnd.spire-io.channels+json;version=1.0"
 
     channel_dictionary:
       type: "object"
-      media_type: "application/vnd.spire-io.channels+json;version=1.0"
+      mediaType: "application/vnd.spire-io.channels+json;version=1.0"
       additionalProperties: {$ref: "#channel"}
 
     subscription:
       #id: "#subscription"
       extends: {$ref: "#resource"}
-      media_type: "application/vnd.spire-io.subscription+json;version=1.0"
+      mediaType: "application/vnd.spire-io.subscription+json;version=1.0"
       properties:
         application_key:
           type: "string"
@@ -102,18 +102,18 @@ module.exports =
     subscription_collection:
       #id: "#subscription_collection"
       extends: {$ref: "#resource"}
-      media_type: "application/vnd.spire-io.subscriptions+json;version=1.0"
+      mediaType: "application/vnd.spire-io.subscriptions+json;version=1.0"
 
     subscription_dictionary:
       #id: "#subscription_dictionary"
       type: "object"
-      media_type: "application/vnd.spire-io.subscriptions+json;version=1.0"
+      mediaType: "application/vnd.spire-io.subscriptions+json;version=1.0"
       additionalProperties: {$ref: "subscription"}
 
     event:
       #id: "#event"
       extends: {$ref: "#resource"}
-      media_type: "application/vnd.spire-io.event+json;version=1.0"
+      mediaType: "application/vnd.spire-io.event+json;version=1.0"
       properties:
         channel_name: {type: "string"}
         content: {type: "object"}
@@ -123,7 +123,7 @@ module.exports =
     event_list:
       #id: "#event_list"
       type: "object"
-      media_type: "application/vnd.spire-io.events+json;version=1.0"
+      mediaType: "application/vnd.spire-io.events+json;version=1.0"
       properties:
         first: {type: "number"}
         last: {type: "number"}
@@ -134,7 +134,7 @@ module.exports =
     message:
       #id: "#message"
       extends: {$ref: "#resource"}
-      media_type: "application/vnd.spire-io.message+json;version=1.0"
+      mediaType: "application/vnd.spire-io.message+json;version=1.0"
       properties:
         channel_name: {type: "string"}
         content: {type: "object"}

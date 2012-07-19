@@ -24,7 +24,7 @@
       "extends": {
         "$ref": "#resource"
       },
-      "media_type": "application/vnd.spire-io.account+json;version=1.0",
+      "mediaType": "application/vnd.spire-io.account+json;version=1.0",
       "properties": {
         "id": {
           "type": "string",
@@ -55,13 +55,13 @@
       "extends": {
         "$ref": "#resource"
       },
-      "media_type": "application/vnd.spire-io.accounts+json;version=1.0"
+      "mediaType": "application/vnd.spire-io.accounts+json;version=1.0"
     },
     "session": {
       "extends": {
         "$ref": "#resource"
       },
-      "media_type": "application/vnd.spire-io.session+json;version=1.0",
+      "mediaType": "application/vnd.spire-io.session+json;version=1.0",
       "properties": {
         "resources": {
           "type": "object",
@@ -94,7 +94,7 @@
       "extends": {
         "$ref": "#resource"
       },
-      "media_type": "application/vnd.spire-io.channel+json;version=1.0",
+      "mediaType": "application/vnd.spire-io.channel+json;version=1.0",
       "properties": {
         "name": {
           "type": "string",
@@ -116,11 +116,11 @@
       "extends": {
         "$ref": "#resource"
       },
-      "media_type": "application/vnd.spire-io.channels+json;version=1.0"
+      "mediaType": "application/vnd.spire-io.channels+json;version=1.0"
     },
     "channel_dictionary": {
       "type": "object",
-      "media_type": "application/vnd.spire-io.channels+json;version=1.0",
+      "mediaType": "application/vnd.spire-io.channels+json;version=1.0",
       "additionalProperties": {
         "$ref": "#channel"
       }
@@ -129,7 +129,7 @@
       "extends": {
         "$ref": "#resource"
       },
-      "media_type": "application/vnd.spire-io.subscription+json;version=1.0",
+      "mediaType": "application/vnd.spire-io.subscription+json;version=1.0",
       "properties": {
         "application_key": {
           "type": "string",
@@ -150,11 +150,11 @@
       "extends": {
         "$ref": "#resource"
       },
-      "media_type": "application/vnd.spire-io.subscriptions+json;version=1.0"
+      "mediaType": "application/vnd.spire-io.subscriptions+json;version=1.0"
     },
     "subscription_dictionary": {
       "type": "object",
-      "media_type": "application/vnd.spire-io.subscriptions+json;version=1.0",
+      "mediaType": "application/vnd.spire-io.subscriptions+json;version=1.0",
       "additionalProperties": {
         "$ref": "subscription"
       }
@@ -163,7 +163,7 @@
       "extends": {
         "$ref": "#resource"
       },
-      "media_type": "application/vnd.spire-io.event+json;version=1.0",
+      "mediaType": "application/vnd.spire-io.event+json;version=1.0",
       "properties": {
         "channel_name": {
           "type": "string"
@@ -181,7 +181,7 @@
     },
     "event_list": {
       "type": "object",
-      "media_type": "application/vnd.spire-io.events+json;version=1.0",
+      "mediaType": "application/vnd.spire-io.events+json;version=1.0",
       "properties": {
         "first": {
           "type": "number"
@@ -200,7 +200,7 @@
       "extends": {
         "$ref": "#resource"
       },
-      "media_type": "application/vnd.spire-io.message+json;version=1.0",
+      "mediaType": "application/vnd.spire-io.message+json;version=1.0",
       "properties": {
         "channel_name": {
           "type": "string"

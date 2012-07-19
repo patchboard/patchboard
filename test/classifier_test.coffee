@@ -38,16 +38,18 @@ http_interface =
         authorization: "Basic"
 
 schema =
-  resource_collection:
-    type: "resource"
-    media_type: "patchboard.resource_collection"
-    properties:
-      some_property: {type: "string"}
-  resource_instance:
-    type: "resource"
-    media_type: "patchboard.resource_instance"
-    properties:
-      some_property: {type: "string"}
+  id: "my_api"
+  properties:
+    resource_collection:
+      extends: "resource"
+      mediaType: "patchboard.resource_collection"
+      properties:
+        some_property: {type: "string"}
+    resource_instance:
+      extends: "resource"
+      mediaType: "patchboard.resource_instance"
+      properties:
+        some_property: {type: "string"}
 
 Patchboard = require("../src/patchboard")
 
@@ -128,7 +130,7 @@ test_classification "failure to match Accept header",
     error: {
       status: 406,
       message: "Not Acceptable",
-      description: "you goofed"
+      description: "Problem with request"
     }
   },
   url: "http://hostname.com/resource/monkey"
@@ -141,7 +143,7 @@ test_classification "failure to match Content-Type header",
     error: {
       status: 415,
       message: "Unsupported Media Type",
-      description: "you goofed"
+      description: "Problem with request"
     }
   },
   url: "http://hostname.com/resource"
@@ -155,7 +157,7 @@ test_classification "failure to match method",
     error: {
       status: 405,
       message: "Method Not Allowed",
-      description: "you goofed"
+      description: "Problem with request"
     }
   },
   url: "http://hostname.com/resource/monkey"
@@ -170,7 +172,7 @@ test_classification "failure to match authorization scheme",
     error: {
       status: 401,
       message: "Unauthorized",
-      description: "you goofed"
+      description: "Problem with request"
     }
   },
   url: "http://hostname.com/resource/monkey"
