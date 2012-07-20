@@ -1,5 +1,4 @@
 http = require("http")
-util = require("util")
 URL = require("url")
 Matchers = require("./matchers")
 
@@ -100,7 +99,6 @@ class Classifier
     url = URL.parse(request.url)
     path = url.pathname
     method = request.method
-    console.log(method)
     headers = request.headers
     authorization = headers["authorization"] || headers["Authorization"]
     content_type = headers["content-type"] || headers["Content-Type"]

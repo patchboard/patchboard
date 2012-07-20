@@ -1,4 +1,3 @@
-http = require("http")
 Classifier = require("./classifier")
 
 class SimpleDispatcher
