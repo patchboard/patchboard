@@ -7,18 +7,7 @@ $BROWSERIFY_OPTIONS = "-i zlib --prelude false -o browser/patchboard.js"
 desc "Build and compile EVERYTHING"
 task "build" => %w[
   coffeescript
-  browser/patchboard.min.js
 ]
-
-task "build:browser" => %w[browser/patchboard.min.js]
-
-file "browser/patchboard.js" => "lib/client.js" do |target|
-  sh "#{$BROWSERIFY} lib/client.js -i zlib --prelude false -o browser/patchboard.js"
-end
-
-file "browser/patchboard.min.js" => "browser/patchboard.js" do |target|
-  sh "node_modules/.bin/uglifyjs -o #{target.name} browser/patchboard.js"
-end
 
 
 # This rigmarole is to allow the coffeescript compilation to depend on whether
