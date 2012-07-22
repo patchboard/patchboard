@@ -66,7 +66,7 @@ test "pass for minimal correct data", ->
   assert_no_errors(result.errors)
 
 
-test "fail when capability is not a string", ->
+test "fail when capability is not a string", (context) ->
   result = sm.validate "account",
     url: "foo"
     email: "me@me.com"
@@ -78,8 +78,9 @@ test "fail when capability is not a string", ->
   helpers.partial_equal result.errors[0],
     schemaUri: "urn:spire#capability"
     attribute: "type"
+  context.done()
 
-test "fail when email is missing", ->
+test "fail when email is missing", (context) ->
   result = sm.validate "account",
     url: "foo"
     password: "strongpassword"
@@ -90,3 +91,4 @@ test "fail when email is missing", ->
   helpers.partial_equal result.errors[0],
     schemaUri: "urn:spire#account/properties/email"
     attribute: "required"
+  context.done()
