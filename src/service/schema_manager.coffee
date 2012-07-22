@@ -1,15 +1,6 @@
 JSV = require("JSV").JSV
-patchboard_schema =
-  id: "patchboard"
-  properties:
-    resource:
-      id: "#resource"
-      type: "object"
-      properties:
-        url:
-          type: "string"
-          format: "uri"
-          readonly: true
+patchboard_schema = require("../patchboard_schema")
+
 
 class SchemaManager
 
