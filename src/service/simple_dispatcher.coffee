@@ -7,23 +7,30 @@ class SimpleDispatcher
     @http_interface = options.interface
     @map = options.map
     @handlers = options.handlers
-    @verify_handlers()
+    @install_default_handlers()
 
     @classifier = new Classifier(options)
     @error_handler = options.error_handler
 
-  verify_handlers: () ->
-    for resource, definition of @http_interface
-      actions = Object.keys(definition.actions)
-      handler = @handlers[resource]
-      if handler
-        for action in actions
-          if handler[action]
-          else
-            console.error "WARN:", "Missing #{action} handler for #{resource}"
 
-      else
-        console.error "WARN:", "No handler group for resource type: #{resource}"
+  install_default_handlers: () ->
+    dummy_handler = (context) ->
+      {request, response, match} = context
+
+      content = JSON.stringify
+        status: 500
+        message: "Unimplemented: #{match.resource_type}.#{match.action_name}"
+      headers =
+        "Content-Type": "application/json"
+        "Content-Length": content.length
+      response.writeHead 501, headers
+      response.end(content)
+
+
+    for resource, definition of @http_interface
+      for action, spec of definition.actions
+        @handlers[resource] ||= {}
+        @handlers[resource][action] ||= dummy_handler
 
   class Context
     constructor: (@request, @response, @match) ->
