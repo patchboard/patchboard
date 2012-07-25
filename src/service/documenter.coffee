@@ -9,6 +9,21 @@ class Documenter
     @schemas = schema.properties
 
   document_schema: () ->
+    out = []
+    out.push "# Schemas"
+    for name, schema of @schemas
+      out.push @schema_doc(name, schema)
+    out.join("\n\n")
+
+  schema_doc: (name, schema) ->
+    lines = []
+    lines.push """
+    <a id="#{@schema_id}/#{name}"></a>
+    ## #{name} 
+    """
+    lines.push "<pre>#{JSON.stringify(schema, null, 2)}</pre>"
+    lines.join("\n\n")
+
 
   document_interface: () ->
     out = []

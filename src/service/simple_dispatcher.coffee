@@ -2,30 +2,52 @@ Classifier = require("./classifier")
 
 class SimpleDispatcher
 
-  constructor: (options) ->
-    @schema = options.schema
-    @http_interface = options.interface
-    @map = options.map
-    @handlers = options.handlers
+  constructor: (@service, @handlers) ->
+    @schema = service.schema
+    @http_interface = service.interface
+    @map = service.map
     @install_default_handlers()
+    @supply_missing_handlers()
 
-    @classifier = new Classifier(options)
-    @error_handler = options.error_handler
-
+    @classifier = new Classifier(@service)
 
   install_default_handlers: () ->
+    service = @service
+    service_description =
+      interface: service.interface
+      schema: service.schema
+
+    @handlers.meta.service_description ||= (context) ->
+      {request, response, match} = context
+
+      content = JSON.stringify(service_description)
+      headers =
+        "Content-Type": "application/json"
+        "Content-Length": content.length
+      response.writeHead 200, headers
+      response.end(content)
+
+    @handlers.meta.documentation ||= (context) ->
+      {request, response, match} = context
+
+      content = service.documentation()
+      headers =
+        "Content-Type": "text/plain"
+        "Content-Length": content.length
+      response.writeHead 200, headers
+      response.end(content)
+
+  supply_missing_handlers: () ->
     dummy_handler = (context) ->
       {request, response, match} = context
 
       content = JSON.stringify
-        status: 500
         message: "Unimplemented: #{match.resource_type}.#{match.action_name}"
       headers =
         "Content-Type": "application/json"
         "Content-Length": content.length
       response.writeHead 501, headers
       response.end(content)
-
 
     for resource, definition of @http_interface
       for action, spec of definition.actions
@@ -50,10 +72,7 @@ class SimpleDispatcher
       handler(context)
 
   classification_error: (error, request, response) ->
-    if @error_handler
-      @error_handler(error)
-    else
-      @default_error_handler(error, response)
+    @default_error_handler(error, response)
 
   find_handler: (match) ->
     if resource = @handlers[match.resource_type]

@@ -4,10 +4,10 @@ Matchers = require("./matchers")
 
 class Classifier
 
-  constructor: (options) ->
-    @schema = options.schema.properties
-    @http_interface = options.interface
-    @map = options.map
+  constructor: (service) ->
+    @schema = service.schema.properties
+    @http_interface = service.interface
+    @map = service.map
     
     @matchers = {}
     @process(@map, @http_interface)
@@ -36,14 +36,20 @@ class Classifier
           action_name: "options"
           allow: Object.keys(supported_methods)
 
-        #match_sequence = @create_match_sequence "/",
-          #method: "GET"
-          #accept: "application/json"
+        match_sequence = @create_match_sequence "/",
+          method: "GET"
+          accept: "application/json"
 
-        #@register_match_sequence match_sequence,
-          #resource_type: "meta"
-          #action_name: "service_description"
+        @register_match_sequence match_sequence,
+          resource_type: "meta"
+          action_name: "service_description"
 
+        match_sequence = @create_match_sequence "/",
+          method: "GET"
+
+        @register_match_sequence match_sequence,
+          resource_type: "meta"
+          action_name: "documentation"
 
   register_match_sequence: (sequence, payload) ->
     matchers = @matchers
@@ -78,6 +84,8 @@ class Classifier
 
     if response_entity = definition.response_entity
       accept = @schema[response_entity].mediaType
+    else if definition.accept
+      accept = definition.accept
     else
       accept = "pass"
 
