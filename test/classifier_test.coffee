@@ -1,7 +1,7 @@
 assert = require("assert")
 
 helpers = require("./helpers")
-test = helpers.test
+testify = require("../src/testify")
 
 map =
   resource_collection:
@@ -68,7 +68,7 @@ class MockRequest
 
 
 test_classification = (name, want, options) ->
-  test name, ->
+  testify name, ->
     request = new MockRequest(options)
     result = classifier.classify(request)
     helpers.partial_equal(result, want)

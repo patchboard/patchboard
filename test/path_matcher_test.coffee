@@ -1,13 +1,13 @@
 assert = require("assert")
 
 helpers = require("./helpers")
-test = require("../src/testify").test
+testify = require("../src/testify")
 
 matchers = require("../src/service/matchers")
 
 PathMatcher = matchers.Path
 
-test "Path matching for '/'", ->
+testify "Path matching for '/'", ->
   matcher = new PathMatcher("/")
   assert.deepEqual(
     matcher.match("/"),
@@ -18,7 +18,7 @@ test "Path matching for '/'", ->
     false
   )
 
-test "Path matching, capturing last component", ->
+testify "Path matching, capturing last component", ->
   matcher = new PathMatcher("/accounts/:account_id")
   assert.deepEqual(
     matcher.pattern,
@@ -38,14 +38,14 @@ test "Path matching, capturing last component", ->
     false
   )
 
-test "Path matching, capturing middle component", ->
+testify "Path matching, capturing middle component", ->
   matcher = new PathMatcher("/accounts/:account_id/channels")
   assert.deepEqual(
     matcher.pattern,
     ["accounts", {name: "account_id"}, "channels"]
   )
 
-test "Path matching, capturing multiple components", ->
+testify "Path matching, capturing multiple components", ->
   matcher = new PathMatcher("/accounts/:account_id/channels/:channel_id")
   assert.deepEqual(
     matcher.pattern,

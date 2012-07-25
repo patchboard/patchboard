@@ -1,7 +1,7 @@
 assert = require("assert")
 
 helpers = require("./helpers")
-test = require("../src/testify").test
+testify = require("../src/testify")
 util = require("util")
 
 
@@ -55,7 +55,7 @@ assert_no_errors = (errors) ->
     console.log(errors)
     assert.equal(errors.length, 0)
 
-test "pass for minimal correct data", ->
+testify "pass for minimal correct data", ->
   result = sm.validate "account",
     url: "foo"
     email: "me@me.com"
@@ -66,7 +66,7 @@ test "pass for minimal correct data", ->
   assert_no_errors(result.errors)
 
 
-test "fail when capability is not a string", (context) ->
+testify "fail when capability is not a string", (test) ->
   result = sm.validate "account",
     url: "foo"
     email: "me@me.com"
@@ -78,9 +78,9 @@ test "fail when capability is not a string", (context) ->
   helpers.partial_equal result.errors[0],
     schemaUri: "urn:spire#capability"
     attribute: "type"
-  context.done()
+  test.done()
 
-test "fail when email is missing", (context) ->
+testify "fail when email is missing", (test) ->
   result = sm.validate "account",
     url: "foo"
     password: "strongpassword"
@@ -91,4 +91,4 @@ test "fail when email is missing", (context) ->
   helpers.partial_equal result.errors[0],
     schemaUri: "urn:spire#account/properties/email"
     attribute: "required"
-  context.done()
+  test.done()
