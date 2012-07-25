@@ -1,7 +1,7 @@
 assert = require("assert")
 
 helpers = require("./helpers")
-test = helpers.test
+test = require("../src/testify").test
 util = require("util")
 
 
