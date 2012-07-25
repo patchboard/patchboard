@@ -21,7 +21,11 @@ class Documenter
     <a id="#{@schema_id}/#{name}"></a>
     ## #{name} 
     """
-    lines.push "<pre>#{JSON.stringify(schema, null, 2)}</pre>"
+    lines.push """
+    ```json
+    #{JSON.stringify(schema, null, 2)}
+    ```
+    """
     lines.join("\n\n")
 
 
