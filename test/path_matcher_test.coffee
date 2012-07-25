@@ -7,7 +7,18 @@ matchers = require("../src/service/matchers")
 
 PathMatcher = matchers.Path
 
-test "Path matching", ->
+test "Path matching for '/'", ->
+  matcher = new PathMatcher("/")
+  assert.deepEqual(
+    matcher.match("/"),
+    {}
+  )
+  assert.equal(
+    matcher.match("/foo"),
+    false
+  )
+
+test "Path matching, capturing last component", ->
   matcher = new PathMatcher("/accounts/:account_id")
   assert.deepEqual(
     matcher.pattern,
@@ -27,12 +38,14 @@ test "Path matching", ->
     false
   )
 
+test "Path matching, capturing middle component", ->
   matcher = new PathMatcher("/accounts/:account_id/channels")
   assert.deepEqual(
     matcher.pattern,
     ["accounts", {name: "account_id"}, "channels"]
   )
 
+test "Path matching, capturing multiple components", ->
   matcher = new PathMatcher("/accounts/:account_id/channels/:channel_id")
   assert.deepEqual(
     matcher.pattern,
