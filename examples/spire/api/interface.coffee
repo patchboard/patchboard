@@ -1,49 +1,68 @@
 module.exports =
 
   account_collection:
-    description: "The collection of accounts"
+    title: "Accounts"
+    description: """
+      The accounts resource is primarily used to create an account. Simply `POST` to the
+      accounts resource with an entity body including an email and password.
+    """
     actions:
       create:
+        description: "Create a new account. The response will contain a session."
         method: "POST"
         request_entity: "account"
         response_entity: "session"
+        status: 201
 
   account:
-    description: "The account resource"
+    description: """
+      An account resource allows you to get information about your account, update it, or
+      close it entirely.
+    """
     actions:
       get:
+        description: "Get information about your account"
         method: "GET"
-        response_entity: "account"
         authorization: "Capability"
+        response_entity: "account"
+        status: 200
       update:
         method: "PUT"
+        authorization: "Capability"
         request_entity: "account"
         response_entity: "account"
-        authorization: "Capability"
+        status: 200
       reset:
         method: "POST"
+        authorization: "Capability"
         response_entity: "account"
+        status: 201
       delete:
         method: "DELETE"
         authorization: "Capability"
+        status: 204
 
   session_collection:
     description: "The place to get sessions from"
     actions:
       create:
         method: "POST"
+        authorization: "Capability"
         request_entity: "account"
         response_entity: "session"
+        status: 201
 
   session:
     actions:
       get:
         method: "GET"
-        response_entity: "session"
         authorization: "Capability"
+        response_entity: "session"
+        status: 200
       delete:
         method: "DELETE"
         authorization: "Capability"
+        status: 204
 
   channel_collection:
     description: "The collection of channels for a particular account"

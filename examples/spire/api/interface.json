@@ -1,35 +1,44 @@
 {
   "account_collection": {
-    "description": "The collection of accounts",
+    "title": "Accounts",
+    "description": "The accounts resource is primarily used to create an account. Simply `POST` to the\naccounts resource with an entity body including an email and password.",
     "actions": {
       "create": {
+        "description": "Create a new account. The response will contain a session.",
         "method": "POST",
         "request_entity": "account",
-        "response_entity": "session"
+        "response_entity": "session",
+        "status": 201
       }
     }
   },
   "account": {
-    "description": "The account resource",
+    "description": "An account resource allows you to get information about your account, update it, or\nclose it entirely.",
     "actions": {
       "get": {
+        "description": "Get information about your account",
         "method": "GET",
+        "authorization": "Capability",
         "response_entity": "account",
-        "authorization": "Capability"
+        "status": 200
       },
       "update": {
         "method": "PUT",
+        "authorization": "Capability",
         "request_entity": "account",
         "response_entity": "account",
-        "authorization": "Capability"
+        "status": 200
       },
       "reset": {
         "method": "POST",
-        "response_entity": "account"
+        "authorization": "Capability",
+        "response_entity": "account",
+        "status": 201
       },
       "delete": {
         "method": "DELETE",
-        "authorization": "Capability"
+        "authorization": "Capability",
+        "status": 204
       }
     }
   },
@@ -38,8 +47,10 @@
     "actions": {
       "create": {
         "method": "POST",
+        "authorization": "Capability",
         "request_entity": "account",
-        "response_entity": "session"
+        "response_entity": "session",
+        "status": 201
       }
     }
   },
@@ -47,12 +58,14 @@
     "actions": {
       "get": {
         "method": "GET",
+        "authorization": "Capability",
         "response_entity": "session",
-        "authorization": "Capability"
+        "status": 200
       },
       "delete": {
         "method": "DELETE",
-        "authorization": "Capability"
+        "authorization": "Capability",
+        "status": 204
       }
     }
   },

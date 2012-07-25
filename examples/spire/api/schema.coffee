@@ -42,7 +42,7 @@ module.exports =
 
     account_collection:
       extends: {$ref: "#resource"}
-      mediaType: "application/vnd.spire-io.accounts+json;version=1.0"
+      #mediaType: "application/vnd.spire-io.accounts+json;version=1.0"
 
     session:
       #id: "#session"
