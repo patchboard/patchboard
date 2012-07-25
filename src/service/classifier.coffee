@@ -24,31 +24,34 @@ class Classifier
         for action_name, definition of resource.actions
           supported_methods[definition.method] = true
           match_sequence = @create_match_sequence(path, definition)
-
-          matchers = @matchers
-          for item in match_sequence
-            matchers[item.ident] ||= new item.klass(item.spec)
-            matcher = matchers[item.ident]
-            matchers = matcher.matchers
-
-          matcher.payload =
+          @register_match_sequence match_sequence,
             resource_type: resource_type
             action_name: action_name
 
         # setup OPTIONS handling
         match_sequence = @create_match_sequence path,
           method: "OPTIONS"
-        matchers = @matchers
-        for item in match_sequence
-          matchers[item.ident] ||= new item.klass(item.spec)
-          matcher = matchers[item.ident]
-          matchers = matcher.matchers
-
-        matcher.payload =
+        @register_match_sequence match_sequence,
           resource_type: "meta"
           action_name: "options"
           allow: Object.keys(supported_methods)
 
+        #match_sequence = @create_match_sequence "/",
+          #method: "GET"
+          #accept: "application/json"
+
+        #@register_match_sequence match_sequence,
+          #resource_type: "meta"
+          #action_name: "service_description"
+
+
+  register_match_sequence: (sequence, payload) ->
+    matchers = @matchers
+    for item in sequence
+      matchers[item.ident] ||= new item.klass(item.spec)
+      matcher = matchers[item.ident]
+      matchers = matcher.matchers
+    matcher.payload = payload
 
   # collect all the values from the interface description
   # that we will need to match against.
