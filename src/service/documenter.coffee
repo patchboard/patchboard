@@ -1,3 +1,4 @@
+http = require("http")
 marked = require("marked")
 marked.setOptions
   gfm: true
@@ -75,8 +76,8 @@ class Documenter
         lines.push "- **Body Schema**: [#{re}](##{@schema_id}/#{re})"
 
     lines.push "**HTTP Response**"
-    if definition.status
-      lines.push "- **Expected Status**: #{definition.status}"
+    if status = definition.status
+      lines.push "- **Expected Status**: #{status} - #{http.STATUS_CODES[status]}"
     if definition.response_entity
       re = definition.response_entity
       lines.push "- **Body Schema**: [#{re}](##{@schema_id}/#{re})"
