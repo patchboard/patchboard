@@ -1,5 +1,4 @@
 http = require("http")
-URL = require("url")
 Matchers = require("./matchers")
 
 class Classifier
@@ -108,21 +107,13 @@ class Classifier
   # and action_name which should handle the request.  Users of this method
   # may then find and use handler functions as they see fit.
   classify: (request) ->
-    url = URL.parse(request.url)
-    path = url.pathname
+    path = request.path
+    query = request.query
     method = request.method
     headers = request.headers
     authorization = headers["authorization"] || headers["Authorization"]
     content_type = headers["content-type"] || headers["Content-Type"]
     accept = headers["accept"] || headers["Accept"]
-    if url.query
-      query_parts = url.query.split("&")
-      query = {}
-      for part in query_parts
-        [key, value] = part.split("=")
-        query[key] = value
-    else
-      query = {}
 
     # the request sequence uses pseudo-tuples so that we can
     # tell at what stage match failures occur.  This is crucial 
