@@ -53,6 +53,11 @@ schema =
 
 Patchboard = require("../src/patchboard")
 
+service = new Patchboard.Service
+  interface: http_interface
+  schema: schema
+  map: map
+
 classifier = new Patchboard.Classifier
   interface: http_interface
   schema: schema
@@ -65,6 +70,7 @@ class MockRequest
     @url = options.url
     @method = options.method
     @headers = options.headers
+    service.improve_request(@)
 
 
 test_classification = (name, want, options) ->

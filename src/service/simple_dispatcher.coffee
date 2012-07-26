@@ -26,7 +26,7 @@ class SimpleDispatcher
       dispatcher.dispatch(request, response)
 
   dispatch: (request, response) ->
-    @improve_request(request)
+    @service.improve_request(request)
     result = @classifier.classify(request)
     if result.error
       @classification_error(result.error, request, response)
@@ -34,19 +34,6 @@ class SimpleDispatcher
       handler = @find_handler(result)
       context = new Context(request, response, result)
       handler(context)
-
-  improve_request: (request) ->
-    url = URL.parse(request.url)
-    request.path = url.pathname
-    if url.query
-      query_parts = url.query.split("&")
-      query = {}
-      for part in query_parts
-        [key, value] = part.split("=")
-        query[key] = value
-    else
-      query = {}
-    request.query = query
 
   find_handler: (match) ->
     if resource = @handlers[match.resource_type]

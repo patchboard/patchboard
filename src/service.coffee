@@ -1,3 +1,4 @@
+URL = require("url")
 Dispatcher = require("./service/simple_dispatcher")
 Documenter = require("./service/documenter")
 
@@ -20,6 +21,18 @@ class Service
     dispatcher = new Dispatcher(@, handlers)
     dispatcher.create_handler()
 
+  improve_request: (request) ->
+    url = URL.parse(request.url)
+    request.path = url.pathname
+    if url.query
+      query_parts = url.query.split("&")
+      query = {}
+      for part in query_parts
+        [key, value] = part.split("=")
+        query[key] = value
+    else
+      query = {}
+    request.query = query 
 
   documentation: () ->
     """
