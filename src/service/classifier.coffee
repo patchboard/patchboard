@@ -36,6 +36,7 @@ class Classifier
           action_name: "options"
           allow: Object.keys(supported_methods)
 
+        # set up handlers for /
         match_sequence = @create_match_sequence "/",
           method: "GET"
           accept: "application/json"

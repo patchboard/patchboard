@@ -7,8 +7,16 @@ class Service
     @interface = options.interface
     @map = options.map
     @documenter = new Documenter(@schema, @interface)
+    @default_handlers = require("./service/handlers")(@)
 
   simple_dispatcher: (handlers) ->
+
+    # Install Patchboard's default handlers
+    for resource, actions of @default_handlers
+      handlers[resource] ||= {}
+      for name, handler of actions
+        handlers[resource][name] ||= handler
+
     dispatcher = new Dispatcher(@, handlers)
     dispatcher.create_handler()
 

@@ -31,7 +31,7 @@ class Documenter
 
   document_interface: () ->
     out = []
-    out.push "# Resources"
+    out.push "# Interface"
     for name, definition of @interface
       out.push @resource_doc(name, definition)
     out.join("\n\n")

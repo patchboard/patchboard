@@ -230,6 +230,8 @@ class Client
         request.on.response = response
         delete options.on.response
 
+      # FIXME:  not all responses should be wrapped.  202 and 204 have no
+      # content.  I'm not sure how Shred handles 30x statuses, either.
       for status, handler of options.on
         request.on[status] = (response) ->
           wrapped = client.wrap(response_type, response.content.data)
