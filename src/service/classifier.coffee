@@ -22,36 +22,47 @@ class Classifier
 
         for action_name, definition of resource.actions
           supported_methods[definition.method] = true
-          match_sequence = @create_match_sequence(path, definition)
-          @register_match_sequence match_sequence,
+
+          @register path, definition,
             resource_type: resource_type
             action_name: action_name
 
-        # setup OPTIONS handling
-        match_sequence = @create_match_sequence path,
-          method: "OPTIONS"
-        @register_match_sequence match_sequence,
-          resource_type: "meta"
-          action_name: "options"
-          allow: Object.keys(supported_methods)
+    # setup OPTIONS handling
+    @register path,
+      {
+        method: "OPTIONS"
+      },
+      {
+        resource_type: "meta"
+        action_name: "options"
+        allow: Object.keys(supported_methods)
+      }
 
-        # set up handlers for /
-        match_sequence = @create_match_sequence "/",
-          method: "GET"
-          accept: "application/json"
+    # set up handlers for /
+    @register "/",
+      {
+        method: "GET"
+        accept: "application/json"
+      },
+      {
+        resource_type: "meta"
+        action_name: "service_description"
+      }
 
-        @register_match_sequence match_sequence,
-          resource_type: "meta"
-          action_name: "service_description"
+    @register "/",
+      {
+        method: "GET"
+      },
+      {
+        resource_type: "meta"
+        action_name: "documentation"
+      }
 
-        match_sequence = @create_match_sequence "/",
-          method: "GET"
+  register: (path, definition, payload) ->
+    sequence = @create_match_sequence(path, definition)
+    @register_match_sequence(path, sequence, payload)
 
-        @register_match_sequence match_sequence,
-          resource_type: "meta"
-          action_name: "documentation"
-
-  register_match_sequence: (sequence, payload) ->
+  register_match_sequence: (path, sequence, payload) ->
     matchers = @matchers
     for item in sequence
       matchers[item.ident] ||= new item.klass(item.spec)
@@ -70,24 +81,24 @@ class Classifier
       # create a string that uniquely identifies the query spec
       required_keys = (key for key, val of query_spec.required).sort()
       optional_keys = (key for key, val of query_spec.optional).sort()
-      query_ident = "r:#{required_keys.join("&")},o:#{optional_keys.join("&")}"
+      query_ident = "required:(#{required_keys.join("&")}), optional:(#{optional_keys.join("&")})"
     else
       query_spec = {}
       query_ident = "none"
 
-    authorization = definition.authorization || "pass"
+    authorization = definition.authorization || "[any]"
 
     if request_entity = definition.request_entity
       content_type = @schema[request_entity].mediaType
     else
-      content_type = "pass"
+      content_type = "[any]"
 
     if response_entity = definition.response_entity
       accept = @schema[response_entity].mediaType
     else if definition.accept
       accept = definition.accept
     else
-      accept = "pass"
+      accept = "[any]"
 
     # NOTE: matching depends on the order of this match sequence
     # being consistent with the order of the request sequence. If

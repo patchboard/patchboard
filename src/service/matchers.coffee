@@ -1,4 +1,4 @@
-class PathMatcher
+class Path
   constructor: (pattern) ->
     @type = "path"
     @pattern = @parse_pattern(pattern)
@@ -37,7 +37,7 @@ class PathMatcher
     else
       false
 
-class QueryMatcher
+class Query
   constructor: (query_spec) ->
     @type = "query"
     @matchers = {}
@@ -59,17 +59,17 @@ class QueryMatcher
 
 
 
-class BasicMatcher
+class Basic
   constructor: (@value) ->
     @matchers = {}
 
   match: (input) ->
-    if @value == "pass"
+    if @value == "[any]"
       true
     else
       input == @value
 
-class MethodMatcher extends BasicMatcher
+class Method extends Basic
   constructor: (method) ->
     @type = "method"
     super(method)
@@ -78,13 +78,13 @@ class MethodMatcher extends BasicMatcher
     input == @value
 
 
-class AuthorizationMatcher extends BasicMatcher
+class Authorization extends Basic
   constructor: (authorization) ->
     @type = "authorization"
     super(authorization)
 
   match: (input) ->
-    if @value == "pass"
+    if @value == "[any]"
       true
     else if input
       scheme = input.split(" ")[0]
@@ -92,14 +92,14 @@ class AuthorizationMatcher extends BasicMatcher
     else
       false
 
-class ContentTypeMatcher extends BasicMatcher
+class ContentType extends Basic
   # TODO: handle mediatypes in a better way than simple string match
   constructor: (content_type) ->
     @type = "content_type"
     super(content_type)
 
   match: (input) ->
-    if @value == "pass"
+    if @value == "[any]"
       true
     else
       if input == @value
@@ -107,14 +107,14 @@ class ContentTypeMatcher extends BasicMatcher
       else
         false
 
-class AcceptMatcher
+class Accept
   # TODO: handle mediatypes in a better way than simple string match
   constructor: (@value, @payload) ->
     @type = "accept"
     #@matchers = {}
 
   match: (input) ->
-    if @value == "pass"
+    if @value == "[any]"
       true
     else
       if input == @value
@@ -123,9 +123,9 @@ class AcceptMatcher
         false
 
 module.exports =
-  Path: PathMatcher
-  Method: MethodMatcher
-  Query: QueryMatcher
-  Authorization: AuthorizationMatcher
-  ContentType: ContentTypeMatcher
-  Accept: AcceptMatcher
+  Path: Path
+  Method: Method
+  Query: Query
+  Authorization: Authorization
+  ContentType: ContentType
+  Accept: Accept
