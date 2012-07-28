@@ -1,7 +1,17 @@
 http = require("http")
 Matchers = require("./matchers")
+PatchboardAPI = require("../patchboard_api")
 
 class Classifier
+
+  MATCH_ORDER = [
+    "Path",
+    "Method",
+    "Query",
+    "Authorization",
+    "ContentType",
+    "Accept"
+  ]
 
   constructor: (service) ->
     @schema = service.schema.properties
@@ -9,6 +19,8 @@ class Classifier
     @map = service.map
     
     @matchers = {}
+
+    @process(PatchboardAPI.map, PatchboardAPI.interface)
     @process(@map, @http_interface)
 
   # Given URL map and HTTP interface objects, set up the matching
@@ -22,45 +34,69 @@ class Classifier
 
         for action_name, definition of resource.actions
           supported_methods[definition.method] = true
-
           @register path, definition,
             resource_type: resource_type
             action_name: action_name
 
-    # setup OPTIONS handling
-    @register path,
-      {
-        method: "OPTIONS"
-      },
-      {
-        resource_type: "meta"
-        action_name: "options"
-        allow: Object.keys(supported_methods)
-      }
+        # setup OPTIONS handling
+        @register path, { method: "OPTIONS" },
+          resource_type: "meta"
+          action_name: "options"
+          allow: Object.keys(supported_methods).sort()
 
-    # set up handlers for /
-    @register "/",
-      {
-        method: "GET"
-        accept: "application/json"
-      },
-      {
-        resource_type: "meta"
-        action_name: "service_description"
-      }
-
-    @register "/",
-      {
-        method: "GET"
-      },
-      {
-        resource_type: "meta"
-        action_name: "documentation"
-      }
 
   register: (path, definition, payload) ->
     sequence = @create_match_sequence(path, definition)
     @register_match_sequence(path, sequence, payload)
+
+  # collect all the values from the interface description
+  # that we will need to match against.
+  create_match_sequence: (path, definition) ->
+    # We use the MATCH_ORDER array (here and at classification time) to make sure
+    # that we always present the facets of a request in the right order.
+    # Each item in the "match sequence" we create here needs a string identifier
+    # so it can be stored in the Object-based graph we use at classification time.
+    # For most matcher types, the identifier is also suitable as a match specification,
+    # but complex matches (e.g. Query) are expressed as objects, not strings.
+    identifiers = {}
+    specs = {}
+
+    identifiers.Path = specs.Path = path
+    identifiers.Method = specs.Method = definition.method
+    identifiers.Authorization = specs.Authorization = definition.authorization || "[any]"
+
+    if definition.query
+      specs.Query = definition.query
+      # create a string that uniquely identifies the query spec
+      required_keys = (key for key, val of specs.Query.required).sort()
+      optional_keys = (key for key, val of specs.Query.optional).sort()
+      identifiers.Query =
+        "required:(#{required_keys.join("&")}), optional:(#{optional_keys.join("&")})"
+    else
+      specs.Query = {}
+      identifiers.Query = "none"
+
+    if request_entity = definition.request_entity
+      identifiers.ContentType = specs.ContentType = @schema[request_entity].mediaType
+    else
+      identifiers.ContentType = specs.ContentType = "[any]"
+
+    if response_entity = definition.response_entity
+      identifiers.Accept = specs.Accept = @schema[response_entity].mediaType
+    else if definition.accept
+      identifiers.Accept = specs.Accept = definition.accept
+    else
+      identifiers.Accept = specs.Accept = "[any]"
+
+
+    sequence = []
+    for type in MATCH_ORDER
+      sequence.push
+        klass: Matchers[type]
+        ident: identifiers[type]
+        spec: specs[type]
+
+    sequence
 
   register_match_sequence: (path, sequence, payload) ->
     matchers = @matchers
@@ -70,47 +106,6 @@ class Classifier
       matchers = matcher.matchers
     matcher.payload = payload
 
-  # collect all the values from the interface description
-  # that we will need to match against.
-   create_match_sequence: (path, definition) ->
-
-    method = definition.method
-
-    if definition.query
-      query_spec = definition.query
-      # create a string that uniquely identifies the query spec
-      required_keys = (key for key, val of query_spec.required).sort()
-      optional_keys = (key for key, val of query_spec.optional).sort()
-      query_ident = "required:(#{required_keys.join("&")}), optional:(#{optional_keys.join("&")})"
-    else
-      query_spec = {}
-      query_ident = "none"
-
-    authorization = definition.authorization || "[any]"
-
-    if request_entity = definition.request_entity
-      content_type = @schema[request_entity].mediaType
-    else
-      content_type = "[any]"
-
-    if response_entity = definition.response_entity
-      accept = @schema[response_entity].mediaType
-    else if definition.accept
-      accept = definition.accept
-    else
-      accept = "[any]"
-
-    # NOTE: matching depends on the order of this match sequence
-    # being consistent with the order of the request sequence. If
-    # you change one, you must change the other.
-    [
-      {klass: Matchers.Path, ident: path, spec: path},
-      {klass: Matchers.Method, ident: method, spec: method},
-      {klass: Matchers.Query, ident: query_ident, spec: query_spec},
-      {klass: Matchers.Authorization, ident: authorization, spec: authorization},
-      {klass: Matchers.ContentType, ident: content_type, spec: content_type},
-      {klass: Matchers.Accept, ident: accept, spec: accept},
-    ]
 
 
   # Given an HTTP request, returns either an error or a result object.
@@ -118,41 +113,27 @@ class Classifier
   # and action_name which should handle the request.  Users of this method
   # may then find and use handler functions as they see fit.
   classify: (request) ->
-    path = request.path
-    query = request.query
-    method = request.method
     headers = request.headers
-    authorization = headers["authorization"] || headers["Authorization"]
-    content_type = headers["content-type"] || headers["Content-Type"]
-    accept = headers["accept"] || headers["Accept"]
+    components =
+      Path: request.path
+      Query: request.query
+      Method: request.method
+      Authorization: headers["authorization"] || headers["Authorization"]
+      ContentType: headers["content-type"] || headers["Content-Type"]
+      Accept: headers["accept"] || headers["Accept"]
 
     # the request sequence uses pseudo-tuples so that we can
     # tell at what stage match failures occur.  This is crucial 
     # to the determination of the appropriate error code (404, 406, etc.)
-    request_sequence = [
-      ["path", path],
-      ["method", method],
-      ["query", query],
-      ["authorization", authorization],
-      ["content_type", content_type],
-      ["accept", accept]
-    ]
-    results = @match_request_sequence(request_sequence)
+    sequence = []
+    for type in MATCH_ORDER
+      sequence.push [type, components[type]]
+
+    results = @match_request_sequence(sequence)
     if results.error
       results
     else
       matches = @compile_matches(results)
-      if matches.length > 1
-        payloads = (match.payload for match in matches)
-        console.log """
-        Dispatching found more than one candidate, so we're using the first.
-        Match payloads:
-        """
-        for payload in payloads
-          console.log(payload)
-      # first match, obviously. compile_matches is a good place
-      # to sort the matches based on whatever criteria we decide
-      # to use.
       match = matches[0]
       # TODO: this is ugly; can we improve?
       for k,v of match.payload
@@ -214,12 +195,12 @@ class Classifier
       description: "Problem with request"
 
   statuses:
-    "authorization": 401
-    "path": 404
-    "query": 404
-    "method": 405
-    "accept": 406
-    "content_type": 415
+    "Authorization": 401
+    "Path": 404
+    "Query": 404
+    "Method": 405
+    "Accept": 406
+    "ContentType": 415
 
 
   compile_matches: (list, val) ->
@@ -234,7 +215,10 @@ class Classifier
           if tracker.data != true
             out[tracker.type] = tracker.data
       matches.push(out)
-    matches
+    # Sort by the number of interesting pieces of data
+    # tracked during matching.  This trick pushes matchers without
+    # wildcards higher than those that have them.
+    matches.sort (item) -> Object.keys(item).length
 
 # while attempting to match the request, we're going to construct
 # a tree containing all the matchers that match facets of the request.

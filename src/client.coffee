@@ -1,7 +1,7 @@
 # HTTP client library
 Shred = require("shred")
 
-patchboard_schema = require("./patchboard_schema")
+patchboard_schema = require("./patchboard_api").schema
 
 class Client
 

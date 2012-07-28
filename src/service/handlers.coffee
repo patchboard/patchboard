@@ -23,19 +23,16 @@ module.exports = (service) ->
   meta:
     options: (context) ->
       {request, response, match} = context
-      console.log "Options match data:", match
 
       allowed = match.allow.join(", ")
-      response.writeHead 204,
+      context.respond 204, "",
         "Allow": allowed
         "Access-Control-Allow-Origin": "*"
         "Access-Control-Allow-Methods": allowed
         "Access-Control-Allow-Headers": "Content-Type, Accept"
         "Access-Control-Max-Age": 30 # seconds
 
-        "Content-Length": 0
-      response.end("")
-
+  patchboard:
     service_description: (context) ->
       {request, response, match} = context
       service_description =
