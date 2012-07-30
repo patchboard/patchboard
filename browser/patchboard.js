@@ -1,9 +1,372 @@
-require.define("/node_modules/shred/package.json", function (require, module, exports, __dirname, __filename) {
-module.exports = {"main":"./lib/shred.js"}
+var require = function (file, cwd) {
+    var resolved = require.resolve(file, cwd || '/');
+    var mod = require.modules[resolved];
+    if (!mod) throw new Error(
+        'Failed to resolve module ' + file + ', tried ' + resolved
+    );
+    var cached = require.cache[resolved];
+    var res = cached? cached.exports : mod();
+    return res;
+}
+
+require.paths = [];
+require.modules = {};
+require.cache = {};
+require.extensions = [".js",".coffee"];
+
+require._core = {
+    'assert': true,
+    'events': true,
+    'fs': true,
+    'path': true,
+    'vm': true
+};
+
+require.resolve = (function () {
+    return function (x, cwd) {
+        if (!cwd) cwd = '/';
+        
+        if (require._core[x]) return x;
+        var path = require.modules.path();
+        cwd = path.resolve('/', cwd);
+        var y = cwd || '/';
+        
+        if (x.match(/^(?:\.\.?\/|\/)/)) {
+            var m = loadAsFileSync(path.resolve(y, x))
+                || loadAsDirectorySync(path.resolve(y, x));
+            if (m) return m;
+        }
+        
+        var n = loadNodeModulesSync(x, y);
+        if (n) return n;
+        
+        throw new Error("Cannot find module '" + x + "'");
+        
+        function loadAsFileSync (x) {
+            x = path.normalize(x);
+            if (require.modules[x]) {
+                return x;
+            }
+            
+            for (var i = 0; i < require.extensions.length; i++) {
+                var ext = require.extensions[i];
+                if (require.modules[x + ext]) return x + ext;
+            }
+        }
+        
+        function loadAsDirectorySync (x) {
+            x = x.replace(/\/+$/, '');
+            var pkgfile = path.normalize(x + '/package.json');
+            if (require.modules[pkgfile]) {
+                var pkg = require.modules[pkgfile]();
+                var b = pkg.browserify;
+                if (typeof b === 'object' && b.main) {
+                    var m = loadAsFileSync(path.resolve(x, b.main));
+                    if (m) return m;
+                }
+                else if (typeof b === 'string') {
+                    var m = loadAsFileSync(path.resolve(x, b));
+                    if (m) return m;
+                }
+                else if (pkg.main) {
+                    var m = loadAsFileSync(path.resolve(x, pkg.main));
+                    if (m) return m;
+                }
+            }
+            
+            return loadAsFileSync(x + '/index');
+        }
+        
+        function loadNodeModulesSync (x, start) {
+            var dirs = nodeModulesPathsSync(start);
+            for (var i = 0; i < dirs.length; i++) {
+                var dir = dirs[i];
+                var m = loadAsFileSync(dir + '/' + x);
+                if (m) return m;
+                var n = loadAsDirectorySync(dir + '/' + x);
+                if (n) return n;
+            }
+            
+            var m = loadAsFileSync(x);
+            if (m) return m;
+        }
+        
+        function nodeModulesPathsSync (start) {
+            var parts;
+            if (start === '/') parts = [ '' ];
+            else parts = path.normalize(start).split('/');
+            
+            var dirs = [];
+            for (var i = parts.length - 1; i >= 0; i--) {
+                if (parts[i] === 'node_modules') continue;
+                var dir = parts.slice(0, i + 1).join('/') + '/node_modules';
+                dirs.push(dir);
+            }
+            
+            return dirs;
+        }
+    };
+})();
+
+require.alias = function (from, to) {
+    var path = require.modules.path();
+    var res = null;
+    try {
+        res = require.resolve(from + '/package.json', '/');
+    }
+    catch (err) {
+        res = require.resolve(from, '/');
+    }
+    var basedir = path.dirname(res);
+    
+    var keys = (Object.keys || function (obj) {
+        var res = [];
+        for (var key in obj) res.push(key);
+        return res;
+    })(require.modules);
+    
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        if (key.slice(0, basedir.length + 1) === basedir + '/') {
+            var f = key.slice(basedir.length);
+            require.modules[to + f] = require.modules[basedir + f];
+        }
+        else if (key === basedir) {
+            require.modules[to] = require.modules[basedir];
+        }
+    }
+};
+
+(function () {
+    var process = {};
+    
+    require.define = function (filename, fn) {
+        if (require.modules.__browserify_process) {
+            process = require.modules.__browserify_process();
+        }
+        
+        var dirname = require._core[filename]
+            ? ''
+            : require.modules.path().dirname(filename)
+        ;
+        
+        var require_ = function (file) {
+            return require(file, dirname);
+        };
+        require_.resolve = function (name) {
+            return require.resolve(name, dirname);
+        };
+        require_.modules = require.modules;
+        require_.define = require.define;
+        require_.cache = require.cache;
+        var module_ = { exports : {} };
+        
+        require.modules[filename] = function () {
+            require.cache[filename] = module_;
+            fn.call(
+                module_.exports,
+                require_,
+                module_,
+                module_.exports,
+                dirname,
+                filename,
+                process
+            );
+            return module_.exports;
+        };
+    };
+})();
+
+
+require.define("path",function(require,module,exports,__dirname,__filename,process){function filter (xs, fn) {
+    var res = [];
+    for (var i = 0; i < xs.length; i++) {
+        if (fn(xs[i], i, xs)) res.push(xs[i]);
+    }
+    return res;
+}
+
+// resolves . and .. elements in a path array with directory names there
+// must be no slashes, empty elements, or device names (c:\) in the array
+// (so also no leading and trailing slashes - it does not distinguish
+// relative and absolute paths)
+function normalizeArray(parts, allowAboveRoot) {
+  // if the path tries to go above the root, `up` ends up > 0
+  var up = 0;
+  for (var i = parts.length; i >= 0; i--) {
+    var last = parts[i];
+    if (last == '.') {
+      parts.splice(i, 1);
+    } else if (last === '..') {
+      parts.splice(i, 1);
+      up++;
+    } else if (up) {
+      parts.splice(i, 1);
+      up--;
+    }
+  }
+
+  // if the path is allowed to go above the root, restore leading ..s
+  if (allowAboveRoot) {
+    for (; up--; up) {
+      parts.unshift('..');
+    }
+  }
+
+  return parts;
+}
+
+// Regex to split a filename into [*, dir, basename, ext]
+// posix version
+var splitPathRe = /^(.+\/(?!$)|\/)?((?:.+?)?(\.[^.]*)?)$/;
+
+// path.resolve([from ...], to)
+// posix version
+exports.resolve = function() {
+var resolvedPath = '',
+    resolvedAbsolute = false;
+
+for (var i = arguments.length; i >= -1 && !resolvedAbsolute; i--) {
+  var path = (i >= 0)
+      ? arguments[i]
+      : process.cwd();
+
+  // Skip empty and invalid entries
+  if (typeof path !== 'string' || !path) {
+    continue;
+  }
+
+  resolvedPath = path + '/' + resolvedPath;
+  resolvedAbsolute = path.charAt(0) === '/';
+}
+
+// At this point the path should be resolved to a full absolute path, but
+// handle relative paths to be safe (might happen when process.cwd() fails)
+
+// Normalize the path
+resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
+    return !!p;
+  }), !resolvedAbsolute).join('/');
+
+  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
+};
+
+// path.normalize(path)
+// posix version
+exports.normalize = function(path) {
+var isAbsolute = path.charAt(0) === '/',
+    trailingSlash = path.slice(-1) === '/';
+
+// Normalize the path
+path = normalizeArray(filter(path.split('/'), function(p) {
+    return !!p;
+  }), !isAbsolute).join('/');
+
+  if (!path && !isAbsolute) {
+    path = '.';
+  }
+  if (path && trailingSlash) {
+    path += '/';
+  }
+  
+  return (isAbsolute ? '/' : '') + path;
+};
+
+
+// posix version
+exports.join = function() {
+  var paths = Array.prototype.slice.call(arguments, 0);
+  return exports.normalize(filter(paths, function(p, index) {
+    return p && typeof p === 'string';
+  }).join('/'));
+};
+
+
+exports.dirname = function(path) {
+  var dir = splitPathRe.exec(path)[1] || '';
+  var isWindows = false;
+  if (!dir) {
+    // No dirname
+    return '.';
+  } else if (dir.length === 1 ||
+      (isWindows && dir.length <= 3 && dir.charAt(1) === ':')) {
+    // It is just a slash or a drive letter with a slash
+    return dir;
+  } else {
+    // It is a full dirname, strip trailing slash
+    return dir.substring(0, dir.length - 1);
+  }
+};
+
+
+exports.basename = function(path, ext) {
+  var f = splitPathRe.exec(path)[2] || '';
+  // TODO: make this comparison case-insensitive on windows?
+  if (ext && f.substr(-1 * ext.length) === ext) {
+    f = f.substr(0, f.length - ext.length);
+  }
+  return f;
+};
+
+
+exports.extname = function(path) {
+  return splitPathRe.exec(path)[3] || '';
+};
 });
 
-require.define("/node_modules/shred/lib/shred.js", function (require, module, exports, __dirname, __filename) {
-// Shred is an HTTP client library intended to simplify the use of Node's
+require.define("__browserify_process",function(require,module,exports,__dirname,__filename,process){var process = module.exports = {};
+
+process.nextTick = (function () {
+    var queue = [];
+    var canPost = typeof window !== 'undefined'
+        && window.postMessage && window.addEventListener
+    ;
+    
+    if (canPost) {
+        window.addEventListener('message', function (ev) {
+            if (ev.source === window && ev.data === 'browserify-tick') {
+                ev.stopPropagation();
+                if (queue.length > 0) {
+                    var fn = queue.shift();
+                    fn();
+                }
+            }
+        }, true);
+    }
+    
+    return function (fn) {
+        if (canPost) {
+            queue.push(fn);
+            window.postMessage('browserify-tick', '*');
+        }
+        else setTimeout(fn, 0);
+    };
+})();
+
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+
+process.binding = function (name) {
+    if (name === 'evals') return (require)('vm')
+    else throw new Error('No such module. (Possibly not yet loaded)')
+};
+
+(function () {
+    var cwd = '/';
+    var path;
+    process.cwd = function () { return cwd };
+    process.chdir = function (dir) {
+        if (!path) path = require('path');
+        cwd = path.resolve(dir, cwd);
+    };
+})();
+});
+
+require.define("/node_modules/shred/package.json",function(require,module,exports,__dirname,__filename,process){module.exports = {"main":"./lib/shred.js"}});
+
+require.define("/node_modules/shred/lib/shred.js",function(require,module,exports,__dirname,__filename,process){// Shred is an HTTP client library intended to simplify the use of Node's
 // built-in HTTP library. In particular, we wanted to make it easier to interact
 // with HTTP-based APIs.
 // 
@@ -58,15 +421,11 @@ Shred.prototype = {
 
 
 module.exports = Shred;
-
 });
 
-require.define("/node_modules/shred/node_modules/underscore/package.json", function (require, module, exports, __dirname, __filename) {
-module.exports = {"main":"underscore.js"}
-});
+require.define("/node_modules/shred/node_modules/underscore/package.json",function(require,module,exports,__dirname,__filename,process){module.exports = {"main":"underscore.js"}});
 
-require.define("/node_modules/shred/node_modules/underscore/underscore.js", function (require, module, exports, __dirname, __filename) {
-//     Underscore.js 1.3.0
+require.define("/node_modules/shred/node_modules/underscore/underscore.js",function(require,module,exports,__dirname,__filename,process){//     Underscore.js 1.3.0
 //     (c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
 //     Underscore is freely distributable under the MIT license.
 //     Portions of Underscore are inspired or borrowed from Prototype,
@@ -1056,15 +1415,11 @@ require.define("/node_modules/shred/node_modules/underscore/underscore.js", func
   };
 
 }).call(this);
-
 });
 
-require.define("/node_modules/shred/node_modules/ax/package.json", function (require, module, exports, __dirname, __filename) {
-module.exports = {"main":"./lib/ax.js"}
-});
+require.define("/node_modules/shred/node_modules/ax/package.json",function(require,module,exports,__dirname,__filename,process){module.exports = {"main":"./lib/ax.js"}});
 
-require.define("/node_modules/shred/node_modules/ax/lib/ax.js", function (require, module, exports, __dirname, __filename) {
-var inspect = require("util").inspect
+require.define("/node_modules/shred/node_modules/ax/lib/ax.js",function(require,module,exports,__dirname,__filename,process){var inspect = require("util").inspect
   , fs = require("fs")
   , _ = require('underscore')
 ;
@@ -1179,11 +1534,9 @@ Logger.prototype = {
 };
 
 module.exports = Logger;
-
 });
 
-require.define("util", function (require, module, exports, __dirname, __filename) {
-var events = require('events');
+require.define("util",function(require,module,exports,__dirname,__filename,process){var events = require('events');
 
 exports.print = function () {};
 exports.puts = function () {};
@@ -1495,11 +1848,9 @@ exports.inherits = function(ctor, superCtor) {
     }
   });
 };
-
 });
 
-require.define("events", function (require, module, exports, __dirname, __filename) {
-if (!process.EventEmitter) process.EventEmitter = function () {};
+require.define("events",function(require,module,exports,__dirname,__filename,process){if (!process.EventEmitter) process.EventEmitter = function () {};
 
 var EventEmitter = exports.EventEmitter = process.EventEmitter;
 var isArray = typeof Array.isArray === 'function'
@@ -1670,20 +2021,14 @@ EventEmitter.prototype.listeners = function(type) {
   }
   return this._events[type];
 };
-
 });
 
-require.define("fs", function (require, module, exports, __dirname, __filename) {
-// nothing to see here... no file methods for the browser
-
+require.define("fs",function(require,module,exports,__dirname,__filename,process){// nothing to see here... no file methods for the browser
 });
 
-require.define("/node_modules/shred/node_modules/cookiejar/package.json", function (require, module, exports, __dirname, __filename) {
-module.exports = {"main":"cookiejar.js"}
-});
+require.define("/node_modules/shred/node_modules/cookiejar/package.json",function(require,module,exports,__dirname,__filename,process){module.exports = {"main":"cookiejar.js"}});
 
-require.define("/node_modules/shred/node_modules/cookiejar/cookiejar.js", function (require, module, exports, __dirname, __filename) {
-exports.CookieAccessInfo=CookieAccessInfo=function CookieAccessInfo(domain,path,secure,script) {
+require.define("/node_modules/shred/node_modules/cookiejar/cookiejar.js",function(require,module,exports,__dirname,__filename,process){exports.CookieAccessInfo=CookieAccessInfo=function CookieAccessInfo(domain,path,secure,script) {
     if(this instanceof CookieAccessInfo) {
     	this.domain=domain||undefined;
     	this.path=path||"/";
@@ -1906,11 +2251,9 @@ CookieJar.prototype.setCookies = function setCookies(cookies) {
 	}
 	return successful;
 }
-
 });
 
-require.define("/node_modules/shred/lib/shred/request.js", function (require, module, exports, __dirname, __filename) {
-// The request object encapsulates a request, creating a Node.js HTTP request and
+require.define("/node_modules/shred/lib/shred/request.js",function(require,module,exports,__dirname,__filename,process){// The request object encapsulates a request, creating a Node.js HTTP request and
 // then handling the response.
 
 var HTTP = require("http")
@@ -1924,7 +2267,60 @@ var HTTP = require("http")
   , Content = require("./content")
 ;
 
-var STATUS_CODES = HTTP.STATUS_CODES;
+var STATUS_CODES = HTTP.STATUS_CODES || {
+    100 : 'Continue',
+    101 : 'Switching Protocols',
+    102 : 'Processing', // RFC 2518, obsoleted by RFC 4918
+    200 : 'OK',
+    201 : 'Created',
+    202 : 'Accepted',
+    203 : 'Non-Authoritative Information',
+    204 : 'No Content',
+    205 : 'Reset Content',
+    206 : 'Partial Content',
+    207 : 'Multi-Status', // RFC 4918
+    300 : 'Multiple Choices',
+    301 : 'Moved Permanently',
+    302 : 'Moved Temporarily',
+    303 : 'See Other',
+    304 : 'Not Modified',
+    305 : 'Use Proxy',
+    307 : 'Temporary Redirect',
+    400 : 'Bad Request',
+    401 : 'Unauthorized',
+    402 : 'Payment Required',
+    403 : 'Forbidden',
+    404 : 'Not Found',
+    405 : 'Method Not Allowed',
+    406 : 'Not Acceptable',
+    407 : 'Proxy Authentication Required',
+    408 : 'Request Time-out',
+    409 : 'Conflict',
+    410 : 'Gone',
+    411 : 'Length Required',
+    412 : 'Precondition Failed',
+    413 : 'Request Entity Too Large',
+    414 : 'Request-URI Too Large',
+    415 : 'Unsupported Media Type',
+    416 : 'Requested Range Not Satisfiable',
+    417 : 'Expectation Failed',
+    418 : 'I\'m a teapot', // RFC 2324
+    422 : 'Unprocessable Entity', // RFC 4918
+    423 : 'Locked', // RFC 4918
+    424 : 'Failed Dependency', // RFC 4918
+    425 : 'Unordered Collection', // RFC 4918
+    426 : 'Upgrade Required', // RFC 2817
+    500 : 'Internal Server Error',
+    501 : 'Not Implemented',
+    502 : 'Bad Gateway',
+    503 : 'Service Unavailable',
+    504 : 'Gateway Time-out',
+    505 : 'HTTP Version not supported',
+    506 : 'Variant Also Negotiates', // RFC 2295
+    507 : 'Insufficient Storage', // RFC 4918
+    509 : 'Bandwidth Limit Exceeded',
+    510 : 'Not Extended' // RFC 2774
+};
 
 // The Shred object itself constructs the `Request` object. You should rarely
 // need to do this directly.
@@ -2368,19 +2764,13 @@ var logCurl = function (req) {
 
 
 module.exports = Request;
-
 });
 
-require.define("http", function (require, module, exports, __dirname, __filename) {
-module.exports = require("http-browserify")
-});
+require.define("http",function(require,module,exports,__dirname,__filename,process){module.exports = require("http-browserify")});
 
-require.define("/node_modules/browserify/node_modules/http-browserify/package.json", function (require, module, exports, __dirname, __filename) {
-module.exports = {"main":"index.js","browserify":"index.js"}
-});
+require.define("/node_modules/http-browserify/package.json",function(require,module,exports,__dirname,__filename,process){module.exports = {"main":"index.js","browserify":"index.js"}});
 
-require.define("/node_modules/browserify/node_modules/http-browserify/index.js", function (require, module, exports, __dirname, __filename) {
-var http = module.exports;
+require.define("/node_modules/http-browserify/index.js",function(require,module,exports,__dirname,__filename,process){var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
 
@@ -2439,11 +2829,9 @@ var xhrHttp = (function () {
         throw new Error('ajax not supported in this browser');
     }
 })();
-
 });
 
-require.define("/node_modules/browserify/node_modules/http-browserify/lib/request.js", function (require, module, exports, __dirname, __filename) {
-var EventEmitter = require('events').EventEmitter;
+require.define("/node_modules/http-browserify/lib/request.js",function(require,module,exports,__dirname,__filename,process){var EventEmitter = require('events').EventEmitter;
 var Response = require('./response');
 
 var Request = module.exports = function (xhr, params) {
@@ -2534,11 +2922,9 @@ Request.prototype.isSafeRequestHeader = function (headerName) {
     if (!headerName) return false;
     return (Request.unsafeHeaders.indexOf(headerName.toLowerCase()) === -1)
 };
-
 });
 
-require.define("/node_modules/browserify/node_modules/http-browserify/lib/response.js", function (require, module, exports, __dirname, __filename) {
-var EventEmitter = require('events').EventEmitter;
+require.define("/node_modules/http-browserify/lib/response.js",function(require,module,exports,__dirname,__filename,process){var EventEmitter = require('events').EventEmitter;
 
 var Response = module.exports = function (res) {
     this.offset = 0;
@@ -2637,16 +3023,12 @@ Response.prototype.write = function (res) {
         this.offset = res.responseText.length;
     }
 };
-
 });
 
-require.define("https", function (require, module, exports, __dirname, __filename) {
-module.exports = require('http');
-
+require.define("https",function(require,module,exports,__dirname,__filename,process){module.exports = require('http');
 });
 
-require.define("/node_modules/shred/lib/shred/parseUri.js", function (require, module, exports, __dirname, __filename) {
-// parseUri 1.2.2
+require.define("/node_modules/shred/lib/shred/parseUri.js",function(require,module,exports,__dirname,__filename,process){// parseUri 1.2.2
 // (c) Steven Levithan <stevenlevithan.com>
 // MIT License
 
@@ -2680,15 +3062,11 @@ parseUri.options = {
 };
 
 module.exports = parseUri;
-
 });
 
-require.define("/node_modules/shred/node_modules/sprintf/package.json", function (require, module, exports, __dirname, __filename) {
-module.exports = {"main":"./lib/sprintf"}
-});
+require.define("/node_modules/shred/node_modules/sprintf/package.json",function(require,module,exports,__dirname,__filename,process){module.exports = {"main":"./lib/sprintf"}});
 
-require.define("/node_modules/shred/node_modules/sprintf/lib/sprintf.js", function (require, module, exports, __dirname, __filename) {
-/**
+require.define("/node_modules/shred/node_modules/sprintf/lib/sprintf.js",function(require,module,exports,__dirname,__filename,process){/**
 sprintf() for JavaScript 0.7-beta1
 http://www.diveintojavascript.com/projects/javascript-sprintf
 
@@ -2876,11 +3254,9 @@ var vsprintf = function(fmt, argv) {
 };
 
 exports.sprintf = sprintf;
-exports.vsprintf = vsprintf;
-});
+exports.vsprintf = vsprintf;});
 
-require.define("/node_modules/shred/lib/shred/response.js", function (require, module, exports, __dirname, __filename) {
-// The `Response object` encapsulates a Node.js HTTP response.
+require.define("/node_modules/shred/lib/shred/response.js",function(require,module,exports,__dirname,__filename,process){// The `Response object` encapsulates a Node.js HTTP response.
 
 var _ = require("underscore")
   , Content = require("./content")
@@ -3078,11 +3454,9 @@ Response.prototype.getHeader = function (name) {
 };
 
 module.exports = Response;
-
 });
 
-require.define("/node_modules/shred/lib/shred/content.js", function (require, module, exports, __dirname, __filename) {
-var _ = require("underscore");
+require.define("/node_modules/shred/lib/shred/content.js",function(require,module,exports,__dirname,__filename,process){var _ = require("underscore");
 
 // The purpose of the `Content` object is to abstract away the data conversions
 // to and from raw content entities as strings. For example, you want to be able
@@ -3270,11 +3644,9 @@ var Errors = {
   }
 }
 module.exports = Content;
-
 });
 
-require.define("/node_modules/shred/lib/shred/mixins/headers.js", function (require, module, exports, __dirname, __filename) {
-// The header mixins allow you to add HTTP header support to any object. This
+require.define("/node_modules/shred/lib/shred/mixins/headers.js",function(require,module,exports,__dirname,__filename,process){// The header mixins allow you to add HTTP header support to any object. This
 // might seem pointless: why not simply use a hash? The main reason is that, per
 // the [HTTP spec](http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2),
 // headers are case-insensitive. So, for example, `content-type` is the same as
@@ -3373,15 +3745,11 @@ module.exports = {
     constructor.prototype.setHeader = function(key,value) { return setHeader(this,key,value); };
     constructor.prototype.setHeaders = function(hash) { return setHeaders(this,hash); };
   },
-};
-});
+};});
 
-require.define("/node_modules/shred/node_modules/iconv-lite/package.json", function (require, module, exports, __dirname, __filename) {
-module.exports = {}
-});
+require.define("/node_modules/shred/node_modules/iconv-lite/package.json",function(require,module,exports,__dirname,__filename,process){module.exports = {}});
 
-require.define("/node_modules/shred/node_modules/iconv-lite/index.js", function (require, module, exports, __dirname, __filename) {
-// Module exports
+require.define("/node_modules/shred/node_modules/iconv-lite/index.js",function(require,module,exports,__dirname,__filename,process){// Module exports
 var iconv = module.exports = {
     toEncoding: function(str, encoding) {
         return iconv.getCodec(encoding).toEncoding(str);
@@ -3586,356 +3954,402 @@ var getType = function(obj) {
     return Object.prototype.toString.call(obj).slice(8, -1);
 }
 
-
 });
 
-require.define("/lib/client.js", function (require, module, exports, __dirname, __filename) {
-    // Generated by CoffeeScript 1.3.3
-var Client, Shred, patchboard_schema;
+require.define("/src/patchboard_api.coffee",function(require,module,exports,__dirname,__filename,process){(function() {
 
-Shred = require("shred");
-
-patchboard_schema = {
-  id: "patchboard",
-  properties: {
-    resource: {
-      id: "#resource",
-      type: "object",
+  module.exports = {
+    map: {
+      patchboard: {
+        paths: ["/"]
+      }
+    },
+    "interface": {
+      patchboard: {
+        actions: {
+          documentation: {
+            method: "GET"
+          },
+          service_description: {
+            method: "GET",
+            accept: "application/json"
+          }
+        }
+      }
+    },
+    schema: {
+      id: "patchboard",
       properties: {
-        url: {
-          type: "string",
-          format: "uri",
-          readonly: true
-        }
-      }
-    }
-  }
-};
-
-Client = (function() {
-
-  function Client(options) {
-    var absolute_name, key, merged, name, parent, parent_type, resource_type, schema, value, _ref, _ref1, _ref2, _ref3;
-    this.shred = new Shred();
-    this.schema_id = options.schema.id;
-    this.schemas = options.schema.properties;
-    _ref = patchboard_schema.properties;
-    for (name in _ref) {
-      schema = _ref[name];
-      absolute_name = "" + patchboard_schema.id + "#" + name;
-      this.schemas[absolute_name] = schema;
-    }
-    this["interface"] = options["interface"];
-    this.wrappers = {};
-    _ref1 = this.schemas;
-    for (resource_type in _ref1) {
-      schema = _ref1[resource_type];
-      if (resource_type === "patchboard#resource") {
-        continue;
-      }
-      if (schema["extends"]) {
-        parent_type = schema["extends"].$ref;
-        if ((parent_type != null ? parent_type.indexOf("#") : void 0) === 0) {
-          parent = this.schemas[parent_type.slice(1)];
-        } else {
-          parent = this.schemas[parent_type];
-        }
-        merged = {
-          properties: {}
-        };
-        _ref2 = parent.properties;
-        for (key in _ref2) {
-          value = _ref2[key];
-          merged.properties[key] = value;
-        }
-        _ref3 = schema.properties;
-        for (key in _ref3) {
-          value = _ref3[key];
-          merged.properties[key] = value;
-        }
-        schema.properties = merged.properties;
-        if (parent_type.indexOf("#") === 0) {
-          this.wrappers[resource_type] = this.resource_wrapper(resource_type, schema);
-        }
-      } else if (schema.type === "array") {
-        this.wrappers[resource_type] = this.array_wrapper(schema);
-      } else if (schema.type === "object") {
-        this.wrappers[resource_type] = this.object_wrapper(schema);
-      }
-    }
-  }
-
-  Client.prototype.register_schemas = function(schemas) {
-    var absolute_name, id, name, schema, _ref, _results;
-    id = schemas.id;
-    _ref = schemas.properties;
-    _results = [];
-    for (name in _ref) {
-      schema = _ref[name];
-      _results.push(absolute_name = "" + patchboard_schema.id + "#" + name);
-    }
-    return _results;
-  };
-
-  Client.prototype.array_wrapper = function(schema) {
-    var client, item_type;
-    client = this;
-    item_type = this.munge_type(schema.items);
-    return function(items) {
-      var result, value, _i, _len;
-      result = [];
-      for (_i = 0, _len = items.length; _i < _len; _i++) {
-        value = items[_i];
-        result.push(client.wrap(item_type, value));
-      }
-      return result;
-    };
-  };
-
-  Client.prototype.munge_type = function(schema) {
-    if (schema.$ref) {
-      return schema.$ref.slice(1);
-    } else if (schema.type) {
-      return schema.type;
-    }
-  };
-
-  Client.prototype.object_wrapper = function(schema) {
-    var client;
-    client = this;
-    return function(data) {
-      var name, prop_def, raw, type, wrapped, _ref;
-      _ref = schema.properties;
-      for (name in _ref) {
-        prop_def = _ref[name];
-        raw = data[name];
-        type = client.munge_type(prop_def);
-        if (type) {
-          wrapped = client.wrap(type, raw);
-        } else {
-          wrapped = raw;
-        }
-        data[name] = wrapped;
-      }
-      if (schema.additionalProperties) {
-        type = client.munge_type(schema.additionalProperties);
-        if (type) {
-          for (name in data) {
-            raw = data[name];
-            if (!(schema.properties && schema.properties[name])) {
-              data[name] = client.wrap(type, raw);
+        resource: {
+          id: "#resource",
+          type: "object",
+          properties: {
+            url: {
+              type: "string",
+              format: "uri",
+              readonly: true
             }
           }
         }
       }
-      return data;
-    };
+    }
   };
 
-  Client.prototype.resource_wrapper = function(resource_type, schema) {
-    var client, constructor, interface_def;
-    client = this;
-    constructor = this.resource_constructor();
-    constructor.resource_type = resource_type;
-    if (interface_def = this["interface"][resource_type]) {
-      this.define_interface(constructor, interface_def.actions);
-    }
-    this.define_properties(constructor, schema.properties);
-    return function(data) {
-      return new constructor(data);
-    };
-  };
+}).call(this);
+});
 
-  Client.prototype.define_interface = function(constructor, actions) {
-    var definition, method, name, _ref, _results;
-    constructor.prototype.requests = {};
-    _ref = this.resource_prototype;
-    for (name in _ref) {
-      method = _ref[name];
-      constructor.prototype[name] = method;
-    }
-    _results = [];
-    for (name in actions) {
-      definition = actions[name];
-      constructor.prototype.requests[name] = this.request_creator(name, definition);
-      _results.push(constructor.prototype[name] = this.register_action(name));
-    }
-    return _results;
-  };
+require.define("/src/client.coffee",function(require,module,exports,__dirname,__filename,process){(function() {
+  var Client, Shred, patchboard_schema;
 
-  Client.prototype.define_properties = function(constructor, properties) {
-    var client, name, schema, spec, _results;
-    client = this;
-    _results = [];
-    for (name in properties) {
-      schema = properties[name];
-      spec = this.property_spec(name, schema);
-      _results.push(Object.defineProperty(constructor.prototype, name, spec));
-    }
-    return _results;
-  };
+  Shred = require("shred");
 
-  Client.prototype.property_spec = function(name, property_schema) {
-    var client, spec, wrap_function;
-    client = this;
-    wrap_function = this.create_wrapping_function(name, property_schema);
-    spec = {};
-    spec.get = function() {
-      var val;
-      val = this.properties[name];
-      return wrap_function(val);
-    };
-    if (!property_schema.readonly) {
-      spec.set = function(val) {
-        return this.properties[name] = val;
-      };
-    }
-    return spec;
-  };
+  patchboard_schema = require("./patchboard_api").schema;
 
-  Client.prototype.resource_constructor = function() {
-    var client;
-    client = this;
-    return function(properties) {
-      Object.defineProperty(this, "client", {
-        value: client,
-        enumerable: false
+  Client = (function() {
+
+    Client.discover = function(service_url, callback) {
+      return new Shred().request({
+        url: service_url,
+        method: "GET",
+        headers: {
+          "Accept": "application/json"
+        },
+        on: {
+          200: function(response) {
+            var client;
+            client = new Client(response.content.data);
+            return callback(null, client);
+          },
+          error: function(response) {
+            return callback(response);
+          }
+        }
       });
-      this.properties = properties;
-      return null;
     };
-  };
 
-  Client.prototype.resource_prototype = {
-    prepare_request: function(name, options) {
-      var prepper;
-      prepper = this.requests[name];
-      if (prepper) {
-        return prepper.call(this, name, options);
-      } else {
-        throw "No such action defined: " + name;
-      }
-    },
-    request: function(name, options) {
-      var request;
-      request = this.prepare_request(name, options);
-      return this.client.shred.request(request);
-    },
-    credential: function(type, action) {
-      var cap;
-      if (type === "Capability") {
-        return cap = this.properties.capabilities[action];
-      }
-    }
-  };
-
-  Client.prototype.register_action = function(name) {
-    return function(data) {
-      return this.request(name, data);
-    };
-  };
-
-  Client.prototype.request_creator = function(name, definition) {
-    var authorization, client, default_headers, method, query, request_media_type, request_type, required_params, response_media_type, response_type;
-    client = this;
-    method = definition.method;
-    default_headers = {};
-    if (request_type = definition.request_entity) {
-      request_media_type = client.schemas[request_type].mediaType;
-      default_headers["Content-Type"] = request_media_type;
-    }
-    if (response_type = definition.response_entity) {
-      response_media_type = client.schemas[response_type].mediaType;
-      default_headers["Accept"] = response_media_type;
-    }
-    authorization = definition.authorization;
-    if (query = definition.query) {
-      required_params = query.required;
-    }
-    return function(name, options) {
-      var credential, error, handler, key, request, response, status, value, _ref, _ref1;
-      request = {
-        url: this.url,
-        method: method,
-        headers: {},
-        content: options.content
-      };
-      for (key in default_headers) {
-        value = default_headers[key];
-        request.headers[key] = value;
-      }
-      if (authorization) {
-        credential = this.credential(authorization, name);
-        request.headers["Authorization"] = "" + authorization + " " + credential;
-      }
-      _ref = options.headers;
+    function Client(options) {
+      var absolute_name, key, merged, name, parent, parent_type, resource_type, schema, value, _ref, _ref1, _ref2, _ref3;
+      this.shred = new Shred();
+      this.schema_id = options.schema.id;
+      this.schemas = options.schema.properties;
+      _ref = patchboard_schema.properties;
       for (name in _ref) {
-        value = _ref[name];
-        request.headers[name] = value;
+        schema = _ref[name];
+        absolute_name = "" + patchboard_schema.id + "#" + name;
+        this.schemas[absolute_name] = schema;
       }
-      if (options.query) {
-        request.query = options.query;
-      }
-      for (key in required_params) {
-        value = required_params[key];
-        if (!request.query[key]) {
-          throw "Missing required query param: " + key;
+      this["interface"] = options["interface"];
+      this.wrappers = {};
+      _ref1 = this.schemas;
+      for (resource_type in _ref1) {
+        schema = _ref1[resource_type];
+        if (resource_type === "patchboard#resource") {
+          continue;
+        }
+        if (schema["extends"]) {
+          parent_type = schema["extends"].$ref;
+          if ((parent_type != null ? parent_type.indexOf("#") : void 0) === 0) {
+            parent = this.schemas[parent_type.slice(1)];
+          } else {
+            parent = this.schemas[parent_type];
+          }
+          merged = {
+            properties: {}
+          };
+          _ref2 = parent.properties;
+          for (key in _ref2) {
+            value = _ref2[key];
+            merged.properties[key] = value;
+          }
+          _ref3 = schema.properties;
+          for (key in _ref3) {
+            value = _ref3[key];
+            merged.properties[key] = value;
+          }
+          schema.properties = merged.properties;
+          if (parent_type.indexOf("#") === 0) {
+            this.wrappers[resource_type] = this.resource_wrapper(resource_type, schema);
+          }
+        } else if (schema.type === "array") {
+          this.wrappers[resource_type] = this.array_wrapper(schema);
+        } else if (schema.type === "object") {
+          this.wrappers[resource_type] = this.object_wrapper(schema);
         }
       }
-      request.on = {};
-      if (error = options.on.error) {
-        request.on.error = error;
-        delete options.on.error;
-      }
-      if (response = options.on.response) {
-        request.on.response = response;
-        delete options.on.response;
-      }
-      _ref1 = options.on;
-      for (status in _ref1) {
-        handler = _ref1[status];
-        request.on[status] = function(response) {
-          var wrapped;
-          wrapped = client.wrap(response_type, response.content.data);
-          return handler(response, wrapped);
-        };
-      }
-      return request;
-    };
-  };
+    }
 
-  Client.prototype.create_wrapping_function = function(name, schema) {
-    var client;
-    client = this;
-    if (schema.type === "object") {
-      return this.object_wrapper(schema);
-    } else if (schema.type === "array") {
-      return this.array_wrapper(schema);
-    } else if (this.wrappers[schema.type]) {
-      return function(data) {
-        return client.wrap(schema.type, data);
+    Client.prototype.register_schemas = function(schemas) {
+      var absolute_name, id, name, schema, _ref, _results;
+      id = schemas.id;
+      _ref = schemas.properties;
+      _results = [];
+      for (name in _ref) {
+        schema = _ref[name];
+        _results.push(absolute_name = "" + patchboard_schema.id + "#" + name);
+      }
+      return _results;
+    };
+
+    Client.prototype.array_wrapper = function(schema) {
+      var client, item_type;
+      client = this;
+      item_type = this.munge_type(schema.items);
+      return function(items) {
+        var result, value, _i, _len;
+        result = [];
+        for (_i = 0, _len = items.length; _i < _len; _i++) {
+          value = items[_i];
+          result.push(client.wrap(item_type, value));
+        }
+        return result;
       };
-    } else {
+    };
+
+    Client.prototype.munge_type = function(schema) {
+      if (schema.$ref) {
+        return schema.$ref.slice(1);
+      } else if (schema.type) {
+        return schema.type;
+      }
+    };
+
+    Client.prototype.object_wrapper = function(schema) {
+      var client;
+      client = this;
       return function(data) {
+        var name, prop_def, raw, type, wrapped, _ref;
+        _ref = schema.properties;
+        for (name in _ref) {
+          prop_def = _ref[name];
+          raw = data[name];
+          type = client.munge_type(prop_def);
+          if (type) {
+            wrapped = client.wrap(type, raw);
+          } else {
+            wrapped = raw;
+          }
+          data[name] = wrapped;
+        }
+        if (schema.additionalProperties) {
+          type = client.munge_type(schema.additionalProperties);
+          if (type) {
+            for (name in data) {
+              raw = data[name];
+              if (!(schema.properties && schema.properties[name])) {
+                data[name] = client.wrap(type, raw);
+              }
+            }
+          }
+        }
         return data;
       };
-    }
-  };
+    };
 
-  Client.prototype.wrap = function(type, data) {
-    var wrapper;
-    if (wrapper = this.wrappers[type]) {
-      return wrapper(data);
-    } else {
-      return data;
-    }
-  };
+    Client.prototype.resource_wrapper = function(resource_type, schema) {
+      var client, constructor, interface_def;
+      client = this;
+      constructor = this.resource_constructor();
+      constructor.resource_type = resource_type;
+      if (interface_def = this["interface"][resource_type]) {
+        this.define_interface(constructor, interface_def.actions);
+      }
+      this.define_properties(constructor, schema.properties);
+      return function(data) {
+        return new constructor(data);
+      };
+    };
 
-  return Client;
+    Client.prototype.define_interface = function(constructor, actions) {
+      var definition, method, name, _ref, _results;
+      constructor.prototype.requests = {};
+      _ref = this.resource_prototype;
+      for (name in _ref) {
+        method = _ref[name];
+        constructor.prototype[name] = method;
+      }
+      _results = [];
+      for (name in actions) {
+        definition = actions[name];
+        constructor.prototype.requests[name] = this.request_creator(name, definition);
+        _results.push(constructor.prototype[name] = this.register_action(name));
+      }
+      return _results;
+    };
 
-})();
+    Client.prototype.define_properties = function(constructor, properties) {
+      var client, name, schema, spec, _results;
+      client = this;
+      _results = [];
+      for (name in properties) {
+        schema = properties[name];
+        spec = this.property_spec(name, schema);
+        _results.push(Object.defineProperty(constructor.prototype, name, spec));
+      }
+      return _results;
+    };
 
-module.exports = Client;
+    Client.prototype.property_spec = function(name, property_schema) {
+      var client, spec, wrap_function;
+      client = this;
+      wrap_function = this.create_wrapping_function(name, property_schema);
+      spec = {};
+      spec.get = function() {
+        var val;
+        val = this.properties[name];
+        return wrap_function(val);
+      };
+      if (!property_schema.readonly) {
+        spec.set = function(val) {
+          return this.properties[name] = val;
+        };
+      }
+      return spec;
+    };
 
+    Client.prototype.resource_constructor = function() {
+      var client;
+      client = this;
+      return function(properties) {
+        Object.defineProperty(this, "client", {
+          value: client,
+          enumerable: false
+        });
+        this.properties = properties;
+        return null;
+      };
+    };
+
+    Client.prototype.resource_prototype = {
+      prepare_request: function(name, options) {
+        var prepper;
+        prepper = this.requests[name];
+        if (prepper) {
+          return prepper.call(this, name, options);
+        } else {
+          throw "No such action defined: " + name;
+        }
+      },
+      request: function(name, options) {
+        var request;
+        request = this.prepare_request(name, options);
+        return this.client.shred.request(request);
+      },
+      credential: function(type, action) {
+        var cap;
+        if (type === "Capability") {
+          return cap = this.properties.capabilities[action];
+        }
+      }
+    };
+
+    Client.prototype.register_action = function(name) {
+      return function(data) {
+        return this.request(name, data);
+      };
+    };
+
+    Client.prototype.request_creator = function(name, definition) {
+      var authorization, client, default_headers, method, query, request_media_type, request_type, required_params, response_media_type, response_type;
+      client = this;
+      method = definition.method;
+      default_headers = {};
+      if (request_type = definition.request_entity) {
+        request_media_type = client.schemas[request_type].mediaType;
+        default_headers["Content-Type"] = request_media_type;
+      }
+      if (response_type = definition.response_entity) {
+        response_media_type = client.schemas[response_type].mediaType;
+        default_headers["Accept"] = response_media_type;
+      }
+      authorization = definition.authorization;
+      if (query = definition.query) {
+        required_params = query.required;
+      }
+      return function(name, options) {
+        var credential, error, handler, key, request, response, status, value, _ref, _ref1;
+        request = {
+          url: this.url,
+          method: method,
+          headers: {},
+          content: options.content
+        };
+        for (key in default_headers) {
+          value = default_headers[key];
+          request.headers[key] = value;
+        }
+        if (authorization) {
+          credential = this.credential(authorization, name);
+          request.headers["Authorization"] = "" + authorization + " " + credential;
+        }
+        _ref = options.headers;
+        for (name in _ref) {
+          value = _ref[name];
+          request.headers[name] = value;
+        }
+        if (options.query) {
+          request.query = options.query;
+        }
+        for (key in required_params) {
+          value = required_params[key];
+          if (!request.query[key]) {
+            throw "Missing required query param: " + key;
+          }
+        }
+        request.on = {};
+        if (error = options.on.error) {
+          request.on.error = error;
+          delete options.on.error;
+        }
+        if (response = options.on.response) {
+          request.on.response = response;
+          delete options.on.response;
+        }
+        _ref1 = options.on;
+        for (status in _ref1) {
+          handler = _ref1[status];
+          request.on[status] = function(response) {
+            var wrapped;
+            wrapped = client.wrap(response_type, response.content.data);
+            return handler(response, wrapped);
+          };
+        }
+        return request;
+      };
+    };
+
+    Client.prototype.create_wrapping_function = function(name, schema) {
+      var client;
+      client = this;
+      if (schema.type === "object") {
+        return this.object_wrapper(schema);
+      } else if (schema.type === "array") {
+        return this.array_wrapper(schema);
+      } else if (this.wrappers[schema.type]) {
+        return function(data) {
+          return client.wrap(schema.type, data);
+        };
+      } else {
+        return function(data) {
+          return data;
+        };
+      }
+    };
+
+    Client.prototype.wrap = function(type, data) {
+      var wrapper;
+      if (wrapper = this.wrappers[type]) {
+        return wrapper(data);
+      } else {
+        return data;
+      }
+    };
+
+    return Client;
+
+  })();
+
+  module.exports = Client;
+
+}).call(this);
 });
-require("/lib/client.js");
+require("/src/client.coffee");

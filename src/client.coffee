@@ -5,6 +5,19 @@ patchboard_schema = require("./patchboard_api").schema
 
 class Client
 
+  @discover: (service_url, callback) ->
+    new Shred().request
+      url: service_url
+      method: "GET"
+      headers:
+        "Accept": "application/json"
+      on:
+        200: (response) ->
+          client = new Client(response.content.data)
+          callback(null, client)
+        error: (response) ->
+          callback(response)
+
   # options.schema describes the data structures of
   # the API service resources, and possibly some "helper"
   # constructs (e.g. dictionaries or arrays of resources)
@@ -13,7 +26,6 @@ class Client
   # via HTTP requests to the API service.
   constructor: (options) ->
     @shred = new Shred()
-    # Dictionary of wrapper classes
     @schema_id = options.schema.id
     @schemas = options.schema.properties
     # add the base schema

@@ -1,0 +1,34 @@
+<html>
+  <head>
+    <title>Patchboard client test</title>
+
+    <script type='text/javascript'
+      src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
+
+    <script type='text/javascript' src='./patchboard.js'></script>
+    <script type="text/javascript">
+
+      $(document).ready(function() {
+
+        var Client = require("/src/client.coffee")
+        Client.discover("http://localhost:1337/", function (err, client) {
+          console.log(client);
+        });
+
+      });
+
+    </script>
+
+  </head>
+  <body>
+    <div id="test">
+      <h2>Test Results</h2>
+    </div>
+  </body>
+</html>
+
+
+
+
+
+
