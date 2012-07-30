@@ -1,8 +1,8 @@
 $COFFEE = File.expand_path("node_modules/.bin/coffee")
 
 $BROWSERIFY = File.expand_path("node_modules/.bin/browserify")
-$BROWSERIFY_OPTIONS = "-i zlib --prelude false -o browser/patchboard.js"
 
+$UGLIFY = File.expand_path("node_modules/.bin/uglifyjs")
 
 desc "Build and compile EVERYTHING"
 task "build" => %w[
@@ -25,6 +25,11 @@ rule(".js" => lambda { |tn|
   sh "#{$COFFEE} --compile --bare --print #{target.source} > #{target.name}"
 end
 
+task "build:browser" do
+  sh "#{$BROWSERIFY} -i zlib -o browser/patchboard.js src/client.coffee --exports require"
+  sh "#{$UGLIFY} -o browser/patchboard.min.js browser/patchboard.js"
+  #sh "#{$BROWSERIFY} -i zlib -o browser/client.js browser/client.coffee --exports require"
+end
 
 desc "Run tests"
 task "test" => %w[
