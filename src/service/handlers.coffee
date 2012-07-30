@@ -39,6 +39,7 @@ module.exports = (service) ->
         interface: service.interface
         schema: service.schema
 
+      context.set_cors_headers("*")
       content = JSON.stringify(service_description)
       headers =
         "Content-Type": "application/json"
