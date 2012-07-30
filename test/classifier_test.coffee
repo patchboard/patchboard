@@ -58,10 +58,7 @@ service = new Patchboard.Service
   schema: schema
   map: map
 
-classifier = new Patchboard.Classifier
-  interface: http_interface
-  schema: schema
-  map: map
+classifier = new Patchboard.Classifier(service)
 
 
 class MockRequest

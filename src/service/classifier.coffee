@@ -77,12 +77,21 @@ class Classifier
       identifiers.Query = "none"
 
     if request_entity = definition.request_entity
-      identifiers.ContentType = specs.ContentType = @schema[request_entity].mediaType
+      schema = @schema[request_entity]
+      if schema
+        identifiers.ContentType = specs.ContentType = schema.mediaType
+      else
+        throw "No schema found for #{request_entity}"
+
     else
       identifiers.ContentType = specs.ContentType = "[any]"
 
     if response_entity = definition.response_entity
-      identifiers.Accept = specs.Accept = @schema[response_entity].mediaType
+      schema = @schema[response_entity]
+      if schema
+        identifiers.Accept = specs.Accept = schema.mediaType
+      else
+        throw "No schema found for #{response_entity}"
     else if definition.accept
       identifiers.Accept = specs.Accept = definition.accept
     else
