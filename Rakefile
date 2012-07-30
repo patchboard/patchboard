@@ -26,9 +26,14 @@ rule(".js" => lambda { |tn|
 end
 
 task "build:browser" do
-  sh "#{$BROWSERIFY} -i zlib -o browser/patchboard.js src/client.coffee --exports require"
+  command = []
+  command << "#{$BROWSERIFY} -i zlib -o browser/patchboard.js"
+  command << "-r ./src/client.coffee"
+  command << "-a patchboard:/src/client"
+  command << "--exports require"
+  sh command.join(" ")
+
   sh "#{$UGLIFY} -o browser/patchboard.min.js browser/patchboard.js"
-  #sh "#{$BROWSERIFY} -i zlib -o browser/client.js browser/client.coffee --exports require"
 end
 
 desc "Run tests"
