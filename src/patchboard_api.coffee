@@ -1,19 +1,20 @@
 module.exports =
   
   map:
-    patchboard:
+    service:
       paths: ["/"]
+      publish: true
 
   interface:
-    patchboard:
+    service:
       actions:
 
         documentation:
           method: "GET"
 
-        service_description:
+        description:
           method: "GET"
-          accept: "application/json"
+          response_entity: "description"
 
   schema:
     id: "patchboard"
@@ -26,4 +27,13 @@ module.exports =
             type: "string"
             format: "uri"
             readonly: true
+      service:
+        extends: {$ref: "#resource"}
+      description:
+        type: "object"
+        mediaType: "application/json"
+        properties:
+          schema: {type: "object"}
+          interface: {type: "object"}
+          directory: {type: "object"}
 

@@ -1,7 +1,10 @@
 # HTTP client library
 Shred = require("shred")
 
-patchboard_schema = require("./patchboard_api").schema
+patchboard_api = require("./patchboard_api")
+patchboard_schema = patchboard_api.schema
+patchboard_interface = patchboard_api.interface
+patchboard_resources = patchboard_api.resources
 
 class Client
 
@@ -28,11 +31,20 @@ class Client
     @shred = new Shred()
     @schema_id = options.schema.id
     @schemas = options.schema.properties
+    @directory = options.directory
+    @resources = {}
+
     # add the base schema
     for name, schema of patchboard_schema.properties
       absolute_name = "#{patchboard_schema.id}##{name}"
       @schemas[absolute_name] = schema
-    @interface = options.interface
+      # FIXME: this is so gross
+      @schemas[name] = schema
+    @interface = {}
+    for key, value of patchboard_interface
+      @interface[key] = value
+    for key, value of options.interface
+      @interface[key] = value
 
     @wrappers = {}
 
@@ -53,18 +65,24 @@ class Client
         schema.properties = merged.properties
         # only define a wrapper if it inherits from a local schema.  ???
         # FIXME: think of a better way to handle this.
-        if parent_type.indexOf("#") == 0
-          @wrappers[resource_type] = @resource_wrapper(resource_type, schema)
+        #if parent_type.indexOf("#") == 0
+          #@wrappers[resource_type] = @resource_wrapper(resource_type, schema)
 
       else if schema.type == "array"
         @wrappers[resource_type] = @array_wrapper(schema)
       else if schema.type == "object"
         @wrappers[resource_type] = @object_wrapper(schema)
 
-  register_schemas: (schemas) ->
-    id = schemas.id
-    for name, schema of schemas.properties
-      absolute_name = "#{patchboard_schema.id}##{name}"
+    for resource_type, definition of @interface
+      if schema = @schemas[resource_type]
+        @wrappers[resource_type] = @resource_wrapper(resource_type, schema)
+
+    @create_resources(@directory)
+
+  create_resources: (directory) ->
+    for key, value of directory
+      if @wrappers[key]
+        @resources[key] = new @wrappers[key](url: value)
 
   array_wrapper: (schema) ->
     client = @

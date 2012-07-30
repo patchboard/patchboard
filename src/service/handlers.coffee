@@ -20,6 +20,8 @@ html = (input) ->
 
 module.exports = (service) ->
 
+  # the "meta" handlers do not correspond to actual resource/action requests
+  # made by clients.  They are to be used for weird situations like OPTIONS.
   meta:
     options: (context) ->
       {request, response, match} = context
@@ -32,20 +34,14 @@ module.exports = (service) ->
         "Access-Control-Allow-Headers": "Content-Type, Accept"
         "Access-Control-Max-Age": 30 # seconds
 
-  patchboard:
-    service_description: (context) ->
+  service:
+    description: (context) ->
       {request, response, match} = context
-      service_description =
-        interface: service.interface
-        schema: service.schema
 
       context.set_cors_headers("*")
-      content = JSON.stringify(service_description)
-      headers =
+      content = JSON.stringify(service.description, null, 2)
+      context.respond 200, content,
         "Content-Type": "application/json"
-        "Content-Length": content.length
-      response.writeHead 200, headers
-      response.end(content)
 
     documentation: (context) ->
       {request, response, match} = context
@@ -58,6 +54,7 @@ module.exports = (service) ->
         content = markdown
         media_type = "text/plain"
 
+      context.set_cors_headers("*")
       context.respond 200, content,
         "Content-Type": media_type
 
@@ -66,9 +63,8 @@ module.exports = (service) ->
 
       content = JSON.stringify
         message: "Unimplemented: #{match.resource_type}.#{match.action_name}"
-      headers =
+      context.set_cors_headers("*")
+      context.respond 501, content
         "Content-Type": "application/json"
         "Content-Length": content.length
-      response.writeHead 501, headers
-      response.end(content)
 

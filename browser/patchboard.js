@@ -365,11 +365,17 @@ process.binding = function (name) {
 });
 
 require.define("/src/client.coffee",function(require,module,exports,__dirname,__filename,process){(function() {
-  var Client, Shred, patchboard_schema;
+  var Client, Shred, patchboard_api, patchboard_interface, patchboard_resources, patchboard_schema;
 
   Shred = require("shred");
 
-  patchboard_schema = require("./patchboard_api").schema;
+  patchboard_api = require("./patchboard_api");
+
+  patchboard_schema = patchboard_api.schema;
+
+  patchboard_interface = patchboard_api["interface"];
+
+  patchboard_resources = patchboard_api.resources;
 
   Client = (function() {
 
@@ -394,21 +400,31 @@ require.define("/src/client.coffee",function(require,module,exports,__dirname,__
     };
 
     function Client(options) {
-      var absolute_name, key, merged, name, parent, parent_type, resource_type, schema, value, _ref, _ref1, _ref2, _ref3;
+      var absolute_name, key, merged, name, parent, parent_type, resource_type, schema, value, _ref, _ref1, _ref2, _ref3, _ref4;
       this.shred = new Shred();
       this.schema_id = options.schema.id;
       this.schemas = options.schema.properties;
+      this.directory = options.directory;
       _ref = patchboard_schema.properties;
       for (name in _ref) {
         schema = _ref[name];
         absolute_name = "" + patchboard_schema.id + "#" + name;
         this.schemas[absolute_name] = schema;
       }
-      this["interface"] = options["interface"];
+      this["interface"] = {};
+      for (key in patchboard_interface) {
+        value = patchboard_interface[key];
+        this["interface"][key] = value;
+      }
+      _ref1 = options["interface"];
+      for (key in _ref1) {
+        value = _ref1[key];
+        this["interface"][key] = value;
+      }
       this.wrappers = {};
-      _ref1 = this.schemas;
-      for (resource_type in _ref1) {
-        schema = _ref1[resource_type];
+      _ref2 = this.schemas;
+      for (resource_type in _ref2) {
+        schema = _ref2[resource_type];
         if (resource_type === "patchboard#resource") {
           continue;
         }
@@ -422,14 +438,14 @@ require.define("/src/client.coffee",function(require,module,exports,__dirname,__
           merged = {
             properties: {}
           };
-          _ref2 = parent.properties;
-          for (key in _ref2) {
-            value = _ref2[key];
-            merged.properties[key] = value;
-          }
-          _ref3 = schema.properties;
+          _ref3 = parent.properties;
           for (key in _ref3) {
             value = _ref3[key];
+            merged.properties[key] = value;
+          }
+          _ref4 = schema.properties;
+          for (key in _ref4) {
+            value = _ref4[key];
             merged.properties[key] = value;
           }
           schema.properties = merged.properties;
@@ -4318,6 +4334,9 @@ require.define("/src/patchboard_api.coffee",function(require,module,exports,__di
       patchboard: {
         paths: ["/"]
       }
+    },
+    directory: {
+      patchboard: "/"
     },
     "interface": {
       patchboard: {
