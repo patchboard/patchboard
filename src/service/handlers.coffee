@@ -64,7 +64,7 @@ module.exports = (service) ->
       content = JSON.stringify
         message: "Unimplemented: #{match.resource_type}.#{match.action_name}"
       context.set_cors_headers("*")
-      context.respond 501, content
+      context.respond 501, content,
         "Content-Type": "application/json"
         "Content-Length": content.length
 

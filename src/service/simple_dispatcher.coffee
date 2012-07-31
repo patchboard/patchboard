@@ -13,7 +13,7 @@ class SimpleDispatcher
     @classifier = new Classifier(@service)
 
   supply_missing_handlers: () ->
-    handler = @handlers.meta.default
+    handler = @handlers.service.default
 
     for resource, definition of @http_interface
       for action, spec of definition.actions
