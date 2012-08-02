@@ -2,7 +2,7 @@
   "name": "patchboard",
   "description": "Self-assembling HTTP APIs",
   "author": "Matthew King",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "repository": {
     "type": "git",
     "url": "https://github.com/automatthew/patchboard/"
@@ -10,6 +10,7 @@
   "main": "./lib/patchboard.js",
   "bin": {"c2j": "./bin/c2json.coffee"},
   "files": [
+    "bin",
     "lib",
     "test"
   ],
