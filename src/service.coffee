@@ -6,7 +6,7 @@ Documenter = require("./service/documenter")
 class Service
 
   constructor: (options) ->
-    @base_url = options.url || "http://localhost:1337"
+    @service_url = options.service_url || "http://localhost:1337"
     @schema = {properties: {}}
     @interface = {}
     @directory = {}
@@ -23,9 +23,9 @@ class Service
       @interface[key] = value
 
     for resource_type, definition of PatchboardAPI.map when definition.publish
-      @directory[resource_type] = "#{@base_url}#{definition.paths[0]}"
+      @directory[resource_type] = "#{@service_url}#{definition.paths[0]}"
     for resource_type, definition of options.map when definition.publish
-      @directory[resource_type] = "#{@base_url}#{definition.paths[0]}"
+      @directory[resource_type] = "#{@service_url}#{definition.paths[0]}"
 
     @interface = options.interface
     @map = options.map

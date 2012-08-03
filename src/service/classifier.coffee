@@ -37,6 +37,7 @@ class Classifier
           @register path, definition,
             resource_type: resource_type
             action_name: action_name
+            success_status: definition.status
 
         # setup OPTIONS handling
         @register path, { method: "OPTIONS" },
