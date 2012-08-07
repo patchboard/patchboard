@@ -3,61 +3,9 @@ assert = require("assert")
 helpers = require("./helpers")
 testify = require("../src/testify")
 
-map =
-  resource_collection:
-    paths: ["/resource"]
-  resource_instance:
-    paths: ["/resource/:id"]
-
-
-http_interface =
-  resource_collection:
-    actions:
-      create:
-        method: "POST"
-        request_entity: "resource_instance"
-        response_entity: "resource_instance"
-      list:
-        method: "GET"
-        response_entity: "resource_collection"
-      search:
-        method: "GET"
-        response_entity: "resource_collection"
-        query:
-          required:
-            name: {type: "string"}
-          optional:
-            reverse: {type: "boolean"}
-  resource_instance:
-    actions:
-      get:
-        method: "GET"
-        response_entity: "resource_instance"
-      delete:
-        method: "DELETE"
-        authorization: "Basic"
-
-schema =
-  id: "my_api"
-  properties:
-    resource_collection:
-      extends: "resource"
-      mediaType: "patchboard.resource_collection"
-      properties:
-        some_property: {type: "string"}
-    resource_instance:
-      extends: "resource"
-      mediaType: "patchboard.resource_instance"
-      properties:
-        some_property: {type: "string"}
-
+api = require("./sample_api.coffee")
 Patchboard = require("../src/patchboard")
-
-service = new Patchboard.Service
-  interface: http_interface
-  schema: schema
-  map: map
-
+service = new Patchboard.Service(api)
 classifier = new Patchboard.Classifier(service)
 
 

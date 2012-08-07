@@ -2,6 +2,7 @@ URL = require("url")
 PatchboardAPI = require("./patchboard_api")
 Dispatcher = require("./service/simple_dispatcher")
 Documenter = require("./service/documenter")
+Path = require("./service/path")
 
 class Service
 
@@ -30,10 +31,24 @@ class Service
     @interface = options.interface
     @map = options.map
     @documenter = new Documenter(@schema, @interface)
+
+    @paths = {}
+    for resource_type, definition of @map
+      path_string = definition.paths[0]
+      @paths[resource_type] = new Path(path_string)
+
     @description =
       interface: @interface
       schema: @schema
       directory: @directory
+
+
+  generate_url: (resource_type, args...) ->
+    path = @paths[resource_type]
+    if path
+      "#{@service_url}#{path.generate(args...)}"
+    else
+      throw "Problem generating URL. No such resource: #{resource_type}"
 
 
   simple_dispatcher: (app_handlers) ->
@@ -53,7 +68,7 @@ class Service
     dispatcher = new Dispatcher(@, handlers)
     dispatcher.create_handler()
 
-  improve_request: (request) ->
+  augment_request: (request) ->
     url = URL.parse(request.url)
     request.path = url.pathname
     if url.query
@@ -72,6 +87,8 @@ class Service
     
     #{@documenter.document_schema()}
     """
+  
+
 
 
 module.exports = Service

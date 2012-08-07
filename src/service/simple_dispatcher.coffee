@@ -26,7 +26,7 @@ class SimpleDispatcher
       dispatcher.dispatch(request, response)
 
   dispatch: (request, response) ->
-    @service.improve_request(request)
+    @service.augment_request(request)
     result = @classifier.classify(request)
     if result.error
       @classification_error(result.error, request, response)
