@@ -5,7 +5,6 @@ Context = require("./context")
 class SimpleDispatcher
 
   constructor: (@service, @handlers) ->
-    @schema = service.schema
     @http_interface = service.interface
     @map = service.map
     @supply_missing_handlers()

@@ -1,73 +1,63 @@
-JSV = require("JSV").JSV
-patchboard_schema = require("../patchboard_schema")
-
+patchboard_schema = require("../patchboard_api").schema
 
 class SchemaManager
 
   constructor: (@application_schema) ->
-    @jsv = JSV.createEnvironment("json-schema-draft-03")
+    # "flat" storage of schemas, using absolute names
+    @schemas = {}
+
+    @normalize(patchboard_schema)
+    @normalize(@application_schema)
+
     @register_schema(patchboard_schema)
     @register_schema(@application_schema)
 
+  normalize: (schema) ->
+    for name, definition of schema.properties
+      if definition.id && definition.id.indexOf("#") == 0
+        definition.id = "#{schema.id}#{definition.id}"
+      else
+        definition.id = "#{schema.id}##{name}"
+
+      if definition.extends
+        if definition.extends.$ref && definition.extends.$ref.indexOf("#") == 0
+          definition.extends.$ref = "#{schema.id}#{definition.extends.$ref}"
+
+
+  # Stows each subschema in a dict under its name and id.
+  # The ids should be unique, but names can easily end with surprising 
+  # overrides, so this needs to be used as Last One Wins.
+  # The primary reason for using the bare "name" is so that Patchboard
+  # HTTP interface specs can refer to them.
+  # The reason to store the fully qualified ids is to allow bog standard
+  # JSON schema validators to work.
   register_schema: (schema) ->
-    @jsv.createSchema(schema, false, schema.id)
+    for name, definition of schema.properties
+      @schemas[name] = definition
+      if definition.id
+        @schemas[definition.id] = definition
 
-  validate: (type, data) ->
-    schema_url = "urn:#{@application_schema.id}##{type}"
-    schema = @jsv.findSchema(schema_url)
-    if schema
-      @jsv.validate data, schema, (error) ->
-        console.log(error)
-    else
-      throw "unknown schema type: #{type}"
+  document: () ->
+    @document_markdown()
 
-  @transform_schemas: (schemas) ->
-    primitives =
-      "string": true
-      "object": true
-      "array": true
-      "boolean": true
-      "number": true
+  document_markdown: () ->
+    out = []
+    out.push "# Schemas"
+    for name, schema of @schemas
+      out.push @schema_doc(name, schema)
+    out.join("\n\n")
 
-
-    convert_types = (thing) ->
-      for key, value of thing
-        if value.type == "object" && value.properties
-          convert_types(value.properties)
-        else if value.type && !primitives[value.type]
-          thing[key] = {$ref: "api##{value.type}"}
-        else
-          #console.log value
-
-    transformed = {}
-    transformed.id = "api"
-    transformed.properties = {}
-
-    for name, schema of schemas
-      trans = { id: "##{name}"}
-      if extender = schema.extends
-        delete schema.extends
-        if extender.indexOf("patchboard#") == 0
-          trans.extends = {$ref: extender}
-        else
-          trans.extends = {$ref: "api##{extender}"}
-      required = schema.required
-      delete schema.required
-
-      if schema.media_type
-        trans.mediaType = schema.media_type
-        delete schema.media_type
-
-      if schema.properties
-        convert_types(schema.properties)
-
-      for key, value of schema
-        trans[key] = value
-      if required
-        for key in required
-          trans.properties[key].required = true
-      transformed.properties[name] = trans
-    transformed
-
+  schema_doc: (name, schema) ->
+    lines = []
+    lines.push """
+    <a id="#{schema.id.replace("#", "/")}"></a>
+    ## #{name} 
+    """
+    lines.push """
+    ```json
+    #{JSON.stringify(schema, null, 2)}
+    ```
+    """
+    lines.join("\n\n")
 
 module.exports = SchemaManager

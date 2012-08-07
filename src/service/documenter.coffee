@@ -5,30 +5,7 @@ marked.setOptions
   pedantic: false
 
 class Documenter
-  constructor: (schema, @interface) ->
-    @schema_id = schema.id
-    @schemas = schema.properties
-
-  document_schema: () ->
-    out = []
-    out.push "# Schemas"
-    for name, schema of @schemas
-      out.push @schema_doc(name, schema)
-    out.join("\n\n")
-
-  schema_doc: (name, schema) ->
-    lines = []
-    lines.push """
-    <a id="#{@schema_id}/#{name}"></a>
-    ## #{name} 
-    """
-    lines.push """
-    ```json
-    #{JSON.stringify(schema, null, 2)}
-    ```
-    """
-    lines.join("\n\n")
-
+  constructor: (@schemas, @interface) ->
 
   document_interface: () ->
     out = []
@@ -73,14 +50,14 @@ class Documenter
       lines.push "- **Headers**"
       lines.push headers.join("\n\n")
       if definition.request_entity
-        lines.push "- **Body Schema**: [#{re}](##{@schema_id}/#{re})"
+        lines.push "- **Body Schema**: [#{re}](##{@schemas[re].id.replace("#", "/")})"
 
     lines.push "**HTTP Response**"
     if status = definition.status
       lines.push "- **Expected Status**: #{status} - #{http.STATUS_CODES[status]}"
     if definition.response_entity
       re = definition.response_entity
-      lines.push "- **Body Schema**: [#{re}](##{@schema_id}/#{re})"
+      lines.push "- **Body Schema**: [#{re}](##{@schemas[re].id.replace("#", "/")})"
 
     lines.join("\n\n")
 

@@ -14,7 +14,7 @@ class Classifier
   ]
 
   constructor: (service) ->
-    @schema = service.schema.properties
+    @schema = service.schema_manager.schemas
     @http_interface = service.interface
     @map = service.map
     

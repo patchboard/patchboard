@@ -2,24 +2,25 @@
 Shred = require("shred")
 
 patchboard_api = require("./patchboard_api")
-patchboard_schema = patchboard_api.schema
 patchboard_interface = patchboard_api.interface
-patchboard_resources = patchboard_api.resources
 
 class Client
 
   @discover: (service_url, callback) ->
-    new Shred().request
-      url: service_url
-      method: "GET"
-      headers:
-        "Accept": "application/json"
-      on:
-        200: (response) ->
-          client = new Client(response.content.data)
-          callback(null, client)
-        error: (response) ->
-          callback(response)
+    if service_url.constructor == String
+      new Shred().request
+        url: service_url
+        method: "GET"
+        headers:
+          "Accept": "application/json"
+        on:
+          200: (response) ->
+            client = new Client(response.content.data)
+            callback(null, client)
+          error: (response) ->
+            callback(response)
+    else
+      throw "Expected to receive a String, but got something else"
 
   # options.schema describes the data structures of
   # the API service resources, and possibly some "helper"
@@ -29,17 +30,10 @@ class Client
   # via HTTP requests to the API service.
   constructor: (options) ->
     @shred = new Shred()
-    @schema_id = options.schema.id
-    @schemas = options.schema.properties
+    @schemas = options.schema
     @directory = options.directory
     @resources = {}
 
-    # add the base schema
-    for name, schema of patchboard_schema.properties
-      absolute_name = "#{patchboard_schema.id}##{name}"
-      @schemas[absolute_name] = schema
-      # FIXME: this is so gross
-      @schemas[name] = schema
     @interface = {}
     for key, value of patchboard_interface
       @interface[key] = value

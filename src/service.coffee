@@ -2,45 +2,39 @@ URL = require("url")
 PatchboardAPI = require("./patchboard_api")
 Dispatcher = require("./service/simple_dispatcher")
 Documenter = require("./service/documenter")
+SchemaManager = require("./service/schema_manager")
 Path = require("./service/path")
 
 class Service
 
   constructor: (options) ->
     @service_url = options.service_url || "http://localhost:1337"
-    @schema = {properties: {}}
+    @schema_manager = new SchemaManager(options.schema)
+    @map = options.map
+
+
     @interface = {}
-    @directory = {}
-    @default_handlers = require("./service/handlers")(@)
-
-    for key, value of PatchboardAPI.schema.properties
-      @schema.properties[key] = value
-    @schema.id = options.schema.id
-    for key, value of options.schema.properties
-      @schema.properties[key] = value
-
     for key, value of PatchboardAPI.interface
       @interface[key] = value
     for key, value of options.interface
       @interface[key] = value
 
+    @directory = {}
     for resource_type, definition of PatchboardAPI.map when definition.publish
       @directory[resource_type] = "#{@service_url}#{definition.paths[0]}"
-    for resource_type, definition of options.map when definition.publish
+    for resource_type, definition of @map when definition.publish
       @directory[resource_type] = "#{@service_url}#{definition.paths[0]}"
-
-    @interface = options.interface
-    @map = options.map
-    @documenter = new Documenter(@schema, @interface)
 
     @paths = {}
     for resource_type, definition of @map
       path_string = definition.paths[0]
       @paths[resource_type] = new Path(path_string)
 
+    @documenter = new Documenter(@schema_manager.schemas, @interface)
+    @default_handlers = require("./service/handlers")(@)
     @description =
       interface: @interface
-      schema: @schema
+      schema: @schema_manager.schemas
       directory: @directory
 
 
@@ -86,7 +80,7 @@ class Service
     """
     #{@documenter.document_interface()}
     
-    #{@documenter.document_schema()}
+    #{@schema_manager.document()}
     """
   
 
