@@ -15,6 +15,7 @@ class Service
 
     for key, value of PatchboardAPI.schema.properties
       @schema.properties[key] = value
+    @schema.id = options.schema.id
     for key, value of options.schema.properties
       @schema.properties[key] = value
 
