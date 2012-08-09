@@ -61,6 +61,9 @@ class Service
       if definition.extends
         if definition.extends.$ref && definition.extends.$ref.indexOf("#") == 0
           definition.extends.$ref = "#{schema.id}#{definition.extends.$ref}"
+      if definition.type == "array" && definition.items.$ref.indexOf("#") == 0
+        definition.items.$ref = "#{schema.id}#{definition.items.$ref}"
+
 
   simple_dispatcher: (app_handlers) ->
     handlers = {}

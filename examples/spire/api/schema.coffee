@@ -3,23 +3,19 @@ module.exports =
   properties:
 
     capability:
-      #id: "#capability"
       type: "string"
 
     capability_dictionary:
-      #id: "#capability_dictionary"
       type: "object"
       additionalProperties: {$ref: "spire#capability"}
 
     resource:
-      #id: "#resource"
       extends: {$ref: "patchboard#resource"}
       properties:
         capabilities:
           $ref: "spire#capability_dictionary"
 
     account:
-      #id: "#account"
       extends: {$ref: "#resource"}
       mediaType: "application/vnd.spire-io.account+json;version=1.0"
       properties:
@@ -45,7 +41,6 @@ module.exports =
       #mediaType: "application/vnd.spire-io.accounts+json;version=1.0"
 
     session:
-      #id: "#session"
       extends: {$ref: "#resource"}
       mediaType: "application/vnd.spire-io.session+json;version=1.0"
       properties:
@@ -59,11 +54,9 @@ module.exports =
             notifications: {type: "object"}
             
     session_collection:
-      #id: "#session_collection"
       extends: {$ref: "#resource"}
 
     channel:
-      #id: "#channel"
       extends: {$ref: "#resource"}
       mediaType: "application/vnd.spire-io.channel+json;version=1.0"
       properties:
@@ -77,7 +70,6 @@ module.exports =
       required: ["name"]
 
     channel_collection:
-      #id: "#channel_collection"
       extends: {$ref: "#resource"}
       mediaType: "application/vnd.spire-io.channels+json;version=1.0"
 
@@ -87,7 +79,6 @@ module.exports =
       additionalProperties: {$ref: "#channel"}
 
     subscription:
-      #id: "#subscription"
       extends: {$ref: "#resource"}
       mediaType: "application/vnd.spire-io.subscription+json;version=1.0"
       properties:
@@ -100,18 +91,15 @@ module.exports =
           items: {"type": "string"}
 
     subscription_collection:
-      #id: "#subscription_collection"
       extends: {$ref: "#resource"}
       mediaType: "application/vnd.spire-io.subscriptions+json;version=1.0"
 
     subscription_dictionary:
-      #id: "#subscription_dictionary"
       type: "object"
       mediaType: "application/vnd.spire-io.subscriptions+json;version=1.0"
       additionalProperties: {$ref: "subscription"}
 
     event:
-      #id: "#event"
       extends: {$ref: "#resource"}
       mediaType: "application/vnd.spire-io.event+json;version=1.0"
       properties:
@@ -121,7 +109,6 @@ module.exports =
         reason: {type: "string"}
 
     event_list:
-      #id: "#event_list"
       type: "object"
       mediaType: "application/vnd.spire-io.events+json;version=1.0"
       properties:
@@ -132,7 +119,6 @@ module.exports =
         parts: {}
 
     message:
-      #id: "#message"
       extends: {$ref: "#resource"}
       mediaType: "application/vnd.spire-io.message+json;version=1.0"
       properties:
@@ -141,7 +127,6 @@ module.exports =
         timestamp: {type: "number"}
 
     message_list:
-      #id: "#message_list"
       type: "array"
       items: {$ref: "#message"}
 

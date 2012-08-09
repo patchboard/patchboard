@@ -31,7 +31,6 @@ class Client
   # via HTTP requests to the API service.
   constructor: (options) ->
     @shred = new Shred()
-    @munged_schema = options.schema
     @schema_manager = new SchemaManager(options.schemas...)
     @directory = options.directory
     @resources = {}
@@ -42,26 +41,33 @@ class Client
     for key, value of options.interface
       @interface[key] = value
 
-    @wrappers = {}
+    @representations = {}
 
-    for resource_type, schema of @munged_schema
-      if /^patchboard#/.test(resource_type)
+    # define representation wrappers
+    for name, schema of @schema_manager.names
+      if /^patchboard#/.test(name)
         continue
-      if schema.type == "array"
-        @wrappers[resource_type] = @array_wrapper(schema)
+      if schema.extends
+        @representations[name] = @representation_wrapper(name, schema)
+      else if schema.type == "array"
+        @representations[name] = @array_wrapper(schema)
       else if schema.type == "object"
-        @wrappers[resource_type] = @object_wrapper(schema)
+        @representations[name] = @object_wrapper(schema)
 
     for resource_type, definition of @interface
-      if schema = @schema_manager.names[resource_type]
-        @wrappers[resource_type] = @resource_wrapper(resource_type, schema)
+      rep = @representations[resource_type]
+      if rep
+        schema = @schema_manager.names[resource_type]
+        @representations[resource_type] = @resource_wrapper(rep, resource_type, schema)
+      else
+        @representations[resource_type] = @resource_wrapper(null, resource_type)
 
     @create_resources(@directory)
 
   create_resources: (directory) ->
     for key, value of directory
-      if @wrappers[key]
-        @resources[key] = new @wrappers[key](url: value)
+      if @representations[key]
+        @resources[key] = new @representations[key](url: value)
 
   array_wrapper: (schema) ->
     client = @
@@ -74,6 +80,7 @@ class Client
 
   munge_type: (schema) ->
     if schema.$ref
+      #console.log schema.$ref
       schema.$ref.slice(1)
     else if schema.type
       schema.type
@@ -99,26 +106,36 @@ class Client
 
       data
 
-
-  # Generate and store a resource class based on the schema
-  # and interface
-  resource_wrapper: (resource_type, schema) ->
+  wrap: (type, data) ->
+    if wrapper = @representations[type]
+      new wrapper(data)
+    else
+      data
+  
+  resource_wrapper: (constructor, resource_type, schema) ->
     client = @
-    constructor = @resource_constructor()
+    constructor ||= (@properties) ->
+      @url = @properties.url
+
     # Because coffeescript won't give me Named Function Expressions.
     constructor.resource_type = resource_type
+
+    # Using Object.defineProperty to hide the client from console.log
+    Object.defineProperty constructor.prototype, "client",
+      value: client
+      enumerable: false
 
     if interface_def = @interface[resource_type]
       @define_actions(constructor, interface_def.actions)
 
-    # FIXME: Defining properties here is just plain WRONG.  It's the 
-    # only reason this method needs to take a schema as an argument
-    # at all.  To supply this method with the "correct" schema requires
-    # some really atrocious assumptions about the correlation between
-    # the interface and the schema naming.
+    constructor
+
+
+  representation_wrapper: (resource_type, schema) ->
+    client = @
+    constructor = (@properties) ->
     @define_properties(constructor, schema.properties)
-    (data) ->
-      new constructor(data)
+    constructor
 
   define_actions: (constructor, actions) ->
     constructor.prototype.requests = {}
@@ -151,15 +168,17 @@ class Client
         @properties[name] = val
     spec
 
-  resource_constructor:  ->
+  create_wrapping_function: (name, schema) ->
     client = @
-    (properties) ->
-      # Using Object.defineProperty to hide the client from console.log
-      Object.defineProperty @, "client",
-        value: client
-        enumerable: false
-      @properties = properties
-      null # bless coffeescript.  bless it's little heart.
+    if schema.type == "object"
+      @object_wrapper(schema)
+    else if schema.type == "array"
+      @array_wrapper(schema)
+    else if @representations[schema.type]
+      (data) -> client.wrap(schema.type, data)
+    else
+      (data) -> data
+
 
   resource_prototype:
     # Method for preparing a request object that can be modified
@@ -257,23 +276,6 @@ class Client
 
       request
 
-  create_wrapping_function: (name, schema) ->
-    client = @
-    if schema.type == "object"
-      @object_wrapper(schema)
-    else if schema.type == "array"
-      @array_wrapper(schema)
-    else if @wrappers[schema.type]
-      (data) -> client.wrap(schema.type, data)
-    else
-      (data) -> data
-
-  wrap: (type, data) ->
-    if wrapper = @wrappers[type]
-      wrapper(data)
-    else
-      data
-  
 
 
 
