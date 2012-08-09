@@ -2,14 +2,18 @@ URL = require("url")
 PatchboardAPI = require("./patchboard_api")
 Dispatcher = require("./service/simple_dispatcher")
 Documenter = require("./service/documenter")
-SchemaManager = require("./service/schema_manager")
+SchemaManager = require("./schema_manager")
 Path = require("./service/path")
 
 class Service
 
   constructor: (options) ->
     @service_url = options.service_url || "http://localhost:1337"
-    @schema_manager = new SchemaManager(options.schema)
+
+    @normalize_schema(PatchboardAPI.schema)
+    @normalize_schema(options.schema)
+
+    @schema_manager = new SchemaManager(PatchboardAPI.schema, options.schema)
     @map = options.map
 
 
@@ -30,11 +34,12 @@ class Service
       path_string = definition.paths[0]
       @paths[resource_type] = new Path(path_string)
 
-    @documenter = new Documenter(@schema_manager.schemas, @interface)
+    @documenter = new Documenter(@schema_manager.names, @interface)
     @default_handlers = require("./service/handlers")(@)
     @description =
       interface: @interface
-      schema: @schema_manager.schemas
+      schema: @schema_manager.ids
+      schemas: @schema_manager.schemas
       directory: @directory
 
 
@@ -45,6 +50,17 @@ class Service
     else
       throw "Problem generating URL. No such resource: #{resource_type}"
 
+  normalize_schema: (schema) ->
+    for name, definition of schema.properties
+      if definition.id
+        if definition.id.indexOf("#") == 0
+          definition.id = "#{schema.id}#{definition.id}"
+      else
+        definition.id = "#{schema.id}##{name}"
+
+      if definition.extends
+        if definition.extends.$ref && definition.extends.$ref.indexOf("#") == 0
+          definition.extends.$ref = "#{schema.id}#{definition.extends.$ref}"
 
   simple_dispatcher: (app_handlers) ->
     handlers = {}

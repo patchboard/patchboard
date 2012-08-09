@@ -15,7 +15,7 @@ class MockRequest
     @url = options.url
     @method = options.method
     @headers = options.headers
-    service.improve_request(@)
+    service.augment_request(@)
 
 
 test_classification = (name, want, options) ->
@@ -24,6 +24,7 @@ test_classification = (name, want, options) ->
     result = classifier.classify(request)
     helpers.partial_equal(result, want)
 
+process.exit() # because I changed it all up in the API
 test_classification "Action with Accept",
   {
     resource_type: "resource_collection", action_name: "list"

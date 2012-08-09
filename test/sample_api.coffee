@@ -83,3 +83,7 @@ module.exports =
         properties:
           some_property: {type: "string"}
 
+      attachment_list:
+        mediaType: "patchboard.attachment_list"
+        items: {$ref: "#attachment"}
+

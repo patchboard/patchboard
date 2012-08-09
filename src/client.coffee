@@ -3,6 +3,7 @@ Shred = require("shred")
 
 patchboard_api = require("./patchboard_api")
 patchboard_interface = patchboard_api.interface
+SchemaManager = require("./schema_manager")
 
 class Client
 
@@ -30,7 +31,8 @@ class Client
   # via HTTP requests to the API service.
   constructor: (options) ->
     @shred = new Shred()
-    @schemas = options.schema
+    @munged_schema = options.schema
+    @schema_manager = new SchemaManager(options.schemas...)
     @directory = options.directory
     @resources = {}
 
@@ -42,33 +44,16 @@ class Client
 
     @wrappers = {}
 
-    for resource_type, schema of @schemas
-      continue if resource_type == "patchboard#resource"
-
-      if schema.extends
-        parent_type = schema.extends.$ref
-        if parent_type?.indexOf("#") == 0
-          parent = @schemas[parent_type.slice(1)]
-        else
-          parent = @schemas[parent_type]
-        merged = {properties: {}}
-        for key, value of parent.properties
-          merged.properties[key] = value
-        for key, value of schema.properties
-          merged.properties[key] = value
-        schema.properties = merged.properties
-        # only define a wrapper if it inherits from a local schema.  ???
-        # FIXME: think of a better way to handle this.
-        #if parent_type.indexOf("#") == 0
-          #@wrappers[resource_type] = @resource_wrapper(resource_type, schema)
-
-      else if schema.type == "array"
+    for resource_type, schema of @munged_schema
+      if /^patchboard#/.test(resource_type)
+        continue
+      if schema.type == "array"
         @wrappers[resource_type] = @array_wrapper(schema)
       else if schema.type == "object"
         @wrappers[resource_type] = @object_wrapper(schema)
 
     for resource_type, definition of @interface
-      if schema = @schemas[resource_type]
+      if schema = @schema_manager.names[resource_type]
         @wrappers[resource_type] = @resource_wrapper(resource_type, schema)
 
     @create_resources(@directory)
@@ -124,13 +109,18 @@ class Client
     constructor.resource_type = resource_type
 
     if interface_def = @interface[resource_type]
-      @define_interface(constructor, interface_def.actions)
+      @define_actions(constructor, interface_def.actions)
 
+    # FIXME: Defining properties here is just plain WRONG.  It's the 
+    # only reason this method needs to take a schema as an argument
+    # at all.  To supply this method with the "correct" schema requires
+    # some really atrocious assumptions about the correlation between
+    # the interface and the schema naming.
     @define_properties(constructor, schema.properties)
     (data) ->
       new constructor(data)
 
-  define_interface: (constructor, actions) ->
+  define_actions: (constructor, actions) ->
     constructor.prototype.requests = {}
     for name, method of @resource_prototype
       constructor.prototype[name] = method
@@ -208,10 +198,10 @@ class Client
     method = definition.method
     default_headers = {}
     if request_type = definition.request_entity
-      request_media_type = client.schemas[request_type].mediaType
+      request_media_type = client.schema_manager.names[request_type].mediaType
       default_headers["Content-Type"] = request_media_type
     if response_type = definition.response_entity
-      response_media_type = client.schemas[response_type].mediaType
+      response_media_type = client.schema_manager.names[response_type].mediaType
       default_headers["Accept"] = response_media_type
     authorization = definition.authorization
     if query = definition.query
@@ -243,6 +233,9 @@ class Client
         if !request.query[key]
           throw "Missing required query param: #{key}"
 
+      # NOTE, FIXME, TODO: this entire area is full of early assumptions that
+      # turned out to be troublesome.
+      # 
       # set up response handlers.  The error and default response handlers
       # do NOT attempt to wrap the response entity per the resource schema.
       request.on = {}
@@ -258,6 +251,7 @@ class Client
       # content.  I'm not sure how Shred handles 30x statuses, either.
       for status, handler of options.on
         request.on[status] = (response) ->
+          # TODO: disentangle the resource type from the representation type
           wrapped = client.wrap(response_type, response.content.data)
           handler(response, wrapped)
 
