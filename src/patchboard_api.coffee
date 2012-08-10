@@ -11,10 +11,12 @@ module.exports =
 
         documentation:
           method: "GET"
+          status: 200
 
         description:
           method: "GET"
           response_entity: "description"
+          status: 200
 
   schema:
     id: "patchboard"
@@ -28,6 +30,7 @@ module.exports =
             readonly: true
       service:
         extends: {$ref: "#resource"}
+
       description:
         type: "object"
         mediaType: "application/json"
