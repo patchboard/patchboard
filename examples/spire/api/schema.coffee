@@ -108,7 +108,7 @@ module.exports =
         timestamp: {type: "number"}
         reason: {type: "string"}
 
-    event_list:
+    event_slice:
       type: "object"
       mediaType: "application/vnd.spire-io.events+json;version=1.0"
       properties:

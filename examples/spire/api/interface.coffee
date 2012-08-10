@@ -128,7 +128,7 @@ module.exports =
       events:
         method: "GET"
         authorization: "Capability"
-        response_entity: "event_list"
+        response_entity: "event_slice"
 
   message:
     actions:
