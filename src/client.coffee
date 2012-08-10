@@ -41,63 +41,70 @@ class Client
     for key, value of options.interface
       @interface[key] = value
 
-    @representations = {}
+    @representation_ids = {}
+    @representation_types = {}
+    @resource_constructors = {}
 
-    # define representation wrappers
     for name, schema of @schema_manager.names
-      if /^patchboard#/.test(name)
-        continue
-      if schema.extends
-        @representations[name] = @representation_wrapper(name, schema)
-      else if schema.type == "array"
-        @representations[name] = @array_wrapper(schema)
-      else if schema.type == "object"
-        @representations[name] = @object_wrapper(schema)
+      if schema.type == "array"
+        constructor = @array_wrapper(schema)
+        @representation_ids[schema.id] = constructor
+      else
+        constructor = @representation_constructor(schema)
+        @representation_ids[schema.id] = constructor
 
     for resource_type, definition of @interface
-      rep = @representations[resource_type]
-      if rep
-        schema = @schema_manager.names[resource_type]
-        @representations[resource_type] = @resource_wrapper(rep, resource_type, schema)
-      else
-        @representations[resource_type] = @resource_wrapper(null, resource_type)
+      for id, constructor of @representation_ids
+        # The assumption here is that the frag-ident part of a schema id
+        # corresponds to the resource type.
+        [base, name] = id.split("#")
+        if name == resource_type
+          constructor = @resource_constructor(constructor, resource_type)
+          @representation_ids[id] = constructor
+          @resource_constructors[resource_type] = constructor
+
+      # create a resource constructor for types with no directly associated schemas.
+      @resource_constructors[resource_type] ||= @resource_constructor(null, resource_type)
 
     @create_resources(@directory)
 
+  # Create resource instances using the URLs supplied in the service
+  # description's directory.
   create_resources: (directory) ->
     for key, value of directory
-      if @representations[key]
-        @resources[key] = new @representations[key](url: value)
+      if @resource_constructors[key]
+        @resources[key] = new @resource_constructors[key](url: value)
 
   array_wrapper: (schema) ->
     client = @
-    item_type = @munge_type(schema.items)
+    item_type = @determine_schema_type(schema.items)
+    # NOTE: this works as a constructor because of ECMA-262 3rd Edition,
+    # sections 11.2.2 and 13.2.2. In short, if a function used as a constructor
+    # returns an Object, then the constructor call will return that object.
+    #
+    # I'm doing this for a couple of reasons:
+    #
+    # * client.wrap assumes the functions it uses are all constructors
+    # * subclassing Array in JavaScript is not practical.
     (items) ->
       result = []
       for value in items
         result.push(client.wrap(item_type, value))
       result
 
-  munge_type: (schema) ->
-    if schema.$ref
-      #console.log schema.$ref
-      schema.$ref.slice(1)
-    else if schema.type
-      schema.type
-
   object_wrapper: (schema) ->
     client = @
     (data) ->
       for name, prop_def of schema.properties
         raw = data[name]
-        type = client.munge_type(prop_def)
+        type = client.determine_schema_type(prop_def)
         if type
           wrapped = client.wrap(type, raw)
         else
           wrapped = raw
         data[name] = wrapped
       if schema.additionalProperties
-        type = client.munge_type(schema.additionalProperties)
+        type = client.determine_schema_type(schema.additionalProperties)
         if type
           for name, raw of data
             # we only want to wrap additional properties
@@ -106,45 +113,50 @@ class Client
 
       data
 
+  determine_schema_type: (schema) ->
+    if schema.$ref
+      if schema.$ref.indexOf("#") == 0
+        schema.$ref.slice(1)
+      else
+        schema.$ref
+    else if schema.type
+      schema.type
+
   wrap: (type, data) ->
-    if wrapper = @representations[type]
+    if wrapper = @representation_ids[type]
       new wrapper(data)
     else
+      console.log "no wrapper found for", type
       data
   
-  resource_wrapper: (constructor, resource_type, schema) ->
+  resource_constructor: (constructor, resource_type) ->
     client = @
     constructor ||= (@properties) ->
       @url = @properties.url
-
     # Because coffeescript won't give me Named Function Expressions.
     constructor.resource_type = resource_type
-
     # Using Object.defineProperty to hide the client from console.log
     Object.defineProperty constructor.prototype, "client",
       value: client
       enumerable: false
-
     if interface_def = @interface[resource_type]
       @define_actions(constructor, interface_def.actions)
-
-    constructor
-
-
-  representation_wrapper: (resource_type, schema) ->
-    client = @
-    constructor = (@properties) ->
-    @define_properties(constructor, schema.properties)
     constructor
 
   define_actions: (constructor, actions) ->
     constructor.prototype.requests = {}
-    for name, method of @resource_prototype
+    for name, method of @resource_methods
       constructor.prototype[name] = method
     for name, definition of actions
       constructor.prototype.requests[name] = @request_creator(name, definition)
       constructor.prototype[name] = @register_action(name)
 
+
+  representation_constructor: (schema) ->
+    client = @
+    constructor = (@properties) ->
+    @define_properties(constructor, schema.properties)
+    constructor
 
   define_properties: (constructor, properties) ->
     client = @
@@ -152,10 +164,9 @@ class Client
       spec = @property_spec(name, schema)
       Object.defineProperty(constructor.prototype, name, spec)
 
-
   property_spec: (name, property_schema) ->
     client = @
-    wrap_function = @create_wrapping_function(name, property_schema)
+    wrap_function = @create_wrapping_function(property_schema)
 
     spec = {}
     spec.get = () ->
@@ -168,19 +179,20 @@ class Client
         @properties[name] = val
     spec
 
-  create_wrapping_function: (name, schema) ->
+  create_wrapping_function: (schema) ->
     client = @
-    if schema.type == "object"
+    type = schema.type
+    if schema.$ref
+      (data) -> client.wrap(schema.$ref, data)
+    else if type == "object"
       @object_wrapper(schema)
-    else if schema.type == "array"
+    else if type == "array"
       @array_wrapper(schema)
-    else if @representations[schema.type]
-      (data) -> client.wrap(schema.type, data)
     else
       (data) -> data
 
 
-  resource_prototype:
+  resource_methods:
     # Method for preparing a request object that can be modified
     # before passing to shred.request().
     #
@@ -220,7 +232,8 @@ class Client
       request_media_type = client.schema_manager.names[request_type].mediaType
       default_headers["Content-Type"] = request_media_type
     if response_type = definition.response_entity
-      response_media_type = client.schema_manager.names[response_type].mediaType
+      response_schema = client.schema_manager.names[response_type]
+      response_media_type = response_schema.mediaType
       default_headers["Accept"] = response_media_type
     authorization = definition.authorization
     if query = definition.query
@@ -252,7 +265,7 @@ class Client
         if !request.query[key]
           throw "Missing required query param: #{key}"
 
-      # NOTE, FIXME, TODO: this entire area is full of early assumptions that
+      # NOTE: this entire area is full of early assumptions that
       # turned out to be troublesome.
       # 
       # set up response handlers.  The error and default response handlers
@@ -268,10 +281,13 @@ class Client
 
       # FIXME:  not all responses should be wrapped.  202 and 204 have no
       # content.  I'm not sure how Shred handles 30x statuses, either.
+      # IDEA: take an "on" option of "success", to be applied when the
+      # response status matches the indicated status in the API interface.
       for status, handler of options.on
         request.on[status] = (response) ->
           # TODO: disentangle the resource type from the representation type
-          wrapped = client.wrap(response_type, response.content.data)
+          if response.status == definition.status
+            wrapped = client.wrap(response_schema.id, response.content.data)
           handler(response, wrapped)
 
       request
