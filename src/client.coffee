@@ -265,16 +265,14 @@ class Client
         if !request.query[key]
           throw "Missing required query param: #{key}"
 
-      # NOTE: this entire area is full of early assumptions that
-      # turned out to be troublesome.
-      # 
-      # set up response handlers.  The error and default response handlers
-      # do NOT attempt to wrap the response entity per the resource schema.
       request.on = {}
       if error = options.on.error
         request.on.error = error
         delete options.on.error
 
+      # I can't figure out why, but if I don't do the hokey pokey with
+      # the default "response" handler here, Shred selects it over specific
+      # status code handlers. Might be a Shred bug.
       if response = options.on.response
         request.on.response = response
         delete options.on.response
@@ -285,8 +283,7 @@ class Client
       # response status matches the indicated status in the API interface.
       for status, handler of options.on
         request.on[status] = (response) ->
-          # TODO: disentangle the resource type from the representation type
-          if response.status == definition.status
+          if response.status == definition.status && response_schema
             wrapped = client.wrap(response_schema.id, response.content.data)
           handler(response, wrapped)
 
