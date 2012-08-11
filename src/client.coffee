@@ -57,8 +57,7 @@ class Client
         # corresponds to the resource type.
         [base, name] = id.split("#")
         if name == resource_type
-          constructor = @resourcify(constructor, resource_type)
-          @representation_ids[id] = constructor
+          @resourcify(constructor, resource_type)
           @resource_constructors[resource_type] = constructor
 
       # create a resource constructor for types with no directly associated schemas.
@@ -173,6 +172,7 @@ class Client
 
     # Because coffeescript won't give me Named Function Expressions.
     constructor.prototype.resource_type = resource_type
+    constructor.prototype.requests = {}
 
     # Using Object.defineProperty to hide the client from console.log
     Object.defineProperty constructor.prototype, "client",
@@ -181,10 +181,10 @@ class Client
 
     if interface_def = @interface[resource_type]
       @define_actions(constructor, interface_def.actions)
+
     constructor
 
   define_actions: (constructor, actions) ->
-    constructor.prototype.requests = {}
     for name, method of @resource_methods
       constructor.prototype[name] = method
     if @authorizer
@@ -193,6 +193,7 @@ class Client
       constructor.prototype.requests[name] = @request_creator(name, definition)
       constructor.prototype[name] = @register_action(name)
 
+  # returns a function intended to be bound to a resource instance
   register_action: (name) ->
     (data) -> @request(name, data)
 
@@ -208,6 +209,9 @@ class Client
       if prepper
         prepper.call(@, name, options)
       else
+        # TODO: hook into the "error" handler that should be defined
+        # in options.on.  Possibly have the Client constructor take
+        # a default error handler as an argument.
         throw "No such action defined: #{name}"
 
     request: (name, options) ->
@@ -215,7 +219,7 @@ class Client
       @client.shred.request(request)
 
   # Returns a function intended to be used as a method on a
-  # Resource wrapper instance.
+  # Resource instance.
   request_creator: (name, definition) ->
     client = @
 
@@ -233,34 +237,33 @@ class Client
       required_params = query.required
 
     (name, options) ->
+      resource = @
       request =
-        url: @url
+        url: resource.url
         method: method
         headers: {}
         content: options.content
-
-      # set up headers
-      for key, value of default_headers
-        request.headers[key] = value
-
-      if authorization
-        credential = @authorize(authorization, name)
-        request.headers["Authorization"] = "#{authorization} #{credential}"
-
-      for name, value of options.headers
-        request.headers[name] = value
-
-      if options.query
-        request.query = options.query
+        query: options.query
+        on: {}
 
       # verify presence of the required query params from the schema
       for key, value of required_params
         if !request.query[key]
           throw "Missing required query param: #{key}"
 
-      request.on = {}
+      if authorization
+        credential = resource.authorize(authorization, name)
+        request.headers["Authorization"] = "#{authorization} #{credential}"
 
-      # Pass through any status handlers for which we shouldn't wrap the response
+      # copy default headers
+      for key, value of default_headers
+        request.headers[key] = value
+
+      # Input headers should override the defaults determined from the API spec.
+      for key, value of options.headers
+        request.headers[key] = value
+
+      # Pass through status handlers for which we shouldn't wrap the response
       # body.  202 and 204 don't have bodies.  Errors won't contain the expected
       # representation. I actually want for the default "response" handler to
       # do body wrapping when appropriate, but...
