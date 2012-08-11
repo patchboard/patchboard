@@ -23,16 +23,12 @@ class Client
     else
       throw "Expected to receive a String, but got something else"
 
-  # options.schema describes the data structures of
-  # the API service resources, and possibly some "helper"
-  # constructs (e.g. dictionaries or arrays of resources)
-  #
-  # options.interface represents the actions available
-  # via HTTP requests to the API service.
+
   constructor: (options) ->
     @shred = new Shred()
     @schema_manager = new SchemaManager(options.schemas...)
     @directory = options.directory
+    @authorizer = options.authorizer
     @resources = {}
 
     @interface = {}
@@ -42,14 +38,16 @@ class Client
       @interface[key] = value
 
     @representation_ids = {}
-    @representation_types = {}
     @resource_constructors = {}
 
     for name, schema of @schema_manager.names
       if schema.type == "array"
         constructor = @array_wrapper(schema)
         @representation_ids[schema.id] = constructor
-      else
+      else if schema.type == "object"
+        constructor = @object_wrapper(schema)
+        @representation_ids[schema.id] = constructor
+      else if !SchemaManager.is_primitive(schema.type)
         constructor = @representation_constructor(schema)
         @representation_ids[schema.id] = constructor
 
@@ -59,12 +57,12 @@ class Client
         # corresponds to the resource type.
         [base, name] = id.split("#")
         if name == resource_type
-          constructor = @resource_constructor(constructor, resource_type)
+          constructor = @resourcify(constructor, resource_type)
           @representation_ids[id] = constructor
           @resource_constructors[resource_type] = constructor
 
       # create a resource constructor for types with no directly associated schemas.
-      @resource_constructors[resource_type] ||= @resource_constructor(null, resource_type)
+      @resource_constructors[resource_type] ||= @resourcify(null, resource_type)
 
     @create_resources(@directory)
 
@@ -126,46 +124,19 @@ class Client
     if wrapper = @representation_ids[type]
       new wrapper(data)
     else
-      console.log "no wrapper found for", type
       data
   
-  resource_constructor: (constructor, resource_type) ->
-    client = @
-    constructor ||= (@properties) ->
-      @url = @properties.url
-    # Because coffeescript won't give me Named Function Expressions.
-    constructor.resource_type = resource_type
-    # Using Object.defineProperty to hide the client from console.log
-    Object.defineProperty constructor.prototype, "client",
-      value: client
-      enumerable: false
-    if interface_def = @interface[resource_type]
-      @define_actions(constructor, interface_def.actions)
-    constructor
-
-  define_actions: (constructor, actions) ->
-    constructor.prototype.requests = {}
-    for name, method of @resource_methods
-      constructor.prototype[name] = method
-    for name, definition of actions
-      constructor.prototype.requests[name] = @request_creator(name, definition)
-      constructor.prototype[name] = @register_action(name)
-
-
   representation_constructor: (schema) ->
-    client = @
     constructor = (@properties) ->
     @define_properties(constructor, schema.properties)
     constructor
 
   define_properties: (constructor, properties) ->
-    client = @
     for name, schema of properties
       spec = @property_spec(name, schema)
       Object.defineProperty(constructor.prototype, name, spec)
 
   property_spec: (name, property_schema) ->
-    client = @
     wrap_function = @create_wrapping_function(property_schema)
 
     spec = {}
@@ -192,6 +163,39 @@ class Client
       (data) -> data
 
 
+
+
+
+  resourcify: (constructor, resource_type) ->
+    client = @
+    constructor ||= (@properties) ->
+      @url = @properties.url
+
+    # Because coffeescript won't give me Named Function Expressions.
+    constructor.prototype.resource_type = resource_type
+
+    # Using Object.defineProperty to hide the client from console.log
+    Object.defineProperty constructor.prototype, "client",
+      value: client
+      enumerable: false
+
+    if interface_def = @interface[resource_type]
+      @define_actions(constructor, interface_def.actions)
+    constructor
+
+  define_actions: (constructor, actions) ->
+    constructor.prototype.requests = {}
+    for name, method of @resource_methods
+      constructor.prototype[name] = method
+    if @authorizer
+      constructor.prototype.authorize = @authorizer
+    for name, definition of actions
+      constructor.prototype.requests[name] = @request_creator(name, definition)
+      constructor.prototype[name] = @register_action(name)
+
+  register_action: (name) ->
+    (data) -> @request(name, data)
+
   resource_methods:
     # Method for preparing a request object that can be modified
     # before passing to shred.request().
@@ -209,17 +213,6 @@ class Client
     request: (name, options) ->
       request = @prepare_request(name, options)
       @client.shred.request(request)
-
-    credential: (type, action) ->
-      # TODO: figure out how to have pluggable authorization
-      # handlers.  What should happen if the authorization type is
-      # Basic?  Other types: Cookie?
-      if type == "Capability"
-        cap = @properties.capabilities[action]
-
-
-  register_action: (name) ->
-    (data) -> @request(name, data)
 
   # Returns a function intended to be used as a method on a
   # Resource wrapper instance.
@@ -251,7 +244,7 @@ class Client
         request.headers[key] = value
 
       if authorization
-        credential = @credential(authorization, name)
+        credential = @authorize(authorization, name)
         request.headers["Authorization"] = "#{authorization} #{credential}"
 
       for name, value of options.headers
@@ -266,19 +259,21 @@ class Client
           throw "Missing required query param: #{key}"
 
       request.on = {}
-      if error = options.on.error
-        request.on.error = error
-        delete options.on.error
 
-      # I can't figure out why, but if I don't do the hokey pokey with
+      # Pass through any status handlers for which we shouldn't wrap the response
+      # body.  202 and 204 don't have bodies.  Errors won't contain the expected
+      # representation. I actually want for the default "response" handler to
+      # do body wrapping when appropriate, but...
+      # FIXME: I can't figure out why, but if I don't do the hokey pokey with
       # the default "response" handler here, Shred selects it over specific
       # status code handlers. Might be a Shred bug.
-      if response = options.on.response
-        request.on.response = response
-        delete options.on.response
+      for status in [202, 204, "error", "response"]
+        if handler = options.on[status]
+          request.on[status] = handler
+          delete options.on[status]
 
-      # FIXME:  not all responses should be wrapped.  202 and 204 have no
-      # content.  I'm not sure how Shred handles 30x statuses, either.
+      # TODO: figure out how Shred handles 30x and assess whether Patchboard
+      # needs to care.
       # IDEA: take an "on" option of "success", to be applied when the
       # response status matches the indicated status in the API interface.
       for status, handler of options.on
@@ -288,8 +283,6 @@ class Client
           handler(response, wrapped)
 
       request
-
-
 
 
 

@@ -8,7 +8,7 @@ EventEmitter = require("events").EventEmitter
 # `safely` function, used for wrapping callbacks in testliness;
 # and the `done` method, which signals the end (and success)
 # of a test.
-test = (name, fn) ->
+testify = (name, fn) ->
   try
     if fn.length == 0
       fn()
@@ -20,6 +20,10 @@ test = (name, fn) ->
   catch error
     failure(name, error)
     process.exit()
+
+testify.later = (name, fn) ->
+  () ->
+    testify(name, fn)
 
 success = (name) -> console.log colors.green("Pass: '#{name}'")
 
@@ -68,5 +72,5 @@ create_context = (name) ->
   #for key, val of expected
     #assert.deepEqual(actual[key], val)
 
-module.exports = test
+module.exports = testify
 

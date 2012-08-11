@@ -1,6 +1,40 @@
 class SchemaManager
 
-  #constructor: (@application_schema) ->
+  @normalize: (schema, namespace) ->
+    namespace ||= schema.id
+    if schema.$ref && schema.$ref.indexOf("#") == 0
+      schema.$ref = "#{namespace}#{schema.$ref}"
+
+    for name, definition of schema.properties
+      if definition.id
+        if definition.id.indexOf("#") == 0
+          definition.id = "#{namespace}#{definition.id}"
+      else
+        definition.id = "#{namespace}##{name}"
+
+      if definition.extends
+        if definition.extends.$ref && definition.extends.$ref.indexOf("#") == 0
+          definition.extends.$ref = "#{namespace}#{definition.extends.$ref}"
+
+      if definition.type == "array" && definition.items.$ref.indexOf("#") == 0
+        definition.items.$ref = "#{namespace}#{definition.items.$ref}"
+
+      if definition.type == "object" && definition.additionalProperties?.$ref?.indexOf("#") == 0
+        definition.additionalProperties.$ref = "#{namespace}#{definition.additionalProperties.$ref}"
+
+      if definition.$ref && definition.$ref.indexOf("#") == 0
+        definition.$ref = "#{namespace}#{definition.$ref}"
+
+      for prop_name, prop_def of definition.properties
+        @normalize(prop_def, namespace)
+
+  @is_primitive: (type) ->
+    for name in ["string", "number", "boolean"]
+      return true if type == name
+    return false
+
+
+
   constructor: (@schemas...) ->
     # "flat" storage of schemas, using absolute names
     @names = {}
@@ -16,9 +50,6 @@ class SchemaManager
       @inherit_properties(definition)
 
       @names[name] = definition
-      # NOTE: adding the name to the @ids object is a hack to support
-      # some complex changes in the client. TODO: remove it.
-      #@ids[name] = definition
       if definition.id
         @ids[definition.id] = definition
       if definition.mediaType
