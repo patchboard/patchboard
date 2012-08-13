@@ -1,3 +1,8 @@
+status_code = (description) ->
+  # FIXME.  Probably use http.STATUS_CODES inverted.
+  return 500
+
+
 class Context
   constructor: (@request, @response, @match) ->
 
@@ -17,6 +22,13 @@ class Context
       headers["Content-Type"] ||= @match.accept
     @response.writeHead(status, headers)
     @response.end(content)
+
+  error: (description) ->
+    if description == "timeout"
+      @respond(504)
+    else
+      status = status_code(description)
+      @respond(status, description)
 
 module.exports = Context
 
