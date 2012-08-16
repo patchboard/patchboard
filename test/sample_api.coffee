@@ -46,7 +46,15 @@ module.exports =
           request_entity: "attachment"
         list:
           method: "GET"
-          request_entity: "attachment_list"
+          response_entity: "attachment_list"
+        search:
+          method: "GET"
+          response_entity: "attachment_list"
+          query:
+            required:
+              name: {type: "string"}
+            optional:
+              reverse: {type: "boolean"}
 
     attachment:
       actions:
@@ -58,30 +66,29 @@ module.exports =
           authorization: "Basic"
 
   schema:
-    id: "my_api"
+    id: "api"
     properties:
 
       resource_collection:
-        extends: "resource"
+        extends: {$ref: "patchboard#resource"}
         mediaType: "patchboard.resource_collection"
         properties:
           some_property: {type: "string"}
 
       resource_instance:
-        extends: "resource"
+        extends: {$ref: "patchboard#resource"}
         mediaType: "patchboard.resource_instance"
         properties:
-          some_property: {type: "string"}
-
-      attachments:
-        extends: "resource"
-        mediaType: "patchboard.attachments"
+          expected: {type: "string", required: true}
+          optional: {type: "string"}
+        additionalProperties: false
 
       attachment:
-        extends: "resource"
+        extends: {$ref: "patchboard#resource"}
         mediaType: "patchboard.attachment"
         properties:
-          some_property: {type: "string"}
+          expected: {type: "string", required: true}
+          optional: {type: "string"}
 
       attachment_list:
         mediaType: "patchboard.attachment_list"

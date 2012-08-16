@@ -1,7 +1,7 @@
 class SchemaManager
 
   @normalize: (schema, namespace) ->
-    namespace ||= schema.id
+    namespace ||= "urn:#{schema.id}"
     if schema.$ref && schema.$ref.indexOf("#") == 0
       schema.$ref = "#{namespace}#{schema.$ref}"
 

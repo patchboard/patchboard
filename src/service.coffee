@@ -2,7 +2,9 @@ URL = require("url")
 PatchboardAPI = require("./patchboard_api")
 Dispatcher = require("./service/simple_dispatcher")
 Documenter = require("./service/documenter")
+Classifier = require("./service/classifier")
 SchemaManager = require("./schema_manager")
+SchemaValidator = require("./schema_validator")
 Path = require("./service/path")
 
 class Service
@@ -14,6 +16,7 @@ class Service
     @normalize_schema(options.schema)
 
     @schema_manager = new SchemaManager(PatchboardAPI.schema, options.schema)
+    @validator = new SchemaValidator(@schema_manager)
     @map = options.map
 
 
@@ -42,6 +45,9 @@ class Service
       schemas: @schema_manager.schemas
       directory: @directory
 
+
+  classifier: () ->
+    new Classifier(@)
 
   generate_url: (resource_type, args...) ->
     path = @paths[resource_type]

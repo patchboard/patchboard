@@ -9,7 +9,8 @@ class SimpleDispatcher
     @map = service.map
     @supply_missing_handlers()
 
-    @classifier = new Classifier(@service)
+    @classifier = @service.classifier()
+    #@classifier = new Classifier(@service)
 
   supply_missing_handlers: () ->
     handler = @handlers.service.default
