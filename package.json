@@ -2,7 +2,7 @@
   "name": "patchboard",
   "description": "Self-assembling HTTP APIs",
   "author": "Matthew King",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "repository": {
     "type": "git",
     "url": "https://github.com/automatthew/patchboard/"
@@ -19,7 +19,7 @@
     "JSV": "4.0.x",
     "connect": "2.3.x",
     "colors": "0.6.x",
-    "shred": "https://github.com/automatthew/shred/tarball/master",
+    "shred": "git://github.com/automatthew/shred.git#master",
     "marked": "0.2.x"
   },
   "devDependencies": {
