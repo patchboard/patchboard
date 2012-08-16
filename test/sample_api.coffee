@@ -71,13 +71,13 @@ module.exports =
 
       resource_collection:
         extends: {$ref: "patchboard#resource"}
-        mediaType: "patchboard.resource_collection"
+        mediaType: "api.resource_collection"
         properties:
           some_property: {type: "string"}
 
       resource_instance:
         extends: {$ref: "patchboard#resource"}
-        mediaType: "patchboard.resource_instance"
+        mediaType: "api.resource_instance"
         properties:
           expected: {type: "string", required: true}
           optional: {type: "string"}
@@ -85,12 +85,12 @@ module.exports =
 
       attachment:
         extends: {$ref: "patchboard#resource"}
-        mediaType: "patchboard.attachment"
+        mediaType: "api.attachment"
         properties:
           expected: {type: "string", required: true}
           optional: {type: "string"}
 
       attachment_list:
-        mediaType: "patchboard.attachment_list"
+        mediaType: "api.attachment_list"
         items: {$ref: "#attachment"}
 
