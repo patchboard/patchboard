@@ -7,17 +7,19 @@ class SchemaValidator
     for schema in @schema_manager.schemas
       @jsv.createSchema(schema, false, schema.id)
 
-  get_schema: (id) ->
-    schema_url = "urn:#{id}"
-    @jsv.findSchema(schema_url)
-
-  validate: (id, data) ->
-    schema = @get_schema(id)
+  validate: (identifier, data) ->
+    schema = @schema_manager.find(identifier)
     if schema
-      @jsv.validate data, schema, (error) ->
-        console.log(error)
+      result = @jsv.findSchema(schema.id).validate data, schema
+      if result.errors
+        result.description = {}
+        for error in result.errors
+          propname = error.schemaUri.split(":")[2]
+          result.description[propname] = error.message
+      result
     else
       throw "unknown schema id: #{id}"
+
 
 
 module.exports = SchemaValidator

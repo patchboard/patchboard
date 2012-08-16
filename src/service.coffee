@@ -12,8 +12,8 @@ class Service
   constructor: (options) ->
     @service_url = options.service_url || "http://localhost:1337"
 
-    @normalize_schema(PatchboardAPI.schema)
-    @normalize_schema(options.schema)
+    SchemaManager.normalize(PatchboardAPI.schema)
+    SchemaManager.normalize(options.schema)
 
     @schema_manager = new SchemaManager(PatchboardAPI.schema, options.schema)
     @validator = new SchemaValidator(@schema_manager)
@@ -39,6 +39,9 @@ class Service
 
     @documenter = new Documenter(@schema_manager.names, @interface)
     @default_handlers = require("./service/handlers")(@)
+
+    @classifier = new Classifier(@)
+
     @description =
       interface: @interface
       schema: @schema_manager.ids
@@ -46,8 +49,11 @@ class Service
       directory: @directory
 
 
-  classifier: () ->
-    new Classifier(@)
+  classify: (args...) ->
+    @classifier.classify(args...)
+
+  validate: (args...) ->
+    @validator.validate(args...)
 
   generate_url: (resource_type, args...) ->
     path = @paths[resource_type]

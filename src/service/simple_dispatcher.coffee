@@ -9,8 +9,6 @@ class SimpleDispatcher
     @map = service.map
     @supply_missing_handlers()
 
-    @classifier = @service.classifier()
-    #@classifier = new Classifier(@service)
 
   supply_missing_handlers: () ->
     handler = @handlers.service.default
@@ -27,13 +25,28 @@ class SimpleDispatcher
 
   dispatch: (request, response) ->
     @service.augment_request(request)
-    result = @classifier.classify(request)
-    if result.error
-      @classification_error(result.error, request, response)
+    match = @service.classify(request)
+    if match.error
+      @classification_error(match.error, request, response)
     else
-      handler = @find_handler(result)
-      context = new Context(request, response, result)
+      if match.content_type
+        validation = @validate(match.content_type, request)
+        if validation.errors.length > 0
+          @default_error_handler(
+            # TODO: more informative description
+            {status: 400, message: "Bad Request", description: validation.description},
+            response
+          )
+          return
+
+
+      handler = @find_handler(match)
+      context = new Context(request, response, match)
       handler(context)
+
+  validate: (media_type, request) ->
+    @service.validate {media_type: media_type}, request.body
+
 
   find_handler: (match) ->
     if resource = @handlers[match.resource_type]

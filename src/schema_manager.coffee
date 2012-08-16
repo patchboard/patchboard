@@ -4,6 +4,10 @@ class SchemaManager
     "urn:json:#{identifier}"
 
   @normalize: (schema) ->
+    # TODO: make sure this is idempotent, just in case it gets called twice
+    # on the same schema.  Also: do try not to call this twice on the same
+    # schema
+    # TODO LATER: make this non-destructive
     schema.id = @urnize(schema.id)
     @top_level_ids(schema.properties, schema.id)
     @normalize_properties(schema.properties, schema.id)
@@ -62,14 +66,10 @@ class SchemaManager
     else if index != -1
       schema.$ref = @urnize(schema.$ref)
 
-
-
   @is_primitive: (type) ->
     for name in ["string", "number", "boolean"]
       return true if type == name
     return false
-
-
 
 
   constructor: (@schemas...) ->
@@ -81,6 +81,14 @@ class SchemaManager
     for schema in @schemas
       @register_schema(schema)
 
+  find: (options) ->
+    if id = options.id
+      if id.indexOf(":") == -1
+        id = SchemaManager.urnize(id)
+      @ids[id]
+    else if options.media_type
+      @media_types[options.media_type]
+
 
   register_schema: (schema) ->
     for name, definition of schema.properties
@@ -91,7 +99,6 @@ class SchemaManager
         @ids[definition.id] = definition
       if definition.mediaType
         @media_types[definition.mediaType] = definition
-
 
   inherit_properties: (schema) ->
     if schema.extends

@@ -17,17 +17,8 @@ app_schema =
 
 testify "schema normalization", ->
   result = SchemaManager.normalize(patchboard_api.schema)
-  #console.log JSON.stringify(patchboard_api.schema, null, 2)
-  console.log JSON.stringify(result, null, 2)
   assert.equal(patchboard_api.schema.id, "urn:json:patchboard")
 
 #manager = new SchemaManager(schemas...)
-
-#console.log sm.document()
-
-#testify "schema normalization", ->
-  #assert.ok sm.get_schema("#account")
-  #assert.ok sm.get_schema("spire#account")
-  #assert.ok sm.get_schema("patchboard#resource")
 
 
