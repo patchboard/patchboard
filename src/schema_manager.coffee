@@ -1,37 +1,74 @@
 class SchemaManager
 
-  @normalize: (schema, namespace) ->
-    namespace ||= "urn:#{schema.id}"
-    if schema.$ref && schema.$ref.indexOf("#") == 0
-      schema.$ref = "#{namespace}#{schema.$ref}"
+  @urnize: (identifier) ->
+    "urn:json:#{identifier}"
 
-    for name, definition of schema.properties
-      if definition.id
-        if definition.id.indexOf("#") == 0
-          definition.id = "#{namespace}#{definition.id}"
+  @normalize: (schema) ->
+    schema.id = @urnize(schema.id)
+    @top_level_ids(schema.properties, schema.id)
+    @normalize_properties(schema.properties, schema.id)
+
+  @top_level_ids: (properties, namespace) ->
+    for name, schema of properties
+      if schema.id
+        if schema.id.indexOf("#") == 0
+          schema.id = "#{namespace}#{schema.id}"
       else
-        definition.id = "#{namespace}##{name}"
+        schema.id = "#{namespace}##{name}"
 
-      if definition.extends
-        if definition.extends.$ref && definition.extends.$ref.indexOf("#") == 0
-          definition.extends.$ref = "#{namespace}#{definition.extends.$ref}"
+  @normalize_properties: (properties, namespace) ->
+    for name, definition of properties
+      @normalize_schema(name, definition, namespace)
 
-      if definition.type == "array" && definition.items.$ref.indexOf("#") == 0
-        definition.items.$ref = "#{namespace}#{definition.items.$ref}"
+  @normalize_schema: (name, schema, namespace) ->
+    # TODO: assess whether we care at all about additional attrs:
+    # * disallow
+    # * dependencies
 
-      if definition.type == "object" && definition.additionalProperties?.$ref?.indexOf("#") == 0
-        definition.additionalProperties.$ref = "#{namespace}#{definition.additionalProperties.$ref}"
+    if schema.$ref
+      # This schema is a reference to another schema
+      @normalize_ref(schema, namespace)
+    else if schema.extends?
+      # This schema extends (a.k.a. inherits from) another schema
+      @normalize_ref(schema.extends, namespace)
+    else if schema.type == "array"
+      @normalize_array(schema, namespace)
+    else if schema.type == "object"
+      @normalize_object(schema, namespace)
 
-      if definition.$ref && definition.$ref.indexOf("#") == 0
-        definition.$ref = "#{namespace}#{definition.$ref}"
+    if schema.properties
+      @normalize_properties(schema.properties, namespace)
 
-      for prop_name, prop_def of definition.properties
-        @normalize(prop_def, namespace)
+
+  @normalize_extends: (schema, namespace) ->
+    # TODO: "extends" can be a schema or an array of schemas
+    if schema.$ref
+      @normalize_ref(schema, namespace)
+
+  @normalize_array: (schema, namespace) ->
+    if schema.items?.$ref
+      @normalize_ref(schema.items, namespace)
+    if schema.additionalItems?.$ref
+      @normalize_ref(schema.additionalItems, namespace)
+
+  @normalize_object: (schema, namespace) ->
+    if schema.additionalProperties?.$ref
+      @normalize_ref(schema.additionalProperties, namespace)
+
+  @normalize_ref: (schema, namespace) ->
+    index = schema.$ref.indexOf("#")
+    if index == 0
+      schema.$ref = "#{namespace}#{schema.$ref}"
+    else if index != -1
+      schema.$ref = @urnize(schema.$ref)
+
+
 
   @is_primitive: (type) ->
     for name in ["string", "number", "boolean"]
       return true if type == name
     return false
+
 
 
 
@@ -68,6 +105,7 @@ class SchemaManager
           merged.properties[key] = value
         schema.properties = merged.properties
       else
+        console.log schema
         throw "Could not find parent schema: #{parent_id}"
 
 
