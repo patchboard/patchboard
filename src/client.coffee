@@ -20,6 +20,8 @@ class Client
             callback(null, client)
           error: (response) ->
             callback(response)
+          request_error: (error) ->
+            throw error
     else
       throw "Expected to receive a String, but got something else"
 
@@ -270,10 +272,16 @@ class Client
       # FIXME: I can't figure out why, but if I don't do the hokey pokey with
       # the default "response" handler here, Shred selects it over specific
       # status code handlers. Might be a Shred bug.
-      for status in [202, 204, "error", "response"]
+      for status in [202, 204, "error", "request_error", "response"]
         if handler = options.on[status]
           request.on[status] = handler
           delete options.on[status]
+
+
+      # never silently die on request errors.
+      # TODO: allow a default request_error handler on Client construction
+      request.on.request_error ||= (err) ->
+        throw err
 
       # TODO: figure out how Shred handles 30x and assess whether Patchboard
       # needs to care.
