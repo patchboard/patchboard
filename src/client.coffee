@@ -220,6 +220,10 @@ class Client
       request = @prepare_request(name, options)
       @client.shred.request(request)
 
+    authorize: (type, action) ->
+      @client.authorizer.call(@, type, action)
+
+
   # Returns a function intended to be used as a method on a
   # Resource instance.
   request_creator: (name, definition) ->
