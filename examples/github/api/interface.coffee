@@ -34,6 +34,7 @@ module.exports =
     actions:
       get:
         method: "GET"
+        authorization: "Basic"
         response_entity: "user"
         status: 200
 
@@ -41,7 +42,46 @@ module.exports =
     actions:
       get:
         method: "GET"
+        authorization: "Basic"
         response_entity: "user"
         status: 200
 
   organizations: {}
+
+  gists:
+    actions:
+      create:
+        method: "POST"
+        authorization: "Basic"
+        request_entity: "gist"
+        response_entity: "gist"
+        status: 201
+      get:
+        method: "GET"
+        authorization: "Basic"
+        response_entity: "gist_list"
+        status: 200
+
+
+  starred_gists:
+    actions:
+      get:
+        method: "GET"
+        authorization: "Basic"
+        response_entity: "gist_list"
+        status: 200
+
+  user_gists:
+    actions: {}
+  public_gists:
+    actions: {}
+
+  gist:
+    actions:
+      get:
+        method: "GET"
+        authorization: "Basic"
+        response_entity: "gist_list"
+        status: 200
+
+

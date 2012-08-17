@@ -88,3 +88,10 @@ module.exports =
       mediaType: "application/json"
       extends: {$ref: "#owner"}
 
+    gist:
+      mediaType: "application/json"
+      properties:
+
+
+    gist_list:
+      mediaType: "application/json"

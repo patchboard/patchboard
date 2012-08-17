@@ -37,5 +37,4 @@ Client.discover "http://localhost:1338/", (err, client) ->
         console.log response
 
 
-  return
 
