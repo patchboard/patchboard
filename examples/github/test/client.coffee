@@ -3,12 +3,15 @@ testify = require("patchboard/src/testify")
 
 fs = require("fs")
 
+# read login:password from a file
 string = fs.readFileSync("auth")
 string = string.slice(0, string.length - 1)
+# pack it up, yo.
 basic_auth = new Buffer(string).toString("base64")
 
 Client.discover "http://localhost:1338/", (err, client) ->
 
+  # imbue the client with an authorization function
   client.authorizer = (type, action) ->
     resource = @
     if type == "Basic"
@@ -30,39 +33,9 @@ Client.discover "http://localhost:1338/", (err, client) ->
               console.log repo.owner.url
 
       response: (response) ->
-        console.log "unexpected responses status"
+        console.log "unexpected response status"
         console.log response
 
 
   return
-
-  configuration = client.resources.configuration
-
-  testify "configuration.update responds with 204", (test) ->
-    #time = Date.now()
-    rand = Math.random().toString()
-    configuration.update
-      content:
-        origins: [rand]
-        names: ["known", "event", "names"]
-      on:
-        204: (response) ->
-          test.done()
-          testify "configuration.get", (test) ->
-            configuration.get
-              on:
-                200: (response, config) ->
-                  origins = config.origins
-                  test.assert.equal(origins.constructor, Array)
-                  test.assert.ok(origins.length > 0)
-                  test.assert.ok origins.some (item) ->
-                    item == rand
-                  test.assert.equal(config.names.constructor, Array)
-                  test.assert.ok(config.names.length > 0)
-                  test.done()
-                response: (response) ->
-                  test.assert.fail null, null, "Unexpected response status: #{response.status}"
-
-
-
 
