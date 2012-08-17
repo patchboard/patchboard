@@ -2,7 +2,7 @@
 Shred = require("shred")
 
 patchboard_api = require("./patchboard_api")
-patchboard_interface = patchboard_api.interface
+patchboard_resources = patchboard_api.resources
 SchemaManager = require("./schema_manager")
 
 class Client
@@ -33,11 +33,11 @@ class Client
     @authorizer = options.authorizer
     @resources = {}
 
-    @interface = {}
-    for key, value of patchboard_interface
-      @interface[key] = value
-    for key, value of options.interface
-      @interface[key] = value
+    @resource_definitions = {}
+    for key, value of patchboard_resources
+      @resource_definitions[key] = value
+    for key, value of options.resources
+      @resource_definitions[key] = value
 
     @representation_ids = {}
     @resource_constructors = {}
@@ -53,7 +53,7 @@ class Client
         constructor = @representation_constructor(schema)
         @representation_ids[schema.id] = constructor
 
-    for resource_type, definition of @interface
+    for resource_type, definition of @resource_definitions
       for id, constructor of @representation_ids
         # The assumption here is that the frag-ident part of a schema id
         # corresponds to the resource type.
@@ -166,7 +166,6 @@ class Client
 
 
 
-
   resourcify: (constructor, resource_type) ->
     client = @
     constructor ||= (@properties) ->
@@ -181,8 +180,8 @@ class Client
       value: client
       enumerable: false
 
-    if interface_def = @interface[resource_type]
-      @define_actions(constructor, interface_def.actions)
+    if definition = @resource_definitions[resource_type]
+      @define_actions(constructor, definition.actions)
 
     constructor
 
@@ -290,7 +289,7 @@ class Client
       # TODO: figure out how Shred handles 30x and assess whether Patchboard
       # needs to care.
       # IDEA: take an "on" option of "success", to be applied when the
-      # response status matches the indicated status in the API interface.
+      # response status matches the indicated status in the resource description.
       for status, handler of options.on
         request.on[status] = (response) ->
           if response.status == definition.status && response_schema

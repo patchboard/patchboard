@@ -5,15 +5,14 @@ Context = require("./context")
 class SimpleDispatcher
 
   constructor: (@service, @handlers) ->
-    @http_interface = service.interface
-    @map = service.map
+    @map = service.paths
     @supply_missing_handlers()
 
 
   supply_missing_handlers: () ->
     handler = @handlers.service.default
 
-    for resource, definition of @http_interface
+    for resource, definition of @service.resources
       for action, spec of definition.actions
         @handlers[resource] ||= {}
         @handlers[resource][action] ||= handler

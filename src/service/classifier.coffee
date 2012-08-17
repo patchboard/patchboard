@@ -15,42 +15,41 @@ class Classifier
 
   constructor: (service) ->
     @schema = service.schema_manager.names
-    @http_interface = service.interface
+    @resources = service.resources
     @map = service.map
     
     @matchers = {}
 
-    @process(PatchboardAPI.map, PatchboardAPI.interface)
-    @process(@map, @http_interface)
+    @process(PatchboardAPI.paths, PatchboardAPI.resources)
+    @process(@map, @resources)
 
-  # Given URL map and HTTP interface objects, set up the matching
+  # Given the path mappings and resource descriptions, set up the matching
   # structures required for classifying an HTTP request.
-  process: (map, http_interface) ->
+  process: (map, resources) ->
     for resource_type, mapping of map
-      resource = http_interface[resource_type]
-      paths = mapping.paths
-      for path in paths
-        supported_methods = {}
+      resource = resources[resource_type]
+      path = mapping.path
+      supported_methods = {}
 
-        for action_name, definition of resource.actions
-          supported_methods[definition.method] = true
-          @register path, definition,
-            resource_type: resource_type
-            action_name: action_name
-            success_status: definition.status
+      for action_name, definition of resource.actions
+        supported_methods[definition.method] = true
+        @register path, definition,
+          resource_type: resource_type
+          action_name: action_name
+          success_status: definition.status
 
-        # setup OPTIONS handling
-        @register path, { method: "OPTIONS" },
-          resource_type: "meta"
-          action_name: "options"
-          allow: Object.keys(supported_methods).sort()
+      # setup OPTIONS handling
+      @register path, { method: "OPTIONS" },
+        resource_type: "meta"
+        action_name: "options"
+        allow: Object.keys(supported_methods).sort()
 
 
   register: (path, definition, payload) ->
     sequence = @create_match_sequence(path, definition)
     @register_match_sequence(path, sequence, payload)
 
-  # collect all the values from the interface description
+  # collect all the values from the resource description
   # that we will need to match against.
   create_match_sequence: (path, definition) ->
     # We use the MATCH_ORDER array (here and at classification time) to make sure

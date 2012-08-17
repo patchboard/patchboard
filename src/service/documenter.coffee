@@ -5,12 +5,12 @@ marked.setOptions
   pedantic: false
 
 class Documenter
-  constructor: (@schemas, @interface) ->
+  constructor: (@schemas, @resources) ->
 
-  document_interface: () ->
+  document_resources: () ->
     out = []
-    out.push "# Interface"
-    for name, definition of @interface
+    out.push "# Resources"
+    for name, definition of @resources
       out.push @resource_doc(name, definition)
     out.join("\n\n")
 

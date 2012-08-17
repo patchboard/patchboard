@@ -17,33 +17,34 @@ class Service
 
     @schema_manager = new SchemaManager(PatchboardAPI.schema, options.schema)
     @validator = new SchemaValidator(@schema_manager)
-    @map = options.map
+    @map = options.paths
 
 
-    @interface = {}
-    for key, value of PatchboardAPI.interface
-      @interface[key] = value
-    for key, value of options.interface
-      @interface[key] = value
-
-    @directory = {}
-    for resource_type, definition of PatchboardAPI.map when definition.publish
-      @directory[resource_type] = "#{@service_url}#{definition.paths[0]}"
-    for resource_type, definition of @map when definition.publish
-      @directory[resource_type] = "#{@service_url}#{definition.paths[0]}"
+    @resources = {}
+    for key, value of PatchboardAPI.resources
+      @resources[key] = value
+    for key, value of options.resources
+      @resources[key] = value
 
     @paths = {}
-    for resource_type, definition of @map
-      path_string = definition.paths[0]
+    @directory = {}
+
+    for resource_type, mapping of PatchboardAPI.paths when mapping.publish
+      @directory[resource_type] = "#{@service_url}#{mapping.path}"
+    for resource_type, mapping of @map when mapping.publish
+      @directory[resource_type] = "#{@service_url}#{mapping.path}"
+
+    for resource_type, mapping of @map
+      path_string = mapping.path
       @paths[resource_type] = new Path(path_string)
 
-    @documenter = new Documenter(@schema_manager.names, @interface)
+    @documenter = new Documenter(@schema_manager.names, @resources)
     @default_handlers = require("./service/handlers")(@)
 
     @classifier = new Classifier(@)
 
     @description =
-      interface: @interface
+      resources: @resources
       schema: @schema_manager.ids
       schemas: @schema_manager.schemas
       directory: @directory
@@ -109,7 +110,7 @@ class Service
 
   documentation: () ->
     """
-    #{@documenter.document_interface()}
+    #{@documenter.document_resources()}
     
     #{@schema_manager.document()}
     """

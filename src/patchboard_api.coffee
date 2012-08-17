@@ -1,11 +1,11 @@
 module.exports =
   
-  map:
+  paths:
     service:
-      paths: ["/"]
+      path: "/"
       publish: true
 
-  interface:
+  resources:
     service:
       actions:
 
@@ -36,6 +36,6 @@ module.exports =
         mediaType: "application/json"
         properties:
           schema: {type: "object"}
-          interface: {type: "object"}
+          resources: {type: "object"}
           directory: {type: "object"}
 
