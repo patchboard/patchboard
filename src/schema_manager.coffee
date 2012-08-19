@@ -1,7 +1,10 @@
 class SchemaManager
 
   @urnize: (identifier) ->
-    "urn:json:#{identifier}"
+    if identifier.indexOf(":") == -1
+      "urn:json:#{identifier}"
+    else
+      identifier
 
   @normalize: (schema) ->
     # TODO: make sure this is idempotent, just in case it gets called twice
@@ -73,8 +76,7 @@ class SchemaManager
 
 
   constructor: (@schemas...) ->
-    # "flat" storage of schemas, using absolute names
-    @names = {}
+    @names = {} # the part after the fragment identifier
     @ids = {}
     @media_types = {}
 
@@ -82,12 +84,20 @@ class SchemaManager
       @register_schema(schema)
 
   find: (options) ->
+    if options.constructor == String
+      if options.indexOf("#") > 0
+        options = {id: options}
+      else
+        options = {name: options}
+
     if id = options.id
       if id.indexOf(":") == -1
         id = SchemaManager.urnize(id)
       @ids[id]
     else if options.media_type
       @media_types[options.media_type]
+    else if options.name
+      @names[options.name]
 
 
   register_schema: (schema) ->

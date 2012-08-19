@@ -16,14 +16,14 @@ module.exports =
       actions:
         create:
           method: "POST"
-          request_entity: "resource_instance"
-          response_entity: "resource_instance"
+          request_schema: "resource_instance"
+          response_schema: "resource_instance"
         list:
           method: "GET"
-          response_entity: "resource_collection"
+          response_schema: "resource_collection"
         search:
           method: "GET"
-          response_entity: "resource_collection"
+          response_schema: "resource_collection"
           query:
             required:
               name: {type: "string"}
@@ -34,7 +34,7 @@ module.exports =
       actions:
         get:
           method: "GET"
-          response_entity: "resource_instance"
+          response_schema: "resource_instance"
         delete:
           method: "DELETE"
           authorization: "Basic"
@@ -43,13 +43,13 @@ module.exports =
       actions:
         create:
           method: "POST"
-          request_entity: "attachment"
+          request_schema: "attachment"
         list:
           method: "GET"
-          response_entity: "attachment_list"
+          response_schema: "attachment_list"
         search:
           method: "GET"
-          response_entity: "attachment_list"
+          response_schema: "attachment_list"
           query:
             required:
               name: {type: "string"}
@@ -60,7 +60,7 @@ module.exports =
       actions:
         get:
           method: "GET"
-          response_entity: "attachment"
+          response_schema: "attachment"
         delete:
           method: "DELETE"
           authorization: "Basic"

@@ -15,7 +15,7 @@ module.exports =
 
         description:
           method: "GET"
-          response_entity: "description"
+          response_schema: "description"
           status: 200
 
   schema:

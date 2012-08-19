@@ -14,7 +14,7 @@ class Classifier
   ]
 
   constructor: (service) ->
-    @schema = service.schema_manager.names
+    @schema_manager = service.schema_manager
     @resources = service.resources
     @map = service.map
     
@@ -76,22 +76,22 @@ class Classifier
       specs.Query = {}
       identifiers.Query = "none"
 
-    if request_entity = definition.request_entity
-      schema = @schema[request_entity]
+    if request_schema = definition.request_schema
+      schema = @schema_manager.find(request_schema)
       if schema
         identifiers.ContentType = specs.ContentType = schema.mediaType
       else
-        throw "No schema found for #{request_entity}"
+        throw "No schema found for #{request_schema}"
 
     else
       identifiers.ContentType = specs.ContentType = "[any]"
 
-    if response_entity = definition.response_entity
-      schema = @schema[response_entity]
+    if response_schema = definition.response_schema
+      schema = @schema_manager.find(name: response_schema)
       if schema
         identifiers.Accept = specs.Accept = schema.mediaType
       else
-        throw "No schema found for #{response_entity}"
+        throw "No schema found for #{response_schema}"
     else if definition.accept
       identifiers.Accept = specs.Accept = definition.accept
     else

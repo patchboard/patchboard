@@ -42,7 +42,7 @@ class Client
     @representation_ids = {}
     @resource_constructors = {}
 
-    for name, schema of @schema_manager.names
+    for id, schema of @schema_manager.ids
       if schema.type == "array"
         constructor = @array_wrapper(schema)
         @representation_ids[schema.id] = constructor
@@ -230,11 +230,11 @@ class Client
 
     method = definition.method
     default_headers = {}
-    if request_type = definition.request_entity
-      request_media_type = client.schema_manager.names[request_type].mediaType
+    if request_type = definition.request_schema
+      request_media_type = client.schema_manager.find(request_type).mediaType
       default_headers["Content-Type"] = request_media_type
-    if response_type = definition.response_entity
-      response_schema = client.schema_manager.names[response_type]
+    if response_type = definition.response_schema
+      response_schema = client.schema_manager.find(response_type)
       response_media_type = response_schema.mediaType
       default_headers["Accept"] = response_media_type
     authorization = definition.authorization
@@ -292,6 +292,7 @@ class Client
       # response status matches the indicated status in the resource description.
       for status, handler of options.on
         request.on[status] = (response) ->
+          # TODO: check the Content-Type header
           if response.status == definition.status && response_schema
             wrapped = client.wrap(response_schema.id, response.content.data)
           handler(response, wrapped)
