@@ -60,6 +60,8 @@ class SimpleDispatcher
     @default_error_handler(error, response)
 
   default_error_handler: (error, response) ->
+    response.setHeader "Access-Control-Allow-Origin", "*"
+
     response.writeHead error.status,
       "Content-Type": "application/json"
     response.end JSON.stringify(error)
