@@ -45,7 +45,6 @@ class Service
 
     @description =
       resources: @resources
-      schema: @schema_manager.ids
       schemas: @schema_manager.schemas
       directory: @directory
 
