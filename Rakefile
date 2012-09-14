@@ -1,3 +1,5 @@
+require "starter/tasks/github"
+
 $COFFEE = File.expand_path("node_modules/.bin/coffee")
 
 $BROWSERIFY = File.expand_path("node_modules/.bin/browserify")

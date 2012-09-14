@@ -233,6 +233,7 @@ class Client
     if request_type = definition.request_schema
       request_media_type = client.schema_manager.find(request_type).mediaType
       default_headers["Content-Type"] = request_media_type
+    # FIXME:  we should also check for definition.accept
     if response_type = definition.response_schema
       response_schema = client.schema_manager.find(response_type)
       response_media_type = response_schema.mediaType
@@ -253,7 +254,7 @@ class Client
 
       # verify presence of the required query params from the schema
       for key, value of required_params
-        if !request.query[key]
+        if !request.query || !request.query[key]
           throw "Missing required query param: #{key}"
 
       if authorization

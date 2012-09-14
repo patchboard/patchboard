@@ -15,15 +15,28 @@ testify = (name, fn) ->
       success(name)
     else
       context = create_context(name)
-      context.emitter.on "done", () -> success(name)
+      testify.count++
+      context.emitter.on "done", ->
+        success(name)
+        testify.count--
+        if testify.count == 0
+          testify.emitter.emit("done")
       fn(context)
   catch error
     failure(name, error)
     process.exit()
 
+testify.count = 0
+
 testify.later = (name, fn) ->
   () ->
     testify(name, fn)
+
+testify.emitter = new EventEmitter()
+
+testify.on = (args...) ->
+  testify.emitter.on(args...)
+
 
 success = (name) -> console.log colors.green("Pass: '#{name}'")
 
@@ -60,12 +73,6 @@ create_context = (name) ->
     name: name
     emitter: emitter
     done: () -> emitter.emit("done")
-    wrap: (callback) ->
-      (args...) ->
-        try
-          callback(args...)
-        catch error
-          failure(name, error)
     assert: assertions(name)
 
 #assert.partialEqual = (actual, expected) ->

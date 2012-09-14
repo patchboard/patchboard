@@ -2,7 +2,7 @@
   "name": "patchboard",
   "description": "Self-assembling HTTP APIs",
   "author": "Matthew King",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/automatthew/patchboard/"
