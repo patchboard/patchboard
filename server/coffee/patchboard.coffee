@@ -1,8 +1,8 @@
 
 module.exports =
-  Service: require("./service")
-  SchemaManager: require("./schema_manager")
-  Classifier: require("./service/classifier")
-  Dispatcher: require("./service/simple_dispatcher")
-  middleware: require("./service/middleware")
+  Service: require("./src/service")
+  SchemaManager: require("./src/schema_manager")
+  Classifier: require("./src/classifier")
+  Dispatcher: require("./src/simple_dispatcher")
+  middleware: require("./src/middleware")
 

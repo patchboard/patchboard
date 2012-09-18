@@ -1,11 +1,12 @@
 URL = require("url")
+
 PatchboardAPI = require("./patchboard_api")
-Dispatcher = require("./service/simple_dispatcher")
-Documenter = require("./service/documenter")
-Classifier = require("./service/classifier")
+Dispatcher = require("./simple_dispatcher")
+Documenter = require("./documenter")
+Classifier = require("./classifier")
 SchemaManager = require("./schema_manager")
 SchemaValidator = require("./schema_validator")
-Path = require("./service/path")
+Path = require("./path")
 
 class Service
 
@@ -39,7 +40,7 @@ class Service
       @paths[resource_type] = new Path(path_string)
 
     @documenter = new Documenter(@schema_manager.names, @resources)
-    @default_handlers = require("./service/handlers")(@)
+    @default_handlers = require("./handlers")(@)
 
     @classifier = new Classifier(@)
 

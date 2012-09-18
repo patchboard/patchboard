@@ -1,6 +1,7 @@
 http = require("http")
+
 Matchers = require("./matchers")
-PatchboardAPI = require("../patchboard_api")
+PatchboardAPI = require("./patchboard_api")
 
 class Classifier
 
