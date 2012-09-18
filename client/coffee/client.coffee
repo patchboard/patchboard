@@ -1,8 +1,6 @@
 # HTTP client library
 Shred = require("shred")
 
-patchboard_api = require("./patchboard_api")
-patchboard_resources = patchboard_api.resources
 SchemaManager = require("./schema_manager")
 
 class Client
@@ -33,11 +31,7 @@ class Client
     @authorizer = options.authorizer
     @resources = {}
 
-    @resource_definitions = {}
-    for key, value of patchboard_resources
-      @resource_definitions[key] = value
-    for key, value of options.resources
-      @resource_definitions[key] = value
+    @resource_definitions = options.resources
 
     @representation_ids = {}
     @resource_constructors = {}
