@@ -4,7 +4,7 @@ helpers = require("./helpers")
 testify = require("../src/testify")
 
 api = require("./sample_api.coffee")
-Patchboard = require("../src/patchboard")
+Patchboard = require("../patchboard")
 service = new Patchboard.Service(api)
 classifier = new Patchboard.Classifier(service)
 

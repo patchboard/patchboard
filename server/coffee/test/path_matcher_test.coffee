@@ -3,7 +3,7 @@ assert = require("assert")
 helpers = require("./helpers")
 testify = require("../src/testify")
 
-matchers = require("../src/service/matchers")
+matchers = require("../src/matchers")
 
 PathMatcher = matchers.Path
 
