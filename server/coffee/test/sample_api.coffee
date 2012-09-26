@@ -1,17 +1,17 @@
 module.exports =
   service_url: "http://patchboarded.com"
-  map:
+  paths:
     resource_collection:
-      paths: ["/resources"]
+      path: "/resources"
     resource_instance:
-      paths: ["/resources/:id"]
+      path: "/resources/:id"
     attachments:
-      paths: ["/resources/:id/attachments"]
+      path: "/resources/:id/attachments"
     attachment:
-      paths: ["/resources/:id/attachments/:attachment_id"]
+      path: "/resources/:id/attachments/:attachment_id"
 
 
-  interface:
+  resources:
     resource_collection:
       actions:
         create:

@@ -4,7 +4,7 @@ helpers = require("./helpers")
 testify = require("../src/testify")
 
 api = require("./sample_api.coffee")
-Patchboard = require("../src/patchboard")
+Patchboard = require("../patchboard")
 service = new Patchboard.Service(api)
 
 
@@ -34,5 +34,18 @@ testify "URL generation with positional arguments", ->
     service.generate_url("attachment", "someidvalue", "othervalue"),
     "http://patchboarded.com/resources/someidvalue/attachments/othervalue"
   )
+
+api.service_url = "http://patchboarded.com/"
+service = new Patchboard.Service(api)
+
+testify "URL generation with no arguments", ->
+  assert.equal(
+    service.generate_url("resource_collection"),
+    "http://patchboarded.com/resources"
+  )
+
+testify "URL normalization", ->
+  parsed = service.parse_url("http://patchboarded.com//some/path")
+  assert.equal(parsed.path, "/some/path")
 
 # TODO: test failure conditions (too many or few arguments, incorrect names, etc.)

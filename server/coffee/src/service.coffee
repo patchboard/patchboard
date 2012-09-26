@@ -11,7 +11,12 @@ Path = require("./path")
 class Service
 
   constructor: (options) ->
-    @service_url = options.service_url || "http://localhost:1337"
+    url = options.service_url || "http://localhost:1337"
+    # We construct full urls by concatenating @service_url and the path,
+    # so make sure that @service_url does not end in a slash.
+    if url[url.length-1] == "/"
+      url = url.slice(0,-1)
+    @service_url = url
 
     SchemaManager.normalize(PatchboardAPI.schema)
     SchemaManager.normalize(options.schema)
@@ -95,18 +100,16 @@ class Service
     dispatcher = new Dispatcher(@, handlers)
     dispatcher.create_handler()
 
+  parse_url: (url) ->
+    parsed = URL.parse(url, true)
+    parsed.path = parsed.pathname = parsed.pathname.replace("//", "/")
+    parsed
+
+
   augment_request: (request) ->
-    url = URL.parse(request.url)
+    url = @parse_url(request.url)
     request.path = url.pathname
-    if url.query
-      query_parts = url.query.split("&")
-      query = {}
-      for part in query_parts
-        [key, value] = part.split("=")
-        query[key] = value
-    else
-      query = {}
-    request.query = query
+    request.query = url.query
 
   documentation: () ->
     """

@@ -4,6 +4,7 @@ task "test" do
   sh "coffee test/path_matcher_test.coffee"
   sh "coffee test/schema_manager_test.coffee"
   sh "coffee test/classifier_test.coffee"
+  sh "coffee test/service_test.coffee"
 end
 
 rule ".json" => ".coffee" do |target|
