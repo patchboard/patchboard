@@ -19,7 +19,7 @@ class Client
           error: (response) ->
             callback(response)
           request_error: (error) ->
-            throw error
+            callback(error)
     else
       throw "Expected to receive a String, but got something else"
 
