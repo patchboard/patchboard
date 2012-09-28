@@ -10,7 +10,10 @@ def subtask(*args)
   task(*args) do
     subprojects.each do |dir|
       Dir.chdir(dir) do
-        sh "rake #{name}"
+        unless `rake -D #{name}`.empty?
+          puts "Running in #{dir}"
+          sh "rake #{name}"
+        end
       end
     end
   end
