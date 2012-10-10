@@ -17,8 +17,8 @@ class Context
     headers ||= {}
     if content.constructor != String
       content = JSON.stringify(content)
-    headers["Content-Length"] = content.length
-    if @match.accept
+    headers["Content-Length"] = Buffer.byteLength(content)
+    if @match.accept && content.length > 0
       headers["Content-Type"] ||= @match.accept
     @response.writeHead(status, headers)
     @response.end(content)
