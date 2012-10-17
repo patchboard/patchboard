@@ -5,7 +5,40 @@ SchemaManager = require("./schema_manager")
 
 class Client
 
-  @discover: (service_url, callback) ->
+  @discover: (service_url, handlers) ->
+    if service_url.constructor != String
+      throw new Error("Expected to receive a String, but got something else")
+
+    if handlers.constructor == Function
+      @backcompat(service_url, handlers)
+    else
+      create_client = (response) ->
+        client = new Client(response.content.data)
+        
+      if handler = handlers["200"]
+        handlers["200"] = (response) ->
+          try
+            client = new Client(response.content.data)
+            handler(client)
+          catch error
+            handlers["request_error"](error)
+
+      else if handler = handlers["response"]
+        handlers["response"] = (response) ->
+          try
+            client = new Client(response.content.data)
+            handler(client)
+          catch error
+            handlers["request_error"](error)
+
+      new Shred().request
+        url: service_url
+        method: "GET"
+        headers:
+          "Accept": "application/json"
+        on: handlers
+
+  @backcompat: (service_url, callback) ->
     if service_url.constructor == String
       new Shred().request
         url: service_url
@@ -21,11 +54,22 @@ class Client
           request_error: (error) ->
             callback(error)
     else
-      throw "Expected to receive a String, but got something else"
+      throw new Error("Expected to receive a String, but got something else")
 
 
   constructor: (options) ->
     @shred = new Shred()
+
+    # Validate API specification
+    required_fields = ["schemas", "resources", "directory"]
+    missing_fields = []
+    for field in required_fields
+      unless options[field]
+        missing_fields.push(field)
+
+    if missing_fields.length != 0
+      throw new Error("API specification is missing fields: #{missing_fields.join(', ')}")
+
     @schema_manager = new SchemaManager(options.schemas...)
     @directory = options.directory
     @authorizer = options.authorizer
@@ -204,10 +248,9 @@ class Client
       if prepper
         prepper.call(@, name, options)
       else
-        # TODO: hook into the "error" handler that should be defined
-        # in options.on.  Possibly have the Client constructor take
-        # a default error handler as an argument.
-        throw "No such action defined: #{name}"
+        # TODO: catch this error synchronously in the actual request call
+        # and relay into the user-supplied error handler.
+        throw new Error("No such action defined: #{name}")
 
     request: (name, options) ->
       request = @prepare_request(name, options)
@@ -249,7 +292,9 @@ class Client
       # verify presence of the required query params from the schema
       for key, value of required_params
         if !request.query || !request.query[key]
-          throw "Missing required query param: #{key}"
+          # TODO: catch this error synchronously in the actual request call
+          # and relay into the user-supplied error handler.
+          throw new Error("Missing required query param: #{key}")
 
       if authorization
         credential = resource.authorize(authorization, name)

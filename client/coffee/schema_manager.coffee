@@ -32,28 +32,11 @@ class SchemaManager
 
   register_schema: (schema) ->
     for name, definition of schema.properties
-      @inherit_properties(definition)
-
       @names[name] = definition
       if definition.id
         @ids[definition.id] = definition
       if definition.mediaType
         @media_types[definition.mediaType] = definition
-
-  inherit_properties: (schema) ->
-    if schema.extends
-      parent_id = schema.extends.$ref
-      parent = @ids[parent_id]
-      if parent
-        merged = {properties: {}}
-        for key, value of parent.properties
-          merged.properties[key] = value
-        for key, value of schema.properties
-          merged.properties[key] = value
-        schema.properties = merged.properties
-      else
-        console.log schema
-        throw "Could not find parent schema: #{parent_id}"
 
 
 module.exports = SchemaManager
