@@ -1,20 +1,14 @@
 module.exports =
 
-  repositories:
-    paths: ["/user/repos"]
-    publish: true
+  repositories: "https://api.github.com/user/repos"
 
   #user_repositories:
     #paths: ["/users/:user/repos"]
 
 
-  authenticated_user:
-    paths: ["/user"]
-    publish: true
+  authenticated_user: "https://api.github.com/user"
 
-  organizations:
-    paths: ["/user/orgs"]
-    publish: true
+  organizations: "https://api.github.com/user/orgs"
 
   #organization:
     #paths: ["/orgs/:org"]

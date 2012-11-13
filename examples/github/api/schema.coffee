@@ -3,8 +3,11 @@ module.exports =
   properties:
 
     resource:
-      extends: {$ref: "patchboard#resource"}
       properties:
+        url:
+          type: "string"
+          format: "uri"
+          readonly: true
         id:
           type: "number"
           readonly: true
@@ -90,7 +93,6 @@ module.exports =
 
     gist:
       mediaType: "application/json"
-      properties:
 
 
     gist_list:

@@ -4,11 +4,11 @@ module.exports =
     actions:
       create:
         method: "POST"
-        request_entity: "repository"
+        request_schema: "repository"
       list:
         method: "GET"
         authorization: "Basic"
-        response_entity: "repo_list"
+        response_schema: "repo_list"
         query:
           optional:
             sort:
@@ -27,7 +27,7 @@ module.exports =
       get:
         method: "GET"
         authorization: "Basic"
-        response_entity: "repository"
+        response_schema: "repository"
         status: 200
 
   user:
@@ -35,7 +35,7 @@ module.exports =
       get:
         method: "GET"
         authorization: "Basic"
-        response_entity: "user"
+        response_schema: "user"
         status: 200
 
   authenticated_user:
@@ -43,7 +43,7 @@ module.exports =
       get:
         method: "GET"
         authorization: "Basic"
-        response_entity: "user"
+        response_schema: "user"
         status: 200
 
   organizations: {}
@@ -53,13 +53,13 @@ module.exports =
       create:
         method: "POST"
         authorization: "Basic"
-        request_entity: "gist"
-        response_entity: "gist"
+        request_schema: "gist"
+        response_schema: "gist"
         status: 201
       get:
         method: "GET"
         authorization: "Basic"
-        response_entity: "gist_list"
+        response_schema: "gist_list"
         status: 200
 
 
@@ -68,7 +68,7 @@ module.exports =
       get:
         method: "GET"
         authorization: "Basic"
-        response_entity: "gist_list"
+        response_schema: "gist_list"
         status: 200
 
   user_gists:
@@ -81,7 +81,7 @@ module.exports =
       get:
         method: "GET"
         authorization: "Basic"
-        response_entity: "gist_list"
+        response_schema: "gist_list"
         status: 200
 
 
