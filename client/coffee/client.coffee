@@ -73,44 +73,55 @@ class Client
     @schema_manager = new SchemaManager(options.schemas...)
     @directory = options.directory
     @authorizer = options.authorizer
-    @resources = {}
 
     @resource_definitions = options.resources
 
-    @representation_ids = {}
-    @resource_constructors = {}
+    @representations = @create_representation_constructors(@schema_manager.ids)
+    @resource_constructors = @create_resource_constructors(options.resources, @representations)
 
-    for id, schema of @schema_manager.ids
+    @resources = @create_resources(@directory, @resource_constructors)
+
+  create_representation_constructors: (schemas) ->
+    constructors = {}
+    for id, schema of schemas
       if schema.type == "array"
         constructor = @array_wrapper(schema)
-        @representation_ids[schema.id] = constructor
+        constructors[schema.id] = constructor
       else if schema.type == "object"
         constructor = @object_wrapper(schema)
-        @representation_ids[schema.id] = constructor
+        constructors[schema.id] = constructor
       else if !SchemaManager.is_primitive(schema.type)
         constructor = @representation_constructor(schema)
-        @representation_ids[schema.id] = constructor
+        constructors[schema.id] = constructor
+      else
+        console.warn "Received unexpected schema type:", schema.type
+    return constructors
 
-    for resource_type, definition of @resource_definitions
-      for id, constructor of @representation_ids
+
+  create_resource_constructors: (definitions, representations) ->
+    constructors = {}
+    for resource_type, definition of definitions
+      for id, constructor of representations
         # The assumption here is that the frag-ident part of a schema id
         # corresponds to the resource type.
         [base, name] = id.split("#")
         if name == resource_type
-          @resourcify(constructor, resource_type)
-          @resource_constructors[resource_type] = constructor
+          @resourcify(constructor, resource_type, definition)
+          constructors[resource_type] = constructor
 
       # create a resource constructor for types with no directly associated schemas.
-      @resource_constructors[resource_type] ||= @resourcify(null, resource_type)
+      constructors[resource_type] ||= @resourcify(null, resource_type, definition)
+    return constructors
 
-    @create_resources(@directory)
 
   # Create resource instances using the URLs supplied in the service
   # description's directory.
-  create_resources: (directory) ->
+  create_resources: (directory, constructors) ->
+    resources = {}
     for key, value of directory
-      if @resource_constructors[key]
-        @resources[key] = new @resource_constructors[key](url: value)
+      if constructors[key]
+        resources[key] = new constructors[key](url: value)
+    return resources
 
   array_wrapper: (schema) ->
     client = @
@@ -160,7 +171,7 @@ class Client
       schema.type
 
   wrap: (type, data) ->
-    if wrapper = @representation_ids[type]
+    if wrapper = @representations[type]
       new wrapper(data)
     else
       data
@@ -203,8 +214,7 @@ class Client
 
 
 
-
-  resourcify: (constructor, resource_type) ->
+  resourcify: (constructor, resource_type, definition) ->
     client = @
     constructor ||= (@properties) ->
       @url = @properties.url
@@ -218,9 +228,7 @@ class Client
       value: client
       enumerable: false
 
-    if definition = @resource_definitions[resource_type]
-      @define_actions(constructor, definition.actions)
-
+    @define_actions(constructor, definition.actions)
     constructor
 
   define_actions: (constructor, actions) ->
@@ -285,9 +293,12 @@ class Client
         url: resource.url
         method: method
         headers: {}
-        content: options.content
         query: options.query
         on: {}
+      if options.body
+        request.body = options.body
+      else if options.content
+        request.content = options.content
 
       # verify presence of the required query params from the schema
       for key, value of required_params
