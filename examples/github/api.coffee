@@ -1,4 +1,6 @@
-patchboard_schema = require("../../server/coffee/src/patchboard_api").schema
+SchemaManager = require("patchboard-client/schema_manager")
+schema = require("./api/schema.coffee")
+SchemaManager.normalize(schema)
 module.exports =
   service_url: "https://api.github.com"
   directory: require("./api/directory.coffee")

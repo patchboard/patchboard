@@ -1,5 +1,6 @@
 module.exports =
   id: "github.com"
+  type: "object"
   properties:
 
     resource:

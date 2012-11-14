@@ -31,7 +31,7 @@ repositories.list
         on:
           200: (response, repo) ->
             console.log "Name:", repo.name
-            console.log "Owner:", repo.owner.resource_type
+            console.log "Owner type:", repo.owner.resource_type
             console.log repo.owner.url
 
 
