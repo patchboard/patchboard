@@ -81,13 +81,16 @@ class SchemaManager
     @media_types = {}
 
     for schema in @schemas
-      SchemaManager.normalize(schema)
+      #SchemaManager.normalize(schema)
       @register_schema(schema)
 
   find: (options) ->
     if options.constructor == String
-      if options.indexOf("#") > 0
+      index = options.indexOf("#")
+      if index > 0
         options = {id: options}
+      else if index == 0
+        options = {name: options.slice(1)}
       else
         options = {name: options}
 
@@ -112,7 +115,11 @@ class SchemaManager
         @media_types[definition.mediaType] = definition
 
   inherit_properties: (schema) ->
+    # copying all the properties is cheating. Probably should
+    # define a Schema class that can make use of parent schema
+    # without copying.
     if schema.extends
+      # are there any cases where the value wouldn't be a $ref?
       parent_id = schema.extends.$ref
       parent = @ids[parent_id]
       if parent
