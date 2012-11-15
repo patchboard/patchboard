@@ -11,12 +11,12 @@ module.exports =
         response_schema: "repo_list"
         query:
           optional:
-            sort:
-              type:
-                enum: ["created", "updated", "pushed", "full_name"]
             type:
               type:
                 enum: ["all", "owner", "public", "private", "member"]
+            sort:
+              type:
+                enum: ["created", "updated", "pushed", "full_name"]
             direction:
               type:
                 enum: ["asc", "desc"]
