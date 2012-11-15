@@ -74,17 +74,31 @@ class Client
     @authorizer = options.authorizer
 
     @resource_constructors = @create_resource_constructors(options.resources)
-    @resources = @create_resources(options.directory, @resource_constructors)
+    @resources = @create_resources(options.url_templates, @resource_constructors)
+    @directory = @create_directory(options.directory, @resource_constructors)
+
+
+  create_resources: (templates, constructors) ->
+    out = {}
+    for name, fn of templates
+      out[name] = @create_resource(name, fn)
+    out
+
+  create_resource: (name, fn) ->
+    (options) =>
+      constructor = @resource_constructors[name]
+      url = fn(options)
+      return new constructor(url: url)
 
 
   # Create resource instances using the URLs supplied in the service
   # description's directory.
-  create_resources: (directory, constructors) ->
-    resources = {}
-    for key, value of directory
+  create_directory: (urls, constructors) ->
+    out = {}
+    for key, url of urls
       if constructors[key]
-        resources[key] = new constructors[key](url: value)
-    return resources
+        out[key] = new constructors[key](url: url)
+    return out
 
   create_resource_constructors: (definitions) ->
     resource_constructors = {}
