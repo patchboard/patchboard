@@ -80,8 +80,8 @@ class Client
 
   create_resources: (templates, constructors) ->
     out = {}
-    for name, fn of templates
-      out[name] = @create_resource(name, fn)
+    for name, options of templates
+      out[name] = @create_resource(options.resource, options.generate_url)
     out
 
   create_resource: (name, fn) ->
@@ -93,11 +93,11 @@ class Client
 
   # Create resource instances using the URLs supplied in the service
   # description's directory.
-  create_directory: (urls, constructors) ->
+  create_directory: (directory, constructors) ->
     out = {}
-    for key, url of urls
+    for key, options of directory
       if constructors[key]
-        out[key] = new constructors[key](url: url)
+        out[key] = new constructors[options.resource](url: options.url)
     return out
 
   create_resource_constructors: (definitions) ->
