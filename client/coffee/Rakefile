@@ -2,5 +2,5 @@
 require "starter/tasks/npm"
 
 task "test" do
-  sh "coffee test/decoration_test"
+  sh "coffee test/decoration_test.coffee"
 end
