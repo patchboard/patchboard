@@ -71,11 +71,10 @@ class Client
       throw new Error("API specification is missing fields: #{missing_fields.join(', ')}")
 
     @schema_manager = new SchemaManager(options.schemas...)
-    @directory = options.directory
     @authorizer = options.authorizer
 
     @resource_constructors = @create_resource_constructors(options.resources)
-    @resources = @create_resources(@directory, @resource_constructors)
+    @resources = @create_resources(options.directory, @resource_constructors)
 
 
   # Create resource instances using the URLs supplied in the service
@@ -223,7 +222,6 @@ class Client
           # TODO: check the Content-Type header
           if response.status == definition.status && response_schema
             decorated = client.decorate(response_schema, response.content.data)
-            #wrapped = client.wrap(response_schema.id, response.content.data)
           handler(response, decorated)
 
       request
