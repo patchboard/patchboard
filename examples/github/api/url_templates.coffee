@@ -1,13 +1,15 @@
 module.exports = (base_url) ->
 
-  user:
-    url: "#{base_url}/users/:user"
-    repositories: "#{base_url}/users/:user/repos"
+  user: (options) ->
+    "#{base_url}/users/#{options.user}"
 
-  repository:
-    contributors: "#{base_url}/repos/:owner/:repository/contributors"
+  repositories: (options) ->
+    "#{base_url}/users/#{options.owner}/repos"
 
-  organization:
-    url: "#{base_url}/orgs/:organization"
-    repositories: "#{base_url}/orgs/:organization/repos"
+  #repository:
+    #contributors: "#{base_url}/repos/:owner/:repository/contributors"
+
+  #organization:
+    #self: "#{base_url}/orgs/:organization"
+    #repositories: "#{base_url}/orgs/:organization/repos"
 
