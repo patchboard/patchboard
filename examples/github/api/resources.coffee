@@ -30,7 +30,24 @@ module.exports =
         response_schema: "repository"
         status: 200
 
+  contributors:
+    actions:
+      list:
+        method: "GET"
+        authorization: "Basic"
+        response_schema: "contributor_list"
+        status: 200
+
+  languages:
+    actions:
+      list:
+        method: "GET"
+        authorization: "Basic"
+        response_schema: "language_dictionary"
+        status: 200
+
   user:
+    aliases: ["contributor"]
     actions:
       get:
         method: "GET"

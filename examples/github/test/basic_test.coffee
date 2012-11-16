@@ -64,4 +64,3 @@ Testify.test "Resources from templatized urls", (context) ->
 
 
 
-

@@ -83,7 +83,6 @@ module.exports =
         collaborators: {type: "number"}
         plan: {$ref: "#plan"}
 
-
     user:
       mediaType: "application/json"
       extends: {$ref: "#owner"}
@@ -91,6 +90,25 @@ module.exports =
     organization:
       mediaType: "application/json"
       extends: {$ref: "#owner"}
+
+    contributor_list:
+      type: "array"
+      mediaType: "application/json"
+      items: {$ref: "#contributor"}
+
+    contributor:
+      extends: {$ref: "#user"}
+      mediaType: "application/json"
+      type: "object"
+      properties:
+        contributions: {type: "integer"}
+
+    language_dictionary:
+      type: "object"
+      mediaType: "application/json"
+      additionalProperties: {type: "integer"}
+
+
 
     gist:
       mediaType: "application/json"
