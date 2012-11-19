@@ -1,5 +1,43 @@
 module.exports =
 
+  user:
+    aliases: ["contributor"]
+    actions:
+      get:
+        method: "GET"
+        authorization: "Basic"
+        response_schema: "user"
+        status: 200
+      edit:
+        method: "PATCH"
+        authorization: "Basic"
+        request_schema: "user"
+        response_schema: "user"
+        status: 200
+
+  organizations:
+    actions:
+      list:
+        method: "GET"
+        authorization: "Basic"
+        response_schema: "organization_list"
+        status: 200
+
+  organization:
+    actions:
+      get:
+        method: "GET"
+        authorization: "Basic"
+        response_schema: "organization"
+        status: 200
+      edit:
+        method: "PATCH"
+        authorization: "Basic"
+        request_schema: "organization"
+        response_schema: "organization"
+        status: 200
+
+
   repositories:
     actions:
       create:
@@ -29,6 +67,17 @@ module.exports =
         authorization: "Basic"
         response_schema: "repository"
         status: 200
+      edit:
+        method: "PATCH"
+        authorization: "Basic"
+        request_schema: "repository"
+        response_schema: "repository"
+        status: 200
+      #delete:
+        #method: "DELETE"
+        #authorization: "Basic"
+        #status: 204
+
 
   contributors:
     actions:
@@ -46,24 +95,29 @@ module.exports =
         response_schema: "language_dictionary"
         status: 200
 
-  user:
-    aliases: ["contributor"]
+  teams:
+    actions:
+      list:
+        method: "GET"
+        authorization: "Basic"
+        response_schema: "team_list"
+        status: 200
+
+  branches:
+    actions:
+      list:
+        method: "GET"
+        authorization: "Basic"
+        response_schema: "branch_list"
+        status: 200
+
+  branch:
     actions:
       get:
         method: "GET"
         authorization: "Basic"
-        response_schema: "user"
+        response_schema: "branch"
         status: 200
-
-  authenticated_user:
-    actions:
-      get:
-        method: "GET"
-        authorization: "Basic"
-        response_schema: "user"
-        status: 200
-
-  organizations: {}
 
   gists:
     actions:
@@ -78,20 +132,6 @@ module.exports =
         authorization: "Basic"
         response_schema: "gist_list"
         status: 200
-
-
-  starred_gists:
-    actions:
-      get:
-        method: "GET"
-        authorization: "Basic"
-        response_schema: "gist_list"
-        status: 200
-
-  user_gists:
-    actions: {}
-  public_gists:
-    actions: {}
 
   gist:
     actions:

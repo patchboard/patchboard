@@ -12,14 +12,14 @@ client = new GitHubClient(basic_auth)
 
 Testify.test "Resource extensions", (context) ->
 
-  client.resources.repository(owner: "automatthew", repo: "fate").get
+  client.resources.repository(login: "automatthew", name: "fate").get
     on:
       response: (response) ->
         context.fail "unexpected response status: #{response.status}"
       200: (response, repo) ->
         console.log "X-Ratelimit-Remaining:", response.headers["X-Ratelimit-Remaining"]
         context.test "repository.contributors", (context) ->
-          repo.contributors
+          repo.contributors.list
             on:
               response: (response) ->
                 context.fail "unexpected response status: #{response.status}"
@@ -32,7 +32,7 @@ Testify.test "Resource extensions", (context) ->
                     assert.equal item.resource_type, "user"
 
         context.test "repository.languages", (context) ->
-          repo.languages
+          repo.languages.list
             on:
               response: (response) ->
                 context.fail "unexpected response status: #{response.status}"

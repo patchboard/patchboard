@@ -18,27 +18,11 @@ test_repository = (context, repo) ->
           assert.equal repo.owner.resource_type, "user"
 
 
-Testify.test "Resources from the directory", (context) ->
-  repositories = client.directory.repositories
-
-  repositories.list
-    on:
-      response: (response) ->
-        context.fail "Unexpected response status: #{response.status}"
-      200: (response, repos) ->
-        context.test "response is an array", (context) ->
-          assert.equal repos.constructor, Array
-          context.test "items are all repositories", ->
-            for item in repos
-              assert.equal item.resource_type, "repository"
-        context.test "repo is usable as resource", (context) ->
-          test_repository(context, repos[1])
-
 Testify.test "Resources from templatized urls", (context) ->
 
   context.test "User", (context) ->
     context.test ".get()", (context) ->
-      user = client.resources.user(user: "dyoder")
+      user = client.resources.user(login: "dyoder")
       user.get
         on:
           response: (response) ->
@@ -60,6 +44,7 @@ Testify.test "Resources from templatized urls", (context) ->
               context.test "of repository resources", ->
                 for item in list
                   assert.equal item.resource_type, "repository"
+
 
 
 
