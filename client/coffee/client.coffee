@@ -58,6 +58,7 @@ class Client
 
 
   constructor: (options) ->
+    @api = options
     @shred = new Shred()
 
     # Validate API specification
@@ -74,21 +75,59 @@ class Client
     @authorizer = options.authorizer
 
     @resource_constructors = @create_resource_constructors(options.resources)
-    @resources = @create_resources(options.url_templates, @resource_constructors)
+    @resources = @create_resources(options.extensions, @resource_constructors)
     @directory = @create_directory(options.directory, @resource_constructors)
+    for name, spec of options.extensions
+      if spec.association
+        @associate(spec)
 
 
-  create_resources: (templates, constructors) ->
+  generate_url: (template, options) ->
+    parts = template.split("/")
+    out = []
+    for part in parts
+      if part.indexOf(":") == 0
+        key = part.slice(1)
+        if string = options[key]
+          out.push(string)
+        else
+          console.warn "Missing key: '#{key}' in options:", options
+      else
+        out.push(part)
+    @api.service_url + out.join("/")
+
+  create_resources: (extensions, constructors) ->
     out = {}
-    for name, options of templates
-      out[name] = @create_resource(options.resource, options.generate_url)
+    for name, spec of extensions
+      fn = (options) =>
+        @generate_url(spec.template, options)
+      out[name] = @create_resource(spec.resource, spec.template)
     out
 
-  create_resource: (name, fn) ->
+  create_resource: (name, template) ->
     (options) =>
       constructor = @resource_constructors[name]
-      url = fn(options)
+      url = @generate_url(template, options)
       return new constructor(url: url)
+
+  associate: (spec) ->
+    client = @
+    # TODO: error checking
+    target = spec.association
+
+    target_constructor = @resource_constructors[target]
+    # TODO: handle situation where no identifiers object has been created.
+    # TODO: handle situation where named identifier does not exist.
+    identify = @identifiers[target]
+
+    extension_constructor = @resource_constructors[spec.resource]
+
+    if target_constructor && extension_constructor
+      Object.defineProperty target_constructor.prototype, spec.resource,
+        get:  ->
+          identifier = identify(@)
+          url = client.generate_url(spec.template, identifier)
+          new extension_constructor(url: url)
 
 
   # Create resource instances using the URLs supplied in the service
@@ -96,14 +135,18 @@ class Client
   create_directory: (directory, constructors) ->
     out = {}
     for key, options of directory
-      if constructors[key]
+      if constructors[options.resource]
         out[key] = new constructors[options.resource](url: options.url)
     return out
 
   create_resource_constructors: (definitions) ->
     resource_constructors = {}
     for type, definition of definitions
-      resource_constructors[type] = @create_resource_constructor(type, definition)
+      constructor = @create_resource_constructor(type, definition)
+      resource_constructors[type] = constructor
+      if definition.aliases
+        for alias in definition.aliases
+          resource_constructors[alias] = constructor
     resource_constructors
 
   create_resource_constructor: (type, definition) ->
@@ -260,11 +303,13 @@ class Client
       if schema.type == "array"
         if schema.items
           for item, i in data
-            data[i] = @decorate(schema.items, item)
+            if result = @decorate(schema.items, item)
+              data[i] = result
       else if !SchemaManager.is_primitive(schema.type)
         # Declared properties
         for key, value of schema.properties
-          data[key] = @decorate(value, data[key])
+          if result = @decorate(value, data[key])
+            data[key] = result
         # Default for undeclared properties
         if addprop = schema.additionalProperties
           for key, value of data
