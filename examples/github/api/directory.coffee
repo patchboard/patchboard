@@ -12,6 +12,14 @@ module.exports =
     resource: "organizations"
     url: "https://api.github.com/user/orgs"
 
+  issues:
+    resource: "issues"
+    url: "https://api.github.com/issues"
+
+  all_issues:
+    resource: "issues"
+    url: "https://api.github.com/user/issues"
+
   gists:
     resource: "gists"
     url: "https://api.github.com/gists"

@@ -58,7 +58,7 @@ module.exports =
             direction:
               type:
                 enum: ["asc", "desc"]
-        status: 200
+        status: 201
   
   repository:
     actions:
@@ -119,6 +119,86 @@ module.exports =
         response_schema: "branch"
         status: 200
 
+
+  issues:
+    actions:
+      list:
+        method: "GET"
+        authorization: "Basic"
+        query:
+          optional:
+            filter:
+              type:
+                enum: ["assigned", "created", "mentioned", "subscribed", "all"]
+            state:
+              type:
+                enum: ["open", "closed"]
+            labels:
+              type: "string"
+            sort:
+              type:
+                enum: ["created", "updated", "comments"]
+            direction:
+              type:
+                enum: ["asc", "desc"]
+            since:
+              type: "string"
+        response_schema: "issue_list"
+        status: 200
+
+
+  repository_issues:
+    actions:
+      create:
+        method: "POST"
+        authorization: "Basic"
+        request_schema: "issue"
+        response_schema: "issue"
+        status: 201
+      edit:
+        method: "PATCH"
+        authorization: "Basic"
+        request_schema: "issue"
+        response_schema: "issue"
+        status: 200
+      list:
+        method: "GET"
+        authorization: "Basic"
+        query:
+          optional:
+            milestone:
+              type: ["integer", "string"]
+            state:
+              type:
+                enum: ["open", "closed"]
+            assignee:
+              type: "string"
+            creator:
+              type: "string"
+            mentioned:
+              type: "string"
+            labels:
+              type: "string"
+            sort:
+              type:
+                enum: ["created", "updated", "comments"]
+            direction:
+              type:
+                enum: ["asc", "desc"]
+            since:
+              type: "string"
+        response_schema: "issue_list"
+        status: 200
+
+
+  issue:
+    actions:
+      get:
+        method: "GET"
+        authorization: "Basic"
+        response_schema: "issue"
+        status: 200
+
   gists:
     actions:
       create:
@@ -127,7 +207,7 @@ module.exports =
         request_schema: "gist"
         response_schema: "gist"
         status: 201
-      get:
+      list:
         method: "GET"
         authorization: "Basic"
         response_schema: "gist_list"
@@ -140,5 +220,37 @@ module.exports =
         authorization: "Basic"
         response_schema: "gist_list"
         status: 200
+      edit:
+        method: "PATCH"
+        authorization: "Basic"
+        request_schema: "gist"
+        response_schema: "gist"
+        status: 200
+      #delete:
+        #method: "DELETE"
+        #authorization: "Basic"
+        #status: 204
 
+  gist_star:
+    actions:
+      get:
+        method: "GET"
+        authorization: "Basic"
+        status: 204
+      set:
+        method: "PUT"
+        authorization: "Basic"
+        status: 204
+      delete:
+        method: "DELETE"
+        authorization: "Basic"
+        status: 204
+
+  gist_fork:
+    actions:
+      create:
+        method: "POST"
+        authorization: "Basic"
+        response_schema: "gist"
+        status: 201
 

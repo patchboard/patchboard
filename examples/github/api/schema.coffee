@@ -123,7 +123,6 @@ module.exports =
       type: "object"
       properties:
         name: {type: "string"}
-        id: {type: "integer"}
 
     team_list:
       type: "array"
@@ -163,11 +162,119 @@ module.exports =
       mediaType: "application/json"
       items: {$ref: "#branch"}
 
+    pull_ref:
+      type: "object"
+      properties:
+        label: {type: "string"}
+        ref: {type: "string"}
+        sha: {type: "string"}
+        user: {$ref: "#user"}
+        repo: {$ref: "#repository"}
+
+    pull_request:
+      extends: {$ref: "#resource"}
+      properties:
+        html_url: {type: "string", format: "uri"}
+        diff_url: {type: "string", format: "uri"}
+        patch_url: {type: "string", format: "uri"}
+        issue_url: {type: "string", format: "uri"}
+        number: {type: "integer"}
+        state: {type: "string"}
+        title: {type: "string"}
+        body: {type: "string"}
+        created_at: {type: "string"}
+        updated_at: {type: "string"}
+        closed_at: [
+          "null",
+          {type: "string"}
+        ]
+        merged_at: [
+          "null",
+          {type: "string"}
+        ]
+        head: {$ref: "#pull_ref"}
+        base: {$ref: "#pull_ref"}
+        _links:
+          type: "object"
+          properties:
+            comments: {$ref: "issue_comments"}
+            review_comments: {$ref: "review_comments"}
+        user: {$ref: "#user"}
+
+    pull_request_list:
+      type: "array"
+      mediaType: "application/json"
+      items: {$ref: "#pull_request"}
+
+    issue:
+      extends: {$ref: "#resource"}
+      mediaType: "application/json"
+      properties:
+        html_url: {type: "string", format: "uri"}
+        number: {type: "integer"}
+        state: {type: "string"}
+        title: {type: "string"}
+        body: {type: "string"}
+        user: {$ref: "#user"}
+        labels:
+          type: "array"
+          items: {$ref: "#label"}
+        assignee: {$ref: "#user"}
+        milestone: {$ref: "#milestone"}
+        comments: {type: "number"}
+        pull_request: {$ref: "#pull_request"}
+        closed_at: [
+          "null",
+          {type: "string"}
+        ]
+        created_at: {type: "string"}
+        updated_at: {type: "string"}
+
+    issue_list:
+      type: "array"
+      mediaType: "application/json"
+      items: {$ref: "#issue"}
 
     gist:
       mediaType: "application/json"
       extends: {$ref: "#resource"}
-      properties: {}
+      properties:
+        description: {type: "string"}
+        public: {type: "boolean"}
+        user: {$ref: "#user"}
+        files:
+          type: "object"
+          additionalProperties:
+            type: "object"
+            size: {type: "integer"}
+            filename: {type: "string"}
+            raw_url: {type: "string", format: "uri"}
+        comments: {type: "integer"}
+        comments_url: {type: "string", format: "uri"}
+        html_url: {type: "string", format: "uri"}
+        git_pull_url: {type: "string", format: "uri"}
+        git_push_url: {type: "string", format: "uri"}
+        created_at: {type: "string"}
+        forks:
+          type: "array"
+          items: {$ref: "#gist"}
+        history:
+          type: "array"
+          items: {$ref: "#gist_change"}
+
+    gist_change:
+      type: "object"
+      properties:
+        url: {type: "string", format: "uri"}
+        version: {type: "string"}
+        user: {$ref: "#user"}
+        change_status:
+          type: "object"
+          properties:
+            deletions: {type: "integer"}
+            additions: {type: "integer"}
+            total: {type: "integer"}
+        committed_at: {type: "string"}
 
     gist_list:
       mediaType: "application/json"

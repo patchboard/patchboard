@@ -15,12 +15,24 @@ module.exports = (base_url) ->
   user_repositories:
     resource: "repositories"
     association: "user"
-    template: "/users/:user/repos"
+    template: "/users/:login/repos"
 
   organization_repositories:
     resource: "repositories"
     association: "organization"
     template: "/orgs/:organization/repos"
+
+
+  repository_issues:
+    resource: "repository_issues"
+    association: "repository"
+    template: "/repos/:login/:name/issues"
+
+  organization_issues:
+    resource: "issues"
+    association: "organization"
+    template: "/orgs/:organization/issues"
+
 
   user_gists:
     resource: "gists"
