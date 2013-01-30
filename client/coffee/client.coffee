@@ -36,6 +36,7 @@ class Client
         method: "GET"
         headers:
           "Accept": "application/json"
+        cookieJar: null
         on: handlers
 
   @backcompat: (service_url, callback) ->
@@ -45,6 +46,7 @@ class Client
         method: "GET"
         headers:
           "Accept": "application/json"
+        cookieJar: null
         on:
           200: (response) ->
             client = new Client(response.content.data)
@@ -170,6 +172,7 @@ class Client
         method: method
         headers: {}
         query: options.query
+        cookieJar: null
         on: {}
       if options.body
         request.body = options.body
