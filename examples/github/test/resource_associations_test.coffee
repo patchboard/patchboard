@@ -10,7 +10,7 @@ basic_auth = new Buffer(string).toString("base64")
 
 client = new GitHubClient(basic_auth)
 
-Testify.test "Resource extensions", (context) ->
+Testify.test "Resource associations", (context) ->
 
   client.resources.repository(login: "automatthew", name: "fate").get
     on:
