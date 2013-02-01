@@ -33,7 +33,7 @@ Testify.test "Resources from templatized urls", (context) ->
 
   context.test "Repositories", (context) ->
     context.test ".list()", (context) ->
-      user_repos = client.resources.repositories(user: "dyoder")
+      user_repos = client.resources.user_repositories(user: "dyoder")
       user_repos.list
         on:
           response: (response) ->

@@ -43,6 +43,7 @@ module.exports =
       create:
         method: "POST"
         request_schema: "repository"
+        status: 201
       list:
         method: "GET"
         authorization: "Basic"
@@ -58,7 +59,7 @@ module.exports =
             direction:
               type:
                 enum: ["asc", "desc"]
-        status: 201
+        status: 200
   
   repository:
     actions:
