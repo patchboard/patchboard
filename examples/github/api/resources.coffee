@@ -203,6 +203,7 @@ module.exports =
   gists:
     actions:
       create:
+        description: "Create a gist"
         method: "POST"
         authorization: "Basic"
         request_schema: "gist"
@@ -212,11 +213,29 @@ module.exports =
         method: "GET"
         authorization: "Basic"
         response_schema: "gist_list"
+        query:
+          optional:
+            since:
+              type: "string"
+              format: "date-time"
+              description: """
+                a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ
+                Only gists updated at or after this time are returned.
+              """
         status: 200
+      edit:
+        description: "Edit a gist"
+        method: "PATCH"
+        authorization: "Basic"
+        request_schema: "gist"
+        response_schema: "gist"
+        status: 200
+
 
   gist:
     actions:
       get:
+        description: "Get a single gist"
         method: "GET"
         authorization: "Basic"
         response_schema: "gist_list"
@@ -234,7 +253,7 @@ module.exports =
 
   gist_star:
     actions:
-      get:
+      check:
         method: "GET"
         authorization: "Basic"
         status: 204
