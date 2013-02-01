@@ -2,7 +2,7 @@
   "name": "patchboard-client",
   "description": "Client for using Patchboard HTTP APIs",
   "author": "Matthew King",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "repository": {
     "type": "git",
     "url": "https://github.com/automatthew/patchboard/"
