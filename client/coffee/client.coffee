@@ -93,7 +93,8 @@ class Client
         if string = options[key]
           out.push(string)
         else
-          console.warn "Missing key: '#{key}' in options:", options
+          string = "Missing key: '#{key}' in options: #{JSON.stringify(options)}"
+          throw new Error(string)
       else
         out.push(part)
     @api.service_url + out.join("/")
@@ -101,8 +102,6 @@ class Client
   create_resources: (extensions, constructors) ->
     out = {}
     for name, spec of extensions
-      fn = (options) =>
-        @generate_url(spec.template, options)
       out[name] = @create_resource(spec.resource, spec.template)
     out
 
