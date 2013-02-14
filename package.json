@@ -1,0 +1,29 @@
+{
+  "name": "patchboard",
+  "description": "Patchboard API tools",
+  "author": "Matthew King",
+  "version": "0.3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/automatthew/patchboard/"
+  },
+  "main": "./coffee/patchboard.coffee",
+  "bin": "./bin/patchboard",
+  "files": [
+    "bin",
+    "coffee/patchboard.coffee",
+    "coffee/schema.coffee",
+    "schema.json"
+  ],
+  "dependencies": {
+    "JSV": "4.0.x",
+    "js2coffee": "0.2.0",
+    "patchboard-server": "0.2.x",
+    "patchboard-client": "0.2.x"
+  }
+}
+
+
+
+
+

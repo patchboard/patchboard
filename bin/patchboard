@@ -1,0 +1,27 @@
+#!/usr/bin/env coffee
+
+tools = require("../coffee/tools")
+
+[interpreter, script, command, args...] = process.argv
+
+switch command
+  when "validate"
+    [api_file] = args
+    if api_file
+      tools.validate(api_file)
+    else
+      console.log "You must specify the path to the API definition file"
+  when "generate"
+    [type] = args
+    if type
+      tools.generate(type)
+    else
+      console.log "You must specify a type of either json or coffee"
+  when "schema"
+    console.log JSON.stringify(require("../schema"), null, 2)
+  when undefined
+    console.log "You must enter a command (validate, generate, schema)"
+  else
+    console.log "Unsupported command: #{command}"
+
+
