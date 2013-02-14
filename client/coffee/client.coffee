@@ -180,8 +180,9 @@ class Client
         request.content = options.content
 
       # verify presence of the required query params from the schema
-      for key, value of required_params
-        if !request.query || !request.query[key]
+      # TODO: check for unexpected params.
+      for key, value of definition.query
+        if value.required && !request.query
           # TODO: catch this error synchronously in the actual request call
           # and relay into the user-supplied error handler.
           throw new Error("Missing required query param: #{key}")

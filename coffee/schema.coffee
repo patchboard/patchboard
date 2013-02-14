@@ -46,11 +46,7 @@ module.exports =
                   required: true
                   type: "string"
                   enum: ["GET", "PUT", "POST", "PATCH", "DELETE"]
-                query:
-                  type: "object"
-                  properties:
-                    optional: {$ref: "#query"}
-                    required: {$ref: "#query"}
+                query: {$ref: "#query"}
                 request_schema:
                   type: "string"
                   description: "The name of the schema describing the request body"

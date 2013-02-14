@@ -67,10 +67,20 @@ class Classifier
     identifiers.Authorization = specs.Authorization = definition.authorization || "[any]"
 
     if definition.query
-      specs.Query = definition.query
+      specs.Query =
+        required: {}
+        optional: {}
+      required_keys = []
+      optional_keys = []
       # create a string that uniquely identifies the query spec
-      required_keys = (key for key, val of specs.Query.required).sort()
-      optional_keys = (key for key, val of specs.Query.optional).sort()
+      for key, val of definition.query
+        if val.required
+          specs.Query.required[key] = val
+          required_keys.push(key)
+        else
+          specs.Query.optional[key] = val
+          optional_keys.push(key)
+
       identifiers.Query =
         "required:(#{required_keys.join("&")}), optional:(#{optional_keys.join("&")})"
     else
