@@ -1,16 +1,8 @@
 module.exports =
   id: "https://github.com/automathew/patchboard-spec"
   properties:
+
     schema: {$ref: "http://json-schema.org/draft-03/schema#"}
-    query:
-      id: "#query"
-      # Extend the full JSON schema, so we can constrain the legal
-      # values of "type".
-      extends: {$ref: "http://json-schema.org/draft-03/schema#"}
-      properties:
-        type:
-          enum:
-            ["string", "number", "integer", "boolean"]
 
     paths:
       type: "object"
@@ -46,7 +38,14 @@ module.exports =
                   required: true
                   type: "string"
                   enum: ["GET", "PUT", "POST", "PATCH", "DELETE"]
-                query: {$ref: "#query"}
+                query:
+                  # Extend the full JSON schema, so we can constrain the legal
+                  # values of "type".
+                  extends: {$ref: "http://json-schema.org/draft-03/schema#"}
+                  properties:
+                    type:
+                      enum:
+                        ["string", "number", "integer", "boolean"]
                 request_schema:
                   type: "string"
                   description: "The name of the schema describing the request body"
