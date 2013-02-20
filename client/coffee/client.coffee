@@ -121,8 +121,8 @@ class Client
 
   # returns a function intended to be bound to a resource instance
   register_action: (name) ->
-    (data) ->
-      request = @_prepare_request(name, data)
+    (options) ->
+      request = @_prepare_request(name, options)
       @patchboard_client.shred.request(request)
 
   resource_methods:
@@ -140,6 +140,22 @@ class Client
         # TODO: catch this error synchronously in the actual request call
         # and relay into the user-supplied error handler.
         throw new Error("No such action defined: #{name}")
+
+    # returns a string that (when logged to console) can be used as the
+    # curl command that exactly represents this action.
+    curl: (name, options) ->
+      request = @_prepare_request(name, options)
+      {method, url, headers, content} = request
+      agent = headers["User-Agent"]
+      command = []
+      command.push "curl -v -A '#{agent}' -X #{method}"
+      for header, value of headers when header != "User-Agent"
+        command.push "  -H '#{header}: #{value}'"
+
+      if content
+        command.push "  -d '#{JSON.stringify(content)}'"
+      command.push "  #{url}"
+      command.join(" \\\n")
 
     authorize: (type, action) ->
       @patchboard_client.authorizer.call(@, type, action)
@@ -170,7 +186,8 @@ class Client
       request =
         url: resource.url
         method: method
-        headers: {}
+        headers:
+          "User-Agent": "patchboard_client"
         query: options.query
         cookieJar: null
         on: {}
