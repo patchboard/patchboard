@@ -9,54 +9,27 @@ class Client
     if service_url.constructor != String
       throw new Error("Expected to receive a String, but got something else")
 
-    if handlers.constructor == Function
-      @backcompat(service_url, handlers)
-    else
-      create_client = (response) ->
+    create_client = (response) ->
+      client = new Client(response.content.data)
+      
+    if handler = handlers["200"]
+      handlers["200"] = (response) ->
         client = new Client(response.content.data)
-        
-      if handler = handlers["200"]
-        handlers["200"] = (response) ->
-          try
-            client = new Client(response.content.data)
-            handler(client)
-          catch error
-            handlers["request_error"](error)
+        handler(client)
 
-      else if handler = handlers["response"]
-        handlers["response"] = (response) ->
-          try
-            client = new Client(response.content.data)
-            handler(client)
-          catch error
-            handlers["request_error"](error)
+    else if handler = handlers["response"]
+      handlers["response"] = (response) ->
+        client = new Client(response.content.data)
+        handler(client)
 
-      new Shred().request
-        url: service_url
-        method: "GET"
-        headers:
-          "Accept": "application/json"
-        cookieJar: null
-        on: handlers
+    new Shred().request
+      url: service_url
+      method: "GET"
+      headers:
+        "Accept": "application/json"
+      cookieJar: null
+      on: handlers
 
-  @backcompat: (service_url, callback) ->
-    if service_url.constructor == String
-      new Shred().request
-        url: service_url
-        method: "GET"
-        headers:
-          "Accept": "application/json"
-        cookieJar: null
-        on:
-          200: (response) ->
-            client = new Client(response.content.data)
-            callback(null, client)
-          error: (response) ->
-            callback(response)
-          request_error: (error) ->
-            callback(error)
-    else
-      throw new Error("Expected to receive a String, but got something else")
 
 
   constructor: (options) ->
