@@ -25,7 +25,7 @@ dispatcher = service.simple_dispatcher({})
 
 @app = connect()
 @app.use(connect.compress())
-@app.use(Patchboard.middleware.json2())
+@app.use(Patchboard.middleware.json())
 @app.use(dispatcher)
 
 
