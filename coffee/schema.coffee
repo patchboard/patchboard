@@ -2,7 +2,8 @@ module.exports =
   id: "https://github.com/automathew/patchboard-spec"
   properties:
 
-    schema: {$ref: "http://json-schema.org/draft-03/schema#"}
+    schema:
+      $ref: "http://json-schema.org/draft-03/schema#"
 
     paths:
       type: "object"
@@ -16,6 +17,7 @@ module.exports =
             type: "boolean"
 
     resources:
+      required: true
       type: "object"
       description: "A dictionary of resource descriptions"
 
