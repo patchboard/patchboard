@@ -1,3 +1,4 @@
+require "starter/tasks/npm"
 
 desc "Run tests"
 task "test" do
