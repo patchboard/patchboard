@@ -1,7 +1,7 @@
 require "starter/tasks/npm"
 
 def subprojects
-  FileList["{server,client}/*/Rakefile"].map {|file| File.dirname(file)}
+  FileList["{client,server}/*/Rakefile"].map {|file| File.dirname(file)}
 end
 
 def subtask(*args)
