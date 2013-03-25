@@ -13,6 +13,7 @@
     "bin",
     "coffee/patchboard.coffee",
     "coffee/schema.coffee",
+    "coffee/tools.coffee",
     "schema.json"
   ],
   "dependencies": {
