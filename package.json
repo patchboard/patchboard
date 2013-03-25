@@ -18,8 +18,8 @@
   "dependencies": {
     "JSV": "4.0.x",
     "js2coffee": "0.2.0",
-    "patchboard-server": "0.2.x",
-    "patchboard-client": "0.2.x"
+    "patchboard-server": "0.3.0",
+    "patchboard-client": "0.3.0"
   }
 }
 
