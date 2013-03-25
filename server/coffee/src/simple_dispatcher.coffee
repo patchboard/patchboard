@@ -29,6 +29,7 @@ class SimpleDispatcher
       @classification_error(match.error, request, response)
     else
       if match.content_type
+        # TODO: Should body validation be done in the classifier?
         validation = @validate(match.content_type, request)
         if validation.errors.length > 0
           @default_error_handler(

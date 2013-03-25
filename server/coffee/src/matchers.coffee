@@ -55,7 +55,7 @@ class Query
     for key, spec of @spec.required
       if !input[key]
         return false
-    true
+    input
 
 
 
