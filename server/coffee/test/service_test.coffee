@@ -1,7 +1,7 @@
 assert = require("assert")
 Testify = require "testify"
 
-api = require("./sample_api.coffee")
+{api} = require "./helpers"
 Patchboard = require("../patchboard")
 service = new Patchboard.Service(api)
 
@@ -31,3 +31,4 @@ Testify.test "Patchboard.Service", (context) ->
     assert.equal(parsed.path, "/some/path")
 
   # TODO: test failure conditions (too many or few arguments, incorrect names, etc.)
+

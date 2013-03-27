@@ -1,25 +1,17 @@
 assert = require("assert")
 Testify = require "testify"
 
-helpers = require("./helpers")
-testify = require("../src/testify")
+{api, partial_equal} = require("./helpers")
+media_type = api.media_type
 
 Patchboard = require("../patchboard")
-api = require("./sample_api.coffee")
-media_type = api.media_type
 service = new Patchboard.Service(api)
 classifier = new Patchboard.Classifier(service)
 
-partial_equal = (actual, expected) ->
-  for key, val of expected
-    assert.deepEqual(actual[key], val)
 
 class MockRequest
 
-  constructor: (options) ->
-    @url = options.url
-    @method = options.method
-    @headers = options.headers
+  constructor: ({@url, @method, @headers}) ->
     service.augment_request(@)
 
 
@@ -29,7 +21,6 @@ Testify.test "Classifier", (context) ->
     context.test name, ->
       request = new MockRequest(request)
       classification = classifier.classify(request)
-      #console.log name, classification
       partial_equal(classification, result)
 
   test_classification "Action with response_schema",
