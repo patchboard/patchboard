@@ -51,8 +51,10 @@ module.exports =
         # the exact objects in the data and schema that are failing.
         # JSV may have some useful functions for this.
         console.log "Invalid API.  Errors:", report.errors
+        process.exit(1)
     catch error
       console.log "Problem reading API description:", error.message
+      process.exit(1)
 
   generate: (type) ->
     if type == "json"
