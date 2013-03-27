@@ -23,6 +23,12 @@ end
 subtask "test"
 
 
+task "build" => "validate_example"
+
+task "validate_example" do
+  sh "bin/patchboard validate coffee/example_api.coffee"
+end
+
 task "build" => "schema.json"
 
 file "schema.json" => "coffee/schema.coffee" do

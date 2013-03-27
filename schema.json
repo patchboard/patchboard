@@ -4,22 +4,6 @@
     "schema": {
       "$ref": "http://json-schema.org/draft-03/schema#"
     },
-    "query": {
-      "id": "#query",
-      "extends": {
-        "$ref": "http://json-schema.org/draft-03/schema#"
-      },
-      "properties": {
-        "type": {
-          "enum": [
-            "string",
-            "number",
-            "integer",
-            "boolean"
-          ]
-        }
-      }
-    },
     "paths": {
       "type": "object",
       "additionalProperties": {
@@ -36,6 +20,7 @@
       }
     },
     "resources": {
+      "required": true,
       "type": "object",
       "description": "A dictionary of resource descriptions",
       "additionalProperties": {
@@ -64,13 +49,17 @@
                   ]
                 },
                 "query": {
-                  "type": "object",
+                  "extends": {
+                    "$ref": "http://json-schema.org/draft-03/schema#"
+                  },
                   "properties": {
-                    "optional": {
-                      "$ref": "#query"
-                    },
-                    "required": {
-                      "$ref": "#query"
+                    "type": {
+                      "enum": [
+                        "string",
+                        "number",
+                        "integer",
+                        "boolean"
+                      ]
                     }
                   }
                 },
