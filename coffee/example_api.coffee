@@ -196,14 +196,14 @@ exports.resources =
     actions:
       get:
         method: "GET"
-        response_schema: "ref"
+        response_schema: "reference"
         status: 200
 
   branch:
     actions:
       get:
         method: "GET"
-        response_schema: "ref"
+        response_schema: "reference"
         status: 200
       rename:
         method: "POST"
@@ -216,7 +216,7 @@ exports.resources =
     actions:
       get:
         method: "GET"
-        response_schema: "ref"
+        response_schema: "reference"
         status: 200
       delete:
         method: "DELETE"
