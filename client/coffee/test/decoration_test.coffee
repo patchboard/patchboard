@@ -3,7 +3,7 @@ Testify = require "testify"
 
 Client = require "../client"
 
-api = require "./test_api"
+{api} = require "./helpers"
 
 client = new Client(api)
 
