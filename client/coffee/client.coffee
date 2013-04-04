@@ -189,18 +189,15 @@ class Client
       for key, value of options.headers
         request.headers[key] = value
 
-      # Pass through status handlers for which we shouldn't wrap the response
-      # body.  202 and 204 don't have bodies.  Errors won't contain the expected
-      # representation. I actually want for the default "response" handler to
-      # do body wrapping when appropriate, but...
-      # FIXME: I can't figure out why, but if I don't do the hokey pokey with
-      # the default "response" handler here, Shred selects it over specific
-      # status code handlers. Might be a Shred bug.
-      for status in [202, 204, "error", "request_error", "response"]
-        if handler = options.on[status]
-          request.on[status] = handler
-          delete options.on[status]
-
+      # We only decorate the response content for the handler corresponding
+      # to the action definition's "status"
+      success_handler = options.on[definition.status]
+      if success_handler && response_schema
+        request.on[definition.status] = (response) ->
+          # TODO: check the Content-Type header
+          decorated = client.decorate(response_schema, response.content.data)
+          success_handler(response, decorated)
+        delete options.on[definition.status]
 
       # never silently die on request errors.
       # TODO: allow a default request_error handler on Client construction
@@ -209,14 +206,9 @@ class Client
 
       # TODO: figure out how Shred handles 30x and assess whether Patchboard
       # needs to care.
-      # IDEA: take an "on" option of "success", to be applied when the
-      # response status matches the indicated status in the resource description.
+
       for status, handler of options.on
-        request.on[status] = (response) ->
-          # TODO: check the Content-Type header
-          if response.status == definition.status && response_schema
-            decorated = client.decorate(response_schema, response.content.data)
-          handler(response, decorated)
+        request.on[status] = handler
 
       request
 
