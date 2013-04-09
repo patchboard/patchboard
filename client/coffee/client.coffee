@@ -9,54 +9,27 @@ class Client
     if service_url.constructor != String
       throw new Error("Expected to receive a String, but got something else")
 
-    if handlers.constructor == Function
-      @backcompat(service_url, handlers)
-    else
-      create_client = (response) ->
+    create_client = (response) ->
+      client = new Client(response.content.data)
+      
+    if handler = handlers["200"]
+      handlers["200"] = (response) ->
         client = new Client(response.content.data)
-        
-      if handler = handlers["200"]
-        handlers["200"] = (response) ->
-          try
-            client = new Client(response.content.data)
-            handler(client)
-          catch error
-            handlers["request_error"](error)
+        handler(client)
 
-      else if handler = handlers["response"]
-        handlers["response"] = (response) ->
-          try
-            client = new Client(response.content.data)
-            handler(client)
-          catch error
-            handlers["request_error"](error)
+    else if handler = handlers["response"]
+      handlers["response"] = (response) ->
+        client = new Client(response.content.data)
+        handler(client)
 
-      new Shred().request
-        url: service_url
-        method: "GET"
-        headers:
-          "Accept": "application/json"
-        cookieJar: null
-        on: handlers
+    new Shred().request
+      url: service_url
+      method: "GET"
+      headers:
+        "Accept": "application/json"
+      cookieJar: null
+      on: handlers
 
-  @backcompat: (service_url, callback) ->
-    if service_url.constructor == String
-      new Shred().request
-        url: service_url
-        method: "GET"
-        headers:
-          "Accept": "application/json"
-        cookieJar: null
-        on:
-          200: (response) ->
-            client = new Client(response.content.data)
-            callback(null, client)
-          error: (response) ->
-            callback(response)
-          request_error: (error) ->
-            callback(error)
-    else
-      throw new Error("Expected to receive a String, but got something else")
 
 
   constructor: (options) ->
@@ -177,8 +150,8 @@ class Client
 
   # returns a function intended to be bound to a resource instance
   register_action: (name) ->
-    (data) ->
-      request = @_prepare_request(name, data)
+    (options) ->
+      request = @_prepare_request(name, options)
       @patchboard_client.shred.request(request)
 
   resource_methods:
@@ -196,6 +169,22 @@ class Client
         # TODO: catch this error synchronously in the actual request call
         # and relay into the user-supplied error handler.
         throw new Error("No such action defined: #{name}")
+
+    # returns a string that (when logged to console) can be used as the
+    # curl command that exactly represents this action.
+    curl: (name, options) ->
+      request = @_prepare_request(name, options)
+      {method, url, headers, content} = request
+      agent = headers["User-Agent"]
+      command = []
+      command.push "curl -v -A '#{agent}' -X #{method}"
+      for header, value of headers when header != "User-Agent"
+        command.push "  -H '#{header}: #{value}'"
+
+      if content
+        command.push "  -d '#{JSON.stringify(content)}'"
+      command.push "  #{url}"
+      command.join(" \\\n")
 
     authorize: (type, action) ->
       @patchboard_client.authorizer.call(@, type, action)
@@ -226,7 +215,8 @@ class Client
       request =
         url: resource.url
         method: method
-        headers: {}
+        headers:
+          "User-Agent": "patchboard_client"
         query: options.query
         cookieJar: null
         on: {}
@@ -236,8 +226,9 @@ class Client
         request.content = options.content
 
       # verify presence of the required query params from the schema
-      for key, value of required_params
-        if !request.query || !request.query[key]
+      # TODO: check for unexpected params.
+      for key, value of definition.query
+        if value.required && !request.query
           # TODO: catch this error synchronously in the actual request call
           # and relay into the user-supplied error handler.
           throw new Error("Missing required query param: #{key}")
@@ -254,18 +245,15 @@ class Client
       for key, value of options.headers
         request.headers[key] = value
 
-      # Pass through status handlers for which we shouldn't wrap the response
-      # body.  202 and 204 don't have bodies.  Errors won't contain the expected
-      # representation. I actually want for the default "response" handler to
-      # do body wrapping when appropriate, but...
-      # FIXME: I can't figure out why, but if I don't do the hokey pokey with
-      # the default "response" handler here, Shred selects it over specific
-      # status code handlers. Might be a Shred bug.
-      for status in [202, 204, "error", "request_error", "response"]
-        if handler = options.on[status]
-          request.on[status] = handler
-          delete options.on[status]
-
+      # We only decorate the response content for the handler corresponding
+      # to the action definition's "status"
+      success_handler = options.on[definition.status]
+      if success_handler && response_schema
+        request.on[definition.status] = (response) ->
+          # TODO: check the Content-Type header
+          decorated = client.decorate(response_schema, response.content.data)
+          success_handler(response, decorated)
+        delete options.on[definition.status]
 
       # never silently die on request errors.
       # TODO: allow a default request_error handler on Client construction
@@ -274,14 +262,9 @@ class Client
 
       # TODO: figure out how Shred handles 30x and assess whether Patchboard
       # needs to care.
-      # IDEA: take an "on" option of "success", to be applied when the
-      # response status matches the indicated status in the resource description.
+
       for status, handler of options.on
-        request.on[status] = (response) ->
-          # TODO: check the Content-Type header
-          if response.status == definition.status && response_schema
-            decorated = client.decorate(response_schema, response.content.data)
-          handler(response, decorated)
+        request.on[status] = handler
 
       request
 

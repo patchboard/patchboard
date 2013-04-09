@@ -2,7 +2,7 @@
   "name": "patchboard-server",
   "description": "Server for Patchboard HTTP APIs",
   "author": "Matthew King",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/automatthew/patchboard/"
@@ -19,6 +19,9 @@
     "connect": "2.3.x",
     "colors": "0.6.x",
     "marked": "0.2.x"
+  },
+  "devDependencies": {
+    "testify": "0.2.x"
   }
 }
 

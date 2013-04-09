@@ -5,7 +5,6 @@ Context = require("./context")
 class SimpleDispatcher
 
   constructor: (@service, @handlers) ->
-    @map = service.paths
     @supply_missing_handlers()
 
 
@@ -26,14 +25,15 @@ class SimpleDispatcher
     @service.augment_request(request)
     match = @service.classify(request)
     if match.error
-      @classification_error(match.error, request, response)
+      @error_handler(match.error, response)
     else
       if match.content_type
+        # TODO: Should body validation be done in the classifier?
         validation = @validate(match.content_type, request)
         if validation.errors.length > 0
-          @default_error_handler(
+          @error_handler(
             # TODO: more informative description
-            {status: 400, message: "Bad Request", description: validation.description},
+            {status: 400, message: "Bad Request", errors: validation.description},
             response
           )
           return
@@ -56,10 +56,7 @@ class SimpleDispatcher
     else
       throw "No such resource: #{match.resource_type}"
 
-  classification_error: (error, request, response) ->
-    @default_error_handler(error, response)
-
-  default_error_handler: (error, response) ->
+  error_handler: (error, response) ->
     response.setHeader "Access-Control-Allow-Origin", "*"
 
     response.writeHead error.status,

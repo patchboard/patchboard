@@ -1,7 +1,7 @@
-$:.unshift "/Users/mking/projects/oss/starter/lib"
+require "starter/tasks/npm"
 
 def subprojects
-  FileList["{server,client}/*/Rakefile"].map {|file| File.dirname(file)}
+  FileList["{client,server}/*/Rakefile"].map {|file| File.dirname(file)}
 end
 
 def subtask(*args)
@@ -23,3 +23,15 @@ end
 subtask "test"
 
 
+task "build" => "validate_example"
+
+task "validate_example" do
+  sh "bin/patchboard validate coffee/example_api.coffee"
+end
+
+task "build" => "schema.json"
+
+file "schema.json" => "coffee/schema.coffee" do
+  sh "coffee coffee/schema.coffee > schema.json"
+  sh "git add schema.json"
+end
