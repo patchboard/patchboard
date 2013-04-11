@@ -243,10 +243,3 @@ exports.paths =
     path: "/users/:id"
 
 
-#module.exports =
-  #media_type: media_type
-  #service_url: "http://hostname.com/"
-  #paths: paths
-  #resources: resources
-  #schema: schema
-
