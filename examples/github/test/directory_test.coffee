@@ -10,11 +10,11 @@ basic_auth = new Buffer(string).toString("base64")
 
 client = new GitHubClient(basic_auth)
 
-Testify.test "Resources from the directory", (context) ->
-  repositories = client.directory.repositories
+Testify.test "Resources provided full URLs by the directory", (context) ->
+  repositories = client.resources.repositories
 
   context.test "the authenticated user", (context) ->
-    client.directory.authenticated_user.get
+    client.resources.authenticated_user.get
       on:
         response: (response) ->
           context.fail "Unexpected response status: #{response.status}"
@@ -35,7 +35,7 @@ Testify.test "Resources from the directory", (context) ->
                 assert.equal item.resource_type, "repository"
 
   context.test "Own orgs", (context) ->
-    client.directory.organizations.list
+    client.resources.organizations.list
       on:
         response: (response) ->
           context.fail "Unexpected response status: #{response.status}"

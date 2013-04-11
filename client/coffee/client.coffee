@@ -54,7 +54,6 @@ class Client
     @resource_constructors = @create_resource_constructors(options.resources)
 
     @resources = {}
-    @directory = {}
     @create_directory(options.directory, @resource_constructors)
 
 
@@ -68,13 +67,13 @@ class Client
           # generate it.  This is the expected case for directories coming
           # from a Patchboard Server.
           url = options.url
-          @directory[key] = new constructors[options.resource](url: url)
+          @resources[key] = new constructors[options.resource](url: url)
         else if options.path
           # When using a Patchboard definition for a third party API, you may
           # choose to specify paths in the directory, instead of full URLs,
           # to avoid the redundancy.
           url = @api.service_url + options.path
-          @directory[key] = new constructors[options.resource](url: url)
+          @resources[key] = new constructors[options.resource](url: url)
         else if options.template
           # Patchboard can use path templates to provide support for
           # insufficiently hyperlinked APIs.  First we create methods for
