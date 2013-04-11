@@ -34,27 +34,26 @@ class Client
 
 
 
-  constructor: (options) ->
-    @api = options
+  constructor: (@api, options={}) ->
+    {@authorizer} = options
     @shred = new Shred()
 
     # Validate API specification
     required_fields = ["schemas", "resources", "directory"]
     missing_fields = []
     for field in required_fields
-      unless options[field]
+      unless @api[field]
         missing_fields.push(field)
 
     if missing_fields.length != 0
       throw new Error("API specification is missing fields: #{missing_fields.join(', ')}")
 
-    @schema_manager = new SchemaManager(options.schemas...)
-    @authorizer = options.authorizer
+    @schema_manager = new SchemaManager(@api.schemas...)
 
-    @resource_constructors = @create_resource_constructors(options.resources)
+    @resource_constructors = @create_resource_constructors(@api.resources)
 
     @resources = {}
-    @create_directory(options.directory, @resource_constructors)
+    @create_directory(@api.directory, @resource_constructors)
 
 
   # Create resource instances using the URLs supplied in the service
@@ -200,9 +199,6 @@ class Client
       command.push "  #{url}"
       command.join(" \\\n")
 
-    authorize: (type, action) ->
-      @patchboard_client.authorizer.call(@, type, action)
-
 
   # Returns a function intended to be used as a method on a
   # Resource instance.
@@ -248,8 +244,9 @@ class Client
           throw new Error("Missing required query param: #{key}")
 
       if authorization
-        credential = resource.authorize(authorization, name)
-        request.headers["Authorization"] = "#{authorization} #{credential}"
+        if resource.authorize
+          credential = resource.authorize(authorization, name)
+          request.headers["Authorization"] = "#{authorization} #{credential}"
 
       # copy default headers
       for key, value of default_headers
@@ -269,7 +266,7 @@ class Client
           success_handler(response, decorated)
         delete options.on[definition.status]
 
-      # never silently die on request errors.
+      # never silently fail on request errors.
       # TODO: allow a default request_error handler on Client construction
       request.on.request_error ||= (err) ->
         throw err

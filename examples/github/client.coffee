@@ -4,14 +4,13 @@ api = require "./api"
 
 class GitHubClient extends Client
   constructor: (@basic_auth_string) ->
-    super(api)
-
-    @authorizer = (type, action) =>
-      resource = @
-      if type == "Basic"
-        @basic_auth_string
-      else
-        throw "Can't supply credential for #{type}"
+    super api,
+      authorizer: (type, action) =>
+        resource = @
+        if type == "Basic"
+          @basic_auth_string
+        else
+          throw "Can't supply credential for #{type}"
 
   identifiers:
     user: (object) ->
