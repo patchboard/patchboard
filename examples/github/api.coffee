@@ -7,4 +7,3 @@ module.exports =
   directory: require("./api/directory")
   resources: require("./api/resources")
   schemas: [require("./api/schema")]
-  extensions: require("./api/extensions")(service_url)

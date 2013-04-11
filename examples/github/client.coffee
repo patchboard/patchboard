@@ -21,7 +21,7 @@ class GitHubClient extends Client
       {login: object.login}
 
     repository: (object) ->
-      {login: object.owner.login, name: object.name}
+      {login: object.login || object.owner.login, name: object.name}
 
 
 

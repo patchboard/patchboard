@@ -90,8 +90,8 @@ class Client
   create_resource: (name, template) ->
     (options) =>
       constructor = @resource_constructors[name]
-      url = @generate_url(template, options)
-      return new constructor(url: url)
+      options.url = @generate_url(template, options)
+      return new constructor(options)
 
   generate_url: (template, options) ->
     parts = template.split("/")
