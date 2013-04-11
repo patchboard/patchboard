@@ -1,8 +1,8 @@
-PatchboardClient = require("patchboard-client")
+{Client} = require("patchboard")
 
 api = require "./api"
 
-class GitHubClient extends PatchboardClient
+class GitHubClient extends Client
   constructor: (@basic_auth_string) ->
     super(api)
 

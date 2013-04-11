@@ -10,12 +10,13 @@ basic_auth = new Buffer(string).toString("base64")
 
 client = new GitHubClient(basic_auth)
 
-test_repository = (context, repo) ->
-  repo.get
-    on:
-      200: (response, repo) ->
-        context.test "repo.owner is a resource", ->
-          assert.equal repo.owner.resource_type, "user"
+## FIXME: Why is this here?
+#test_repository = (context, repo) ->
+  #repo.get
+    #on:
+      #200: (response, repo) ->
+        #context.test "repo.owner is a resource", ->
+          #assert.equal repo.owner.resource_type, "user"
 
 
 Testify.test "Resources from templatized urls", (context) ->

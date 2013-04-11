@@ -13,7 +13,7 @@ client = new GitHubClient(basic_auth)
 Testify.test "Resources from the directory", (context) ->
   repositories = client.directory.repositories
 
-  context.test "self", (context) ->
+  context.test "the authenticated user", (context) ->
     client.directory.authenticated_user.get
       on:
         response: (response) ->

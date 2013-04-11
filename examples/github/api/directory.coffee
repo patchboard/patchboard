@@ -2,25 +2,69 @@ module.exports =
 
   authenticated_user:
     resource: "user"
-    url: "https://api.github.com/user"
+    path: "/user"
+
+  user:
+    resource: "user"
+    template: "/users/:login"
 
   organizations:
     resource: "organizations"
-    url: "https://api.github.com/user/orgs"
+    path: "/user/orgs"
 
+  organization:
+    resource: "organization"
+    template: "/orgs/:login"
+
+  ## Repositories
   repositories:
     resource: "repositories"
-    url: "https://api.github.com/user/repos"
+    path: "/user/repos"
+
+  user_repositories:
+    resource: "repositories"
+    association: "user"
+    template: "/users/:login/repos"
+
+  organization_repositories:
+    resource: "repositories"
+    association: "organization"
+    template: "/orgs/:organization/repos"
+
+  repository:
+    resource: "repository"
+    template: "/repos/:login/:name"
+
+  contributors:
+    resource: "contributors"
+    association: "repository"
+    template: "/repos/:login/:name/contributors"
+
+  languages:
+    resource: "languages"
+    association: "repository"
+    template: "/repos/:login/:name/languages"
+
 
 
   ## Issues
   issues:
     resource: "issues"
-    url: "https://api.github.com/issues"
+    path: "/issues"
 
   all_issues:
     resource: "issues"
-    url: "https://api.github.com/user/issues"
+    path: "/user/issues"
+
+  repository_issues:
+    resource: "repository_issues"
+    association: "repository"
+    template: "/repos/:login/:name/issues"
+
+  organization_issues:
+    resource: "issues"
+    association: "organization"
+    template: "/orgs/:organization/issues"
 
 
   ## Gists
@@ -29,21 +73,29 @@ module.exports =
       List the authenticated user’s gists, or if called anonymously, this will return all public gists
     """
     resource: "gists"
-    url: "https://api.github.com/gists"
+    path: "/gists"
 
   starred_gists:
     description: """
       List the authenticated user’s starred gists
     """
     resource: "gists"
-    url: "https://api.github.com/gists/starred"
+    path: "/gists/starred"
 
   public_gists:
     description: """
       List all public gists
     """
     resource: "gists"
-    url: "https://api.github.com/gists/public"
+    path: "/gists/public"
+
+  user_gists:
+    resource: "gists"
+    association: "user"
+    template: "/users/:login/gists"
+
+
+
 
 
 

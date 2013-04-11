@@ -197,8 +197,8 @@ module.exports =
         _links:
           type: "object"
           properties:
-            comments: {$ref: "issue_comments"}
-            review_comments: {$ref: "review_comments"}
+            comments: {$ref: "#issue_comments"}
+            review_comments: {$ref: "#review_comments"}
         user: {$ref: "#user"}
 
     pull_request_list:

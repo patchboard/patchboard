@@ -1,4 +1,4 @@
-SchemaManager = require("patchboard-client/schema_manager")
+{SchemaManager} = require("patchboard").Client
 schema = require("./api/schema.coffee")
 SchemaManager.normalize(schema)
 service_url = "https://api.github.com"

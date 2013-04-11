@@ -49,16 +49,15 @@ module.exports =
         authorization: "Basic"
         response_schema: "repo_list"
         query:
-          optional:
+          sort:
             type:
-              type:
-                enum: ["all", "owner", "public", "private", "member"]
-            sort:
-              type:
-                enum: ["created", "updated", "pushed", "full_name"]
-            direction:
-              type:
-                enum: ["asc", "desc"]
+              enum: ["created", "updated", "pushed", "full_name"]
+          direction:
+            type:
+              enum: ["asc", "desc"]
+          type:
+            type:
+              enum: ["all", "owner", "public", "private", "member"]
         status: 200
   
   repository:
@@ -127,23 +126,22 @@ module.exports =
         method: "GET"
         authorization: "Basic"
         query:
-          optional:
-            filter:
-              type:
-                enum: ["assigned", "created", "mentioned", "subscribed", "all"]
-            state:
-              type:
-                enum: ["open", "closed"]
-            labels:
-              type: "string"
-            sort:
-              type:
-                enum: ["created", "updated", "comments"]
-            direction:
-              type:
-                enum: ["asc", "desc"]
-            since:
-              type: "string"
+          filter:
+            type:
+              enum: ["assigned", "created", "mentioned", "subscribed", "all"]
+          state:
+            type:
+              enum: ["open", "closed"]
+          labels:
+            type: "string"
+          sort:
+            type:
+              enum: ["created", "updated", "comments"]
+          direction:
+            type:
+              enum: ["asc", "desc"]
+          since:
+            type: "string"
         response_schema: "issue_list"
         status: 200
 
@@ -166,28 +164,27 @@ module.exports =
         method: "GET"
         authorization: "Basic"
         query:
-          optional:
-            milestone:
-              type: ["integer", "string"]
-            state:
-              type:
-                enum: ["open", "closed"]
-            assignee:
-              type: "string"
-            creator:
-              type: "string"
-            mentioned:
-              type: "string"
-            labels:
-              type: "string"
-            sort:
-              type:
-                enum: ["created", "updated", "comments"]
-            direction:
-              type:
-                enum: ["asc", "desc"]
-            since:
-              type: "string"
+          milestone:
+            type: ["integer", "string"]
+          state:
+            type:
+              enum: ["open", "closed"]
+          assignee:
+            type: "string"
+          creator:
+            type: "string"
+          mentioned:
+            type: "string"
+          labels:
+            type: "string"
+          sort:
+            type:
+              enum: ["created", "updated", "comments"]
+          direction:
+            type:
+              enum: ["asc", "desc"]
+          since:
+            type: "string"
         response_schema: "issue_list"
         status: 200
 
@@ -214,13 +211,12 @@ module.exports =
         authorization: "Basic"
         response_schema: "gist_list"
         query:
-          optional:
-            since:
-              type: "string"
-              format: "date-time"
-              description: """
-                a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ
-                Only gists updated at or after this time are returned.
+          since:
+            type: "string"
+            format: "date-time"
+            description: """
+              a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ
+              Only gists updated at or after this time are returned.
               """
         status: 200
       edit:

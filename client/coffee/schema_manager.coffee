@@ -67,6 +67,9 @@ class SchemaManager
     if index == 0
       schema.$ref = "#{namespace}#{schema.$ref}"
     else if index != -1
+      # if the ref string contains '#' but not at the beginning,
+      # we assume it is already namespaced. All that needs doing
+      # then is to make sure it is a URN
       schema.$ref = @urnize(schema.$ref)
 
   @is_primitive: (type) ->
@@ -130,7 +133,6 @@ class SchemaManager
           merged.properties[key] = value
         schema.properties = merged.properties
       else
-        console.log schema
         throw "Could not find parent schema: #{parent_id}"
 
 

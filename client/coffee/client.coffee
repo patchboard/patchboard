@@ -5,6 +5,8 @@ SchemaManager = require("./schema_manager")
 
 class Client
 
+  @SchemaManager = SchemaManager
+
   @discover: (service_url, handlers) ->
     if service_url.constructor != String
       throw new Error("Expected to receive a String, but got something else")
@@ -50,12 +52,33 @@ class Client
     @authorizer = options.authorizer
 
     @resource_constructors = @create_resource_constructors(options.resources)
-    @resources = @create_resources(options.extensions, @resource_constructors)
-    @directory = @create_directory(options.directory, @resource_constructors)
-    for name, spec of options.extensions
-      if spec.association
-        @associate(spec)
 
+    @resources = {}
+    @directory = {}
+    @create_directory(options.directory, @resource_constructors)
+
+
+  # Create resource instances using the URLs supplied in the service
+  # description's directory.
+  create_directory: (directory, constructors) ->
+    for key, options of directory
+      if constructors[options.resource]
+        if options.url
+          url = options.url
+          @directory[key] = new constructors[options.resource](url: url)
+        else if options.path
+          url = @generate_url(options.path, {})
+          @directory[key] = new constructors[options.resource](url: url)
+        else if options.template
+          @resources[key] = @create_resource(options.resource, options.template)
+          if options.association
+            @associate(options)
+
+  create_resource: (name, template) ->
+    (options) =>
+      constructor = @resource_constructors[name]
+      url = @generate_url(template, options)
+      return new constructor(url: url)
 
   generate_url: (template, options) ->
     parts = template.split("/")
@@ -71,18 +94,6 @@ class Client
       else
         out.push(part)
     @api.service_url + out.join("/")
-
-  create_resources: (extensions, constructors) ->
-    out = {}
-    for name, spec of extensions
-      out[name] = @create_resource(spec.resource, spec.template)
-    out
-
-  create_resource: (name, template) ->
-    (options) =>
-      constructor = @resource_constructors[name]
-      url = @generate_url(template, options)
-      return new constructor(url: url)
 
   associate: (spec) ->
     client = @
@@ -103,15 +114,6 @@ class Client
           url = client.generate_url(spec.template, identifier)
           new extension_constructor(url: url)
 
-
-  # Create resource instances using the URLs supplied in the service
-  # description's directory.
-  create_directory: (directory, constructors) ->
-    out = {}
-    for key, options of directory
-      if constructors[options.resource]
-        out[key] = new constructors[options.resource](url: options.url)
-    return out
 
   create_resource_constructors: (definitions) ->
     resource_constructors = {}
