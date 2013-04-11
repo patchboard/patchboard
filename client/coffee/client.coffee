@@ -64,13 +64,26 @@ class Client
     for key, options of directory
       if constructors[options.resource]
         if options.url
+          # The API has provided a URL for this resource, so we do not have to
+          # generate it.  This is the expected case for directories coming
+          # from a Patchboard Server.
           url = options.url
           @directory[key] = new constructors[options.resource](url: url)
         else if options.path
-          url = @generate_url(options.path, {})
+          # When using a Patchboard definition for a third party API, you may
+          # choose to specify paths in the directory, instead of full URLs,
+          # to avoid the redundancy.
+          url = @api.service_url + options.path
           @directory[key] = new constructors[options.resource](url: url)
         else if options.template
+          # Patchboard can use path templates to provide support for
+          # insufficiently hyperlinked APIs.  First we create methods for
+          # instantiating parameterized resources.
+          # Example:
+          #     client.resources.user(login: "dyoder")
           @resources[key] = @create_resource(options.resource, options.template)
+          # Then, if an association is specified, we imbue the associated
+          # constructor with a method for instantiating this resource.
           if options.association
             @associate(options)
 
