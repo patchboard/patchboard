@@ -15,7 +15,7 @@ module.exports =
 
     repository:
       extends: {$ref: "#resource"}
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       properties:
         name: {type: "string", required: true}
         description: {type: "string"}
@@ -46,7 +46,7 @@ module.exports =
         source: {$ref: "#repository"}
 
     repo_list:
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       type: "array"
       items: {$ref: "#repository"}
 
@@ -55,7 +55,7 @@ module.exports =
       properties: {}
       
     owner:
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       extends: {$ref: "#resource"}
       properties:
         name: {type: "string"}
@@ -85,48 +85,48 @@ module.exports =
         plan: {$ref: "#plan"}
 
     user:
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       extends: {$ref: "#owner"}
 
 
     organization:
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       extends: {$ref: "#owner"}
 
     organization_list:
       type: "array"
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       items: {$ref: "#organization"}
 
 
     contributor:
       extends: {$ref: "#user"}
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       type: "object"
       properties:
         contributions: {type: "integer"}
 
     contributor_list:
       type: "array"
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       items: {$ref: "#contributor"}
 
 
     language_dictionary:
       type: "object"
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       additionalProperties: {type: "integer"}
 
     team:
       extends: {$ref: "#resource"}
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       type: "object"
       properties:
         name: {type: "string"}
 
     team_list:
       type: "array"
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       items: {$ref: "#team"}
 
     commit:
@@ -137,7 +137,7 @@ module.exports =
           type: "string"
           format: "uri"
     tag:
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       type: "object"
       properties:
         name: {type: "string"}
@@ -151,7 +151,7 @@ module.exports =
 
     branch:
       extends: {$ref: "#resource"}
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       type: "object"
       properties:
         name: {type: "string"}
@@ -159,7 +159,7 @@ module.exports =
 
     branch_list:
       type: "array"
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       items: {$ref: "#branch"}
 
     pull_ref:
@@ -203,12 +203,12 @@ module.exports =
 
     pull_request_list:
       type: "array"
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       items: {$ref: "#pull_request"}
 
     issue:
       extends: {$ref: "#resource"}
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       properties:
         html_url: {type: "string", format: "uri"}
         number: {type: "integer"}
@@ -232,11 +232,11 @@ module.exports =
 
     issue_list:
       type: "array"
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       items: {$ref: "#issue"}
 
     gist:
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       extends: {$ref: "#resource"}
       properties:
         description: {type: "string"}
@@ -277,7 +277,7 @@ module.exports =
         committed_at: {type: "string"}
 
     gist_list:
-      mediaType: "application/json"
+      mediaType: "application/vnd.github.beta+json"
       type: "array"
       items: {$ref: "#gist"}
 
