@@ -165,7 +165,9 @@ class Client
   register_action: (name) ->
     (options) ->
       request = @_prepare_request(name, options)
-      @patchboard_client.shred.request(request)
+      if request
+        @patchboard_client.shred.request(request)
+
 
   resource_methods:
     # Method for preparing a request object that can be modified
@@ -230,6 +232,12 @@ class Client
         query: options.query
         cookieJar: null
         on: {}
+
+      # never silently fail on request errors.
+      # TODO: allow a default request_error handler on Client construction
+      options.on.request_error ||= (error) ->
+        console.error "Problem with request:", error
+
       if options.body
         request.body = options.body
       else if options.content
@@ -241,12 +249,22 @@ class Client
         if value.required && !request.query
           # TODO: catch this error synchronously in the actual request call
           # and relay into the user-supplied error handler.
-          throw new Error("Missing required query param: #{key}")
+          options.on.request_error(
+            new Error("Missing required query param: #{key}")
+          )
+          return
 
       if authorization
         if resource.authorize
           credential = resource.authorize(authorization, name)
           request.headers["Authorization"] = "#{authorization} #{credential}"
+        else
+          # FIXME: this should be done as a preflight check
+          options.on.request_error(
+            new Error("Request requires authorization of type 'authorization', but no authorizer was provided")
+          )
+          return
+
 
       # copy default headers
       for key, value of default_headers
@@ -266,10 +284,6 @@ class Client
           success_handler(response, decorated)
         delete options.on[definition.status]
 
-      # never silently fail on request errors.
-      # TODO: allow a default request_error handler on Client construction
-      request.on.request_error ||= (err) ->
-        throw err
 
       # TODO: figure out how Shred handles 30x and assess whether Patchboard
       # needs to care.

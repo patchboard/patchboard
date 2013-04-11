@@ -10,11 +10,14 @@ basic_auth = new Buffer(string).toString("base64")
 
 client = new GitHubClient(basic_auth)
 
+
 Testify.test "Resource associations", (context) ->
 
   context.test "user repositories", (context) ->
     client.resources.user(login: "dyoder").repositories.list
       on:
+        request_error: (error) ->
+          context.fail(error)
         response: (response) ->
           context.fail "unexpected response status: #{response.status}"
         200: (response, list) ->
@@ -32,6 +35,7 @@ Testify.test "Resource associations", (context) ->
     context.test "repository associations", (context) ->
       repo.contributors.list
         on:
+          request_error: (error) -> context.fail(error)
           response: (response) ->
             context.fail "unexpected response status: #{response.status}"
           200: (response, contributors) ->
@@ -45,6 +49,7 @@ Testify.test "Resource associations", (context) ->
     context.test "repository.languages", (context) ->
       repo.languages.list
         on:
+          request_error: (error) -> context.fail(error)
           response: (response) ->
             context.fail "unexpected response status: #{response.status}"
           200: (response, languages) ->
