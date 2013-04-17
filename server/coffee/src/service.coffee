@@ -105,11 +105,20 @@ class Service
     parsed.path = parsed.pathname = parsed.pathname.replace("//", "/")
     parsed
 
+  corset_case: (string) ->
+    string.toLowerCase()
+      .replace("_", "-")
+      .replace /(^|-)(\w)/g, (s) ->  s.toUpperCase()
 
   augment_request: (request) ->
     url = @parse_url(request.url)
     request.path = url.pathname
     request.query = url.query
+    for name, value of request.headers
+      corrected_name = @corset_case(name)
+      request.headers[corrected_name] = value
+      unless name == corrected_name
+        delete request.headers[name]
 
   documentation: () ->
     """

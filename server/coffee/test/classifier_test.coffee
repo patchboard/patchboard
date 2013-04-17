@@ -11,7 +11,7 @@ classifier = new Patchboard.Classifier(service)
 
 class MockRequest
 
-  constructor: ({@url, @method, @headers}) ->
+  constructor: ({@url, @method, @headers={}}) ->
     service.augment_request(@)
 
 
@@ -78,7 +78,6 @@ Testify.test "Classifier", (context) ->
 
 
   # Test failures
-
 
   test_classification "failure to match Accept header",
     request:
