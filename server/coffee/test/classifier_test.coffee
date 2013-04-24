@@ -11,7 +11,8 @@ classifier = new Patchboard.Classifier(service)
 
 class MockRequest
 
-  constructor: ({@url, @method, @headers={}}) ->
+  constructor: ({@url, @method, @headers}) ->
+    @headers ||= {}
     service.augment_request(@)
 
 
