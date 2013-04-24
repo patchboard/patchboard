@@ -16,7 +16,7 @@ exports.json = (options) ->
     if method == "GET" || method == "HEAD" || method == "OPTIONS"
       return next()
 
-    string = request.headers["content-type"]
+    string = request.headers["content-type"] || ""
     media_type = string.split(";")[0]
     if !(media_type == "application/json" || json_regex.test(media_type))
       return next()
