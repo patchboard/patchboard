@@ -80,6 +80,7 @@ Testify.test "Classifier", (context) ->
 
   # Test failures
 
+
   test_classification "failure to match Accept header",
     request:
       url: "http://gh-knockoff.com/plans"

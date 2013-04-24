@@ -20,7 +20,6 @@ class Classifier
     @map = service.map
     
     @matchers = {}
-    @options_matchers = {}
 
     @process(PatchboardAPI.paths, PatchboardAPI.resources)
     @process(@map, @resources)
@@ -40,13 +39,11 @@ class Classifier
           action_name: action_name
           success_status: definition.status
 
-      # setup OPTIONS handling, which plays by different rules.
-      # If an OPTIONS request is a legal CORS preflight request, we
-      # classify it differently than otherwise.
-      matcher = new Matchers.Path(path)
-      matcher.payload =
+      # setup OPTIONS handling
+      @register path, { method: "OPTIONS" },
+        resource_type: "meta"
+        action_name: "options"
         allow: Object.keys(supported_methods).sort()
-      @options_matchers[path] = matcher
 
 
   register: (path, definition, payload) ->
@@ -122,7 +119,6 @@ class Classifier
     sequence
 
   register_match_sequence: (path, sequence, payload) ->
-    # TODO: document what is happening here.
     matchers = @matchers
     for item in sequence
       matchers[item.ident] ||= new item.klass(item.spec)
@@ -130,82 +126,40 @@ class Classifier
       matchers = matcher.matchers
     matcher.payload = payload
 
-  classify_options: (request) ->
-    matcher = @find_options_matcher(request)
-    if !matcher
-      result =
-        error:
-          status: 404
-          message: http.STATUS_CODES[404]
-    else
-      if result = @preflight(request, matcher)
-        result
-      else
-        result =
-          resource_type: "meta"
-          action_name: "options"
-          allow: matcher.payload.allow
-          
 
-  find_options_matcher: (request) ->
-    for _path, matcher of @options_matchers
-      if matcher.match(request.path)
-        return matcher
-
-  preflight: (request, matcher) ->
-    headers = request.headers
-    result =
-      resource_type: "meta"
-      action_name: "preflight"
-      allow: matcher.payload.allow
-    origin = headers["Origin"]
-    method = headers["Access-Control-Request-Method"]
-    if origin && method
-      if @usable_origin(origin) && @usable_method(method, matcher.payload.allow)
-        return result
-
-  usable_origin: (string) ->
-    true
-
-  usable_method: (string, allow) ->
-    allow.some (method) -> method == string
 
   # Given an HTTP request, returns either an error or a result object.
   # The result object contains properties indicating the resource_type
   # and action_name which should handle the request.  Users of this method
   # may then find and use handler functions as they see fit.
   classify: (request) ->
+    headers = request.headers
+    components =
+      Path: request.path
+      Query: request.query
+      Method: request.method
+      Authorization: headers["authorization"] || headers["Authorization"]
+      ContentType: headers["content-type"] || headers["Content-Type"]
+      Accept: headers["accept"] || headers["Accept"]
 
-    if request.method == "OPTIONS"
-      @classify_options(request)
+    # the request sequence uses pseudo-tuples so that we can
+    # tell at what stage match failures occur.  This is crucial 
+    # to the determination of the appropriate error code (404, 406, etc.)
+    sequence = []
+    for type in MATCH_ORDER
+      sequence.push [type, components[type]]
+
+    results = @match_request_sequence(sequence)
+    if results.error
+      results
     else
-      headers = request.headers
-      components =
-        Path: request.path
-        Query: request.query
-        Method: request.method
-        Authorization: headers["authorization"] || headers["Authorization"]
-        ContentType: headers["content-type"] || headers["Content-Type"]
-        Accept: headers["accept"] || headers["Accept"]
-
-      # the request sequence uses pseudo-tuples so that we can
-      # tell at what stage match failures occur.  This is crucial 
-      # to the determination of the appropriate error code (404, 406, etc.)
-      sequence = []
-      for type in MATCH_ORDER
-        sequence.push [type, components[type]]
-
-      results = @match_request_sequence(sequence)
-      if results.error
-        results
-      else
-        matches = @compile_matches(results)
-        match = matches[0]
-        # TODO: this is ugly; can we improve?
-        for k,v of match.payload
-          match[k] = v
-        delete match.payload
-        match
+      matches = @compile_matches(results)
+      match = matches[0]
+      # TODO: this is ugly; can we improve?
+      for k,v of match.payload
+        match[k] = v
+      delete match.payload
+      match
 
   # this code was stolen and adapted from Djinn, which 
   # is why it looks so hideous.  Not that Djinn is hideous,
