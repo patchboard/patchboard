@@ -17,9 +17,13 @@ class Context
     headers ||= {}
     if content.constructor != String
       content = JSON.stringify(content)
-    headers["Content-Length"] = Buffer.byteLength(content)
+    # Set the content-type and content-length headers explicitly 
+    # for the benefit of connect's compress middleware
+    # headers["Content-Length"] = Buffer.byteLength(content)
+    @response.setHeader "Content-Length", Buffer.byteLength(content)
     if @match.accept && content.length > 0
-      headers["Content-Type"] ||= @match.accept
+      # headers["Content-Type"] ||= @match.accept
+      @response.setHeader("Content-Type", @match.accept)
     @response.writeHead(status, headers)
     @response.end(content)
 
