@@ -10,8 +10,8 @@ Path = require("./path")
 
 class Service
 
-  constructor: (options) ->
-    url = options.service_url || "http://localhost:1337"
+  constructor: (api, @options={}) ->
+    url = api.service_url || "http://localhost:1337"
     # We construct full urls by concatenating @service_url and the path,
     # so make sure that @service_url does not end in a slash.
     if url[url.length-1] == "/"
@@ -19,17 +19,18 @@ class Service
     @service_url = url
 
     SchemaManager.normalize(PatchboardAPI.schema)
-    SchemaManager.normalize(options.schema)
+    SchemaManager.normalize(api.schema)
 
-    @schema_manager = new SchemaManager(PatchboardAPI.schema, options.schema)
-    @validator = new SchemaValidator(@schema_manager)
-    @map = options.paths
+    @schema_manager = new SchemaManager(PatchboardAPI.schema, api.schema)
+    unless @options.validate == false
+      @validator = new SchemaValidator(@schema_manager)
+    @map = api.paths
 
 
     @resources = {}
     for key, value of PatchboardAPI.resources
       @resources[key] = value
-    for key, value of options.resources
+    for key, value of api.resources
       @resources[key] = value
 
     @paths = {}
@@ -57,9 +58,6 @@ class Service
 
   classify: (args...) ->
     @classifier.classify(args...)
-
-  validate: (args...) ->
-    @validator.validate(args...)
 
   generate_url: (resource_type, args...) ->
     path = @paths[resource_type]

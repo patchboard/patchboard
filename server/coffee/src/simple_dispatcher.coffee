@@ -27,8 +27,7 @@ class SimpleDispatcher
     if match.error
       @error_handler(match.error, response)
     else
-      if match.content_type
-        # TODO: Should body validation be done in the classifier?
+      if match.content_type && @service.validator
         validation = @validate(match.content_type, request)
         if validation.errors.length > 0
           @error_handler(
@@ -44,7 +43,7 @@ class SimpleDispatcher
       handler(context)
 
   validate: (media_type, request) ->
-    @service.validate {media_type: media_type}, request.body
+    @service.validator.validate {media_type: media_type}, request.body
 
 
   find_handler: (match) ->
