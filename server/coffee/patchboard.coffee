@@ -1,8 +1,8 @@
+module.exports = require "./src/connect"
 
-module.exports =
-  Service: require("./src/service")
-  SchemaManager: require("./src/schema_manager")
-  Classifier: require("./src/classifier")
-  Dispatcher: require("./src/simple_dispatcher")
-  middleware: require("./src/middleware")
+exports.Service = require("./src/service")
+exports.SchemaManager = require("./src/schema_manager")
+exports.Classifier = require("./src/classifier")
+exports.Dispatcher = require("./src/simple_dispatcher")
+exports.middleware = require("./src/middleware")
 
