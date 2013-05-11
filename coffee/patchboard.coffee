@@ -1,5 +1,7 @@
-module.exports =
-  Server: require("patchboard-server")
-  Client: require("patchboard-client")
-  Tools: require("./tools")
+lazyRequire = (path) -> get: (-> require( path )), enumerable: true
+
+Object.defineProperties module.exports,
+  Server: lazyRequire "patchboard-server"
+  Client: lazyRequire "patchboard-client"
+  Tools: lazyRequire "./tools"
 
