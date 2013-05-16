@@ -4,7 +4,8 @@ middleware = require "./middleware"
 
 module.exports = class Server
   constructor: (api, options) ->
-    {@host, @port, url, validate} = options
+    {@host, @port, url, validate, cert, key} = options
+    @host ||= "127.0.0.1"
     @service = new Service api,
       url: url
       validate: validate
@@ -19,7 +20,17 @@ module.exports = class Server
     @connect.use(middleware.json())
     @connect.use(dispatcher)
 
+    if cert && key
+      @protocol = "https"
+      @server = require("https").createServer(
+        {key: key, cert: cert},
+        @connect
+      )
+    else
+      @protocol = "http"
+      @server = require("http").createServer(@connect)
+
   run: ->
-    @connect.listen(@port, @host)
-    console.log("HTTP server listening on #{@host}:#{@port}")
+    @server.listen(@port, @host)
+    console.log("HTTP server listening on #{@protocol}://#{@host}:#{@port}")
 

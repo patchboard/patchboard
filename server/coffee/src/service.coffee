@@ -11,7 +11,8 @@ Path = require("./path")
 class Service
 
   constructor: (api, @options={}) ->
-    url = api.service_url || "http://localhost:1337"
+    url = @options.url || "http://localhost:1337"
+    console.log "service url: #{url}"
     # We construct full urls by concatenating @service_url and the path,
     # so make sure that @service_url does not end in a slash.
     if url[url.length-1] == "/"
