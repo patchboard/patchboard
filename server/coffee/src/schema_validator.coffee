@@ -23,7 +23,7 @@ class SchemaValidator
 
   format_name: (data_uri) ->
     [root, data_property] = data_uri.split("#/")
-    data_property || "<root>"
+    data_property ?= "<root>"
     data_property
       .replace /(\d+)\//g, (match, p1) -> "[#{p1}]/"
       .replace(/\//g, ".")
