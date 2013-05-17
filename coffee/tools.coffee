@@ -1,9 +1,10 @@
 path = require("path")
 fs = require("fs")
 
-js2coffee = require("js2coffee")
 JSV = require("JSV").JSV
 jsv = JSV.createEnvironment("json-schema-draft-03")
+
+CSON = require "c50n"
 
 schema = require("./schema")
 
@@ -61,11 +62,10 @@ module.exports =
       api = example
       string = JSON.stringify(api, null, 2)
       fs.writeFileSync("api.json", string)
-    else if type == "coffee"
+    else if type == "cson"
       api = example
-      src = "modules.export = #{JSON.stringify(api)}"
-      string = js2coffee.build(src)
-      fs.writeFileSync("api.coffee", string)
+      string = CSON.stringify(api)
+      fs.writeFileSync("api.cson", string)
     else
       console.log "Unsupported type: #{type}"
 

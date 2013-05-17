@@ -16,7 +16,7 @@ switch command
     if type
       tools.generate(type)
     else
-      console.log "You must specify a type of either json or coffee"
+      console.log "You must specify a type of either json or cson"
   when "schema"
     console.log JSON.stringify(require("../schema"), null, 2)
   when undefined
