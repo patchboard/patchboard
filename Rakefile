@@ -18,13 +18,13 @@ end
 task "build" => "validate_example"
 
 task "validate_example" do
-  sh "bin/patchboard validate coffee/example_api.coffee"
+  sh "bin/patchboard validate src/example_api.coffee"
 end
 
 task "build" => "schema.json"
 
-file "schema.json" => "coffee/schema.coffee" do
-  sh "coffee coffee/schema.coffee > schema.json"
+file "schema.json" => "src/schema.coffee" do
+  sh "coffee src/schema.coffee > schema.json"
   sh "git add schema.json"
 end
 
