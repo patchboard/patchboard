@@ -4,5 +4,5 @@ Object.defineProperties module.exports,
   Server: lazyRequire "./server"
   Service: lazyRequire "./src/server/service"
   Tools: lazyRequire "./tools"
-  Client: lazyRequire "patchboard-client"
+  Client: lazyRequire "patchboard-js"
 
