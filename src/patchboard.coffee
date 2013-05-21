@@ -1,7 +1,8 @@
 lazyRequire = (path) -> get: (-> require( path )), enumerable: true
 
 Object.defineProperties module.exports,
-  Server: lazyRequire "patchboard-server"
-  Client: lazyRequire "patchboard-client"
+  Server: lazyRequire "./server"
+  Service: lazyRequire "./src/server/service"
   Tools: lazyRequire "./tools"
+  Client: lazyRequire "patchboard-client"
 

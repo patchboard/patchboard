@@ -4,9 +4,11 @@ Testify = require "testify"
 {api, partial_equal} = require("./helpers")
 media_type = api.media_type
 
-Patchboard = require("../patchboard")
-service = new Patchboard.Service(api)
-classifier = new Patchboard.Classifier(service)
+Service = require "../../src/server/service"
+Classifier = require "../../src/server/classifier"
+
+service = new Service(api)
+classifier = new Classifier(service)
 
 
 class MockRequest

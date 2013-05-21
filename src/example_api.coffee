@@ -222,7 +222,6 @@ exports.resources =
         method: "DELETE"
         status: 204
 
-exports.service_url = "http://gh-knockoff.com/"
 
 exports.paths =
   organizations:

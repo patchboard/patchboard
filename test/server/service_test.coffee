@@ -2,8 +2,8 @@ assert = require("assert")
 Testify = require "testify"
 
 {api} = require "./helpers"
-Patchboard = require("../patchboard")
-service = new Patchboard.Service(api)
+Service = require "../../src/server/service"
+service = new Service(api, url: "http://gh-knockoff.com/")
 
 
 Testify.test "Patchboard.Service", (context) ->

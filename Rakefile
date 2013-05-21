@@ -2,28 +2,18 @@ require "starter/tasks/npm"
 require "starter/tasks/git"
 require "starter/tasks/github"
 
-#def subprojects
-  #FileList["{client,server}/*/Rakefile"].map {|file| File.dirname(file)}
-#end
 
-#def subtask(*args)
-  #name = args.first
-  #desc "Run #{name} for all subprojects"
-  #task(*args) do
-    #subprojects.each do |dir|
-      #Dir.chdir(dir) do
-        #unless `rake -D #{name}`.empty?
-          #puts "Running in #{dir}"
-          #sh "rake #{name}"
-        #end
-      #end
-    #end
-  #end
-  #yield if block_given?
-#end
+task "link" do
+  sh "npm link ../patchboard-js"
+end
 
-#subtask "test"
+task "unlink" do
+  sh "npm rm patchboard-js"
+end
 
+task "install_local" do
+  sh "npm install ../patchboard-js"
+end
 
 task "build" => "validate_example"
 
@@ -36,6 +26,13 @@ task "build" => "schema.json"
 file "schema.json" => "coffee/schema.coffee" do
   sh "coffee coffee/schema.coffee > schema.json"
   sh "git add schema.json"
+end
+
+desc "Run tests"
+task "test" do
+  sh "coffee test/server/path_matcher_test.coffee"
+  sh "coffee test/server/classifier_test.coffee"
+  sh "coffee test/server/service_test.coffee"
 end
 
 #def format_issue(issue, format="plain")

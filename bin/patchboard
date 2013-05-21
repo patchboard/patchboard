@@ -1,6 +1,6 @@
 #!/usr/bin/env coffee
 
-tools = require("../coffee/tools")
+tools = require("../src/tools")
 
 [interpreter, script, command, args...] = process.argv
 
