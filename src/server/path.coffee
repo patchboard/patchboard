@@ -34,8 +34,6 @@ class Path
         options = args[0]
         input_keys = Object.keys(options).sort().join(",")
         if input_keys != expected_keys
-          # TODO: add explanation to error
-          console.log expected_keys, input_keys
           throw "Input properties not suitable to generate URL"
         for name, index of spec.fields
           value = options[name]

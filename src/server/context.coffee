@@ -65,27 +65,23 @@ module.exports = class Context
     @_traverse(schema, data, callback)
 
   _traverse: (schema, data, callback) ->
-    if !schema || !data
-      return
+    return unless schema && data
+
     if ref = schema.$ref
       if schema = @schema_manager.find(ref)
         @traverse(schema, data, callback)
       else
         console.error "Can't find ref:", ref
-        data
     else
       if schema.type == "array"
         if schema.items
           for item, i in data
             @traverse(schema.items, item, callback)
       else if !schema.is_primitive
-        # Declared properties
-        for key, value of schema.properties
-          @traverse(value, data[key], callback)
-        # Default for undeclared properties
-        if addprop = schema.additionalProperties
-          for key, value of data
-            unless schema.properties?[key]
-              @traverse(addprop, value, callback)
-        return data
+        additional_schema = schema.additionalProperties
+        for key, value of data
+          property_schema = schema.properties?[key] || additional_schema
+          if property_schema
+            @traverse(property_schema, value, callback)
+
 

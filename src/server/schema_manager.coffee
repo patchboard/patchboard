@@ -131,8 +131,7 @@ class SchemaManager
           merged.properties[key] = value
         schema.properties = merged.properties
       else
-        console.log schema
-        throw "Could not find parent schema: #{parent_id}"
+        throw "Could not find parent schema: #{parent_id} for schema #{schema.id}"
 
 
 
