@@ -102,8 +102,16 @@ class SchemaManager
 
   register_schema: (schema) ->
     for name, definition of schema.properties
-      definition.name = name
-      @inherit_properties(definition)
+      # We don't want these meta-properties to show up in the definition
+      # we give to clients, so hide them.
+      Object.defineProperties definition,
+        name:
+          value: name
+          enumerable: false
+        is_primitive:
+          value: @constructor.is_primitive(definition.type)
+          enumerable: false
+        @inherit_properties(definition)
 
       @names[name] = definition
       if definition.id
