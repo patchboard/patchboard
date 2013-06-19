@@ -6,7 +6,7 @@ status_code = (description) ->
 
 module.exports = class Context
   constructor: (@service, @request, @response, @match) ->
-    @schema_manager = @service.schema_manager
+    {@schema_manager, @log} = @service
 
   set_cors_headers: (origin) ->
     if @request.headers["origin"]
@@ -23,7 +23,8 @@ module.exports = class Context
     else
       @response_schema = null
 
-    @response_content = @marshal(@response_content)
+    if @response_content
+      @response_content = @marshal(@response_content)
 
     # Set the content-type and content-length headers explicitly 
     # for the benefit of connect's compress middleware
@@ -42,7 +43,6 @@ module.exports = class Context
 
   url: (name, args...) ->
     @service.generate_url(name, args...)
-
 
   marshal: (content) ->
     if content.constructor == String
@@ -71,7 +71,7 @@ module.exports = class Context
       if schema = @schema_manager.find(ref)
         @traverse(schema, data, callback)
       else
-        console.error "Can't find ref:", ref
+        @log.error "Can't find ref:", ref
     else
       if schema.type == "array"
         if schema.items

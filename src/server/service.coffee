@@ -20,6 +20,7 @@ class Service
     @service_url = url
 
     @decorator = @options.decorator
+    @log = @options.log || console
 
     SchemaManager.normalize(PatchboardAPI.schema)
     SchemaManager.normalize(api.schema)
