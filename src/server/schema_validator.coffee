@@ -10,7 +10,7 @@ class SchemaValidator
   validate: (identifier, data) ->
     schema = @schema_manager.find(identifier)
     if schema
-      result = @jsv.findSchema(schema.id).validate data, schema
+      result = @jsv.findSchema(schema.id).validate data
       if result.errors
         result.description = {}
         for error in result.errors
@@ -18,7 +18,7 @@ class SchemaValidator
           result.description[data_property] = @format_error(error)
       result
     else
-      throw "unknown schema id: #{id}"
+      throw "unknown schema identifier: #{identifier}"
 
 
   format_name: (data_uri) ->

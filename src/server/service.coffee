@@ -12,7 +12,7 @@ class Service
 
   constructor: (api, @options={}) ->
     url = @options.url || "http://localhost:1337"
-    console.log "service url: #{url}"
+
     # We construct full urls by concatenating @service_url and the path,
     # so make sure that @service_url does not end in a slash.
     if url[url.length-1] == "/"
@@ -27,6 +27,7 @@ class Service
       @validator = new SchemaValidator(@schema_manager)
     @map = api.paths
 
+    @response_decorator = @options.response_decorator
 
     @resources = {}
     for key, value of PatchboardAPI.resources
@@ -117,7 +118,39 @@ class Service
     #{@schema_manager.document()}
     """
   
+  smurfy: (schema, data) ->
+    @service.response_decorator(@, schema, data)
+    @_decorate(schema, data)
 
+  decorate: (context, schema, data) ->
+    if @response_decorator
+      @response_decorator(context, schema, data)
+    @_decorate(context, schema, data)
+
+  _decorate: (context, schema, data) ->
+    if !schema || !data
+      return
+    if ref = schema.$ref
+      if schema = @schema_manager.find(ref)
+        @decorate(context, schema, data)
+      else
+        console.error "Can't find ref:", ref
+        data
+    else
+      if schema.type == "array"
+        if schema.items
+          for item, i in data
+            @decorate(context, schema.items, item)
+      else if !SchemaManager.is_primitive(schema.type)
+        # Declared properties
+        for key, value of schema.properties
+          @decorate(context, value, data[key])
+        # Default for undeclared properties
+        if addprop = schema.additionalProperties
+          for key, value of data
+            unless schema.properties?[key]
+              @decorate(context, addprop, value)
+        return data
 
 
 module.exports = Service

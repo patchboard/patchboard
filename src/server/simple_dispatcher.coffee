@@ -39,7 +39,7 @@ class SimpleDispatcher
 
 
       handler = @find_handler(match)
-      context = new Context(request, response, match)
+      context = new Context(@service, request, response, match)
       handler(context)
 
   validate: (media_type, request) ->

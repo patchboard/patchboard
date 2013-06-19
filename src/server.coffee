@@ -6,9 +6,7 @@ module.exports = class Server
   constructor: (api, options) ->
     {@host, @port, url, validate, cert, key} = options
     @host ||= "127.0.0.1"
-    @service = new Service api,
-      url: url
-      validate: validate
+    @service = new Service api, options
 
     # service.simple_dispatcher returns the http handler function
     # used by Connect or the stdlib http server.

@@ -102,6 +102,7 @@ class SchemaManager
 
   register_schema: (schema) ->
     for name, definition of schema.properties
+      definition.name = name
       @inherit_properties(definition)
 
       @names[name] = definition
