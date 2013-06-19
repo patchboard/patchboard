@@ -85,9 +85,15 @@ exports.schema =
       extends: {$ref: "#resource"}
       mediaType: media_type("reference")
       properties:
-        name: {type: "string"}
-        commit: {type: "string"}
-        message: {type: "string"}
+        name:
+          required: true
+          type: "string"
+        commit:
+          required: true
+          type: "string"
+        message:
+          required: true
+          type: "string"
 
     branch:
       extends: {$ref: "#reference"}
@@ -121,6 +127,9 @@ exports.resources =
             type: "integer"
           offset:
             type: "integer"
+          sort:
+            type: "string"
+            enum: ["asc", "desc"]
         status: 200
 
   organization:
