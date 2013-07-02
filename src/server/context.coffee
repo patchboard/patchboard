@@ -1,7 +1,16 @@
 SchemaManager = require "./schema_manager"
+
+codes =
+  "unauthorized": 401
+  "forbidden": 403
+  "not found": 404
+  "conflict": 409
+
 status_code = (description) ->
-  # FIXME.  Probably use http.STATUS_CODES inverted.
-  return 500
+  if code = codes[description.toLowerCase()]
+    code
+  else
+    500
 
 
 module.exports = class Context
