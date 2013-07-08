@@ -16,10 +16,9 @@ class SimpleDispatcher
         @handlers[resource] ||= {}
         @handlers[resource][action] ||= handler
 
-  create_handler: () ->
-    dispatcher = @
-    (request, response) ->
-      dispatcher.dispatch(request, response)
+  request_listener: () ->
+    (request, response) =>
+      @dispatch(request, response)
 
   dispatch: (request, response) ->
     @service.augment_request(request)
