@@ -85,8 +85,11 @@ class SchemaManager
 
   find: (options) ->
     if options.constructor == String
-      if options.indexOf("#") > 0
+      index = options.indexOf("#")
+      if index > 0
         options = {id: options}
+      else if index == 0
+        options = {name: options.slice(1)}
       else
         options = {name: options}
 
