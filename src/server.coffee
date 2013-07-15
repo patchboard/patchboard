@@ -46,7 +46,7 @@ module.exports = class Server
   run: ->
     @status = "ok"
     @server = @_create()
-    @server.listen(@port, @host)
+    @server.listen(@port, @host, @options.tcp_backlog)
     console.log("HTTP server listening on #{@protocol}://#{@host}:#{@port}")
 
 

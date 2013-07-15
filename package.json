@@ -10,8 +10,8 @@
   "main": "./src/patchboard.coffee",
   "bin": "./bin/patchboard",
   "files": [
-    "bin",
-    "src",
+    "bin/",
+    "src/",
     "schema.json"
   ],
   "dependencies": {
