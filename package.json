@@ -2,7 +2,7 @@
   "name": "patchboard",
   "description": "Patchboard API tools",
   "author": "Matthew King",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "repository": {
     "type": "git",
     "url": "https://github.com/automatthew/patchboard/"
