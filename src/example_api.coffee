@@ -181,7 +181,8 @@ exports.resources =
         status: 200
 
       update:
-        method: "GET"
+        method: "PUT"
+        request_schema: "user"
         response_schema: "user"
         status: 200
 
