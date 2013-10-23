@@ -1,5 +1,17 @@
 # Imaginary API of a GitHub knockoff
 
+search_query =
+  match:
+    type: "string"
+  limit:
+    type: "integer"
+  offset:
+    type: "integer"
+  sort:
+    type: "string"
+    enum: ["asc", "desc"]
+
+
 exports.media_type = media_type = (name) ->
   "application/vnd.gh-knockoff.#{name}+json;version=1.0"
 
@@ -118,7 +130,7 @@ exports.resources =
 
 
 exports.schema =
-  id: "gh-knockoff"
+  id: "urn:gh-knockoff"
   # This is the conventional place to store schema definitions,
   # becoming official as of Draft 04
   definitions:
