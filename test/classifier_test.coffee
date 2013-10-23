@@ -4,8 +4,8 @@ Testify = require "testify"
 {api, partial_equal} = require("./helpers")
 media_type = api.media_type
 
-Service = require "../../src/server/service"
-Classifier = require "../../src/server/classifier"
+Service = require "../src/server/service"
+Classifier = require "../src/server/classifier"
 
 service = new Service(api)
 classifier = new Classifier(service)
