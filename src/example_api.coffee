@@ -3,204 +3,88 @@
 exports.media_type = media_type = (name) ->
   "application/vnd.gh-knockoff.#{name}+json;version=1.0"
 
-exports.schema =
-  id: "gh-knockoff"
-  properties:
+ 
+  authenticated_user:
+    path: "/user"
+    resource: "user"
+ 
+  user:
+    resource: "user"
+    template: "/user/:login"
 
-    resource:
-      type: "object"
-      properties:
-        url:
-          type: "string"
-          format: "uri"
-
-    organization:
-      extends: {$ref: "#resource"}
-      mediaType: media_type("organization")
-      properties:
-        name: {type: "string"}
-        plan: {$ref: "#plan"}
-        projects:
-          # Here's how you describe a dictionary
-          type: "object"
-          additionalProperties: {$ref: "#project"}
-        members: {$ref: "#user_list"}
-
-    organization_list:
-      type: "object"
-      mediaType: media_type("organization_list")
-      additionalProperties: {$ref: "#organization"}
-
-
-    plan:
-      extends: {$ref: "#resource"}
-      mediaType: media_type("plan")
-      properties:
-        name: {type: "string"}
-        space: {type: "integer"}
-        bandwidth: {type: "integer"}
-
-    plan_list:
-      type: "object"
-      mediaType: media_type("plan_list")
-      additionalProperties: {$ref: "#plan"}
-
-    user:
-      extends: {$ref: "#resource"}
-      mediaType: media_type("user")
-      properties:
-        name: {type: "string"}
-        email: {type: "string"}
-
-    user_list:
-      mediaType: media_type("user_list")
-      type: "array"
-      items: {$ref: "#user"}
-
-
-    project:
-      extends: {$ref: "#resource"}
-      mediaType: media_type("project")
-      properties:
-        name: {type: "string"}
-        description: {type: "string"}
-        refs:
-          type: "object"
-          properties:
-            main: {$ref: "#branch"}
-            branches:
-              type: "object"
-              additionalProperties: {$ref: "#branch"}
-            tags:
-              type: "array"
-              items: {$ref: "#tag"}
-
-    project_list:
-      mediaType: media_type("project_list")
-      type: "array"
-      items: {$ref: "#project"}
-
-
-    reference:
-      extends: {$ref: "#resource"}
-      mediaType: media_type("reference")
-      properties:
-        name:
-          required: true
-          type: "string"
-        commit:
-          required: true
-          type: "string"
-        message:
-          required: true
-          type: "string"
-
-    branch:
-      extends: {$ref: "#reference"}
-      mediaType: media_type("branch")
-
-    tag:
-      extends: {$ref: "#reference"}
-      mediaType: media_type("tag")
-
+  user_search:
+    path: "/user"
+    resource: "user_search"
+    query: search_query
+ 
+  repositories:
+    description: "Repositories for the authenticated user"
+    path: "/user/repos"
+    resource: "repositories"
+  
+  user_repositories:
+    path: "/user/:login/repos"
+    resource: "repositories"
+  
+  repository:
+    template: "/repos/:login/:name"
+    resource: "repository"
+  
+  repo_search:
+    path: "/repos"
+    query: search_query
+    resource: "repo_search"
 
 
 exports.resources =
 
-  organizations:
-    actions:
-
-      create:
-        method: "POST"
-        request_schema: "organization"
-        response_schema: "organization"
-        status: 201
-
-      search:
-        method: "GET"
-        response_schema: "organization_list"
-        query:
-          q:
-            required: true
-            type: "string"
-          limit:
-            type: "integer"
-          offset:
-            type: "integer"
-          sort:
-            type: "string"
-            enum: ["asc", "desc"]
-        status: 200
-
-  organization:
-    actions:
-      get:
-        method: "GET"
-        response_schema: "organization"
-        status: 200
-
-      update:
-        method: "PUT"
-        request_schema: "organization"
-        response_schema: "organization"
-        authorization: "Basic"
-        status: 200
-
-      delete:
-        method: "DELETE"
-        authorization: "Basic"
-        status: 204
-
-  plans:
-    actions:
-      list:
-        method: "GET"
-        response_schema: "plan_list"
-        status: 200
-
-
-  plan:
-    actions:
-      get:
-        method: "GET"
-        response_schema: "plan"
-        status: 200
-
-      update:
-        method: "PUT"
-        request_schema: "plan"
-        response_schema: "plan"
-        status: 200
-
   user:
     actions:
-
       get:
         method: "GET"
         response_schema: "user"
         status: 200
-
       update:
         method: "PUT"
         request_schema: "user"
         response_schema: "user"
         status: 200
 
-  project:
+  user_search:
     actions:
-
       get:
         method: "GET"
-        response_schema: "project"
+        response_schema: "user_list"
+        status: 200
+
+  repository:
+    actions:
+      get:
+        method: "GET"
+        response_schema: "repository"
         status: 200
 
       update:
         method: "PUT"
-        response_schema: "project"
+        response_schema: "repository"
         status: 200
 
       delete:
         method: "DELETE", status: 204
+
+  repo_search:
+    actions:
+      get:
+        method: "GET"
+        response_schema: "repository_list"
+        status: 200
+
+  repositories:
+    actions:
+      create:
+        method: "POST"
+        request_schema: "repository"
+        status: 201
 
   ref:
     actions:
@@ -233,29 +117,77 @@ exports.resources =
         status: 204
 
 
-exports.paths =
-  organizations:
-    path: "/organizations"
-    publish: true
+exports.schema =
+  id: "gh-knockoff"
+  # This is the conventional place to store schema definitions,
+  # becoming official as of Draft 04
+  definitions:
 
-  organization:
-    path: "/organizations/:id"
+    resource:
+      type: "object"
+      properties:
+        url:
+          type: "string"
+          format: "uri"
 
-  plans:
-    path: "/plans"
-    publish: true
+    user:
+      extends: {$ref: "#/definitions/resource"}
+      mediaType: media_type("user")
+      properties:
+        login: {type: "string"}
+        name: {type: "string"}
+        email: {type: "string"}
 
-  plan:
-    path: "/plans/:id"
+    user_list:
+      mediaType: media_type("user_list")
+      type: "array"
+      items: {$ref: "#/definitions/user"}
 
-  user:
-    path: "/users/:id"
+
+    repository:
+      extends: {$ref: "#/definitions/resource"}
+      mediaType: media_type("repository")
+      properties:
+        name: {type: "string"}
+        description: {type: "string"}
+        refs:
+          type: "object"
+          properties:
+            main: {$ref: "#/definitions/branch"}
+            branches:
+              type: "object"
+              additionalProperties: {$ref: "#/definitions/branch"}
+            tags:
+              type: "array"
+              items: {$ref: "#/definitions/tag"}
+
+    repository_list:
+      mediaType: media_type("repository_list")
+      type: "array"
+      items: {$ref: "#/definitions/repository"}
 
 
-#module.exports =
-  #media_type: media_type
-  #service_url: "http://hostname.com/"
-  #paths: paths
-  #resources: resources
-  #schema: schema
+    reference:
+      extends: {$ref: "#/definitions/resource"}
+      mediaType: media_type("reference")
+      properties:
+        name:
+          required: true
+          type: "string"
+        commit:
+          required: true
+          type: "string"
+        message:
+          required: true
+          type: "string"
+
+    branch:
+      extends: {$ref: "#/definitions/reference"}
+      mediaType: media_type("branch")
+
+    tag:
+      extends: {$ref: "#/definitions/reference"}
+      mediaType: media_type("tag")
+
+
 
