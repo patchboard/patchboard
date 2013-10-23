@@ -7,52 +7,49 @@ class Classifier
 
   MATCH_ORDER = [
     "Path",
-    "Method",
     "Query",
+    "Method",
     "Authorization",
     "ContentType",
     "Accept"
   ]
 
-  constructor: (service) ->
-    @schema_manager = service.schema_manager
-    @resources = service.resources
-    @map = service.map
+  constructor: ({@schema_manager, @resources, @map}) ->
     
     @matchers = {}
 
-    @process(PatchboardAPI.paths, PatchboardAPI.resources)
-    @process(@map, @resources)
+    @process(PatchboardAPI.mappings, PatchboardAPI.resources)
+    @process(@mappings, @resources)
 
   # Given the path mappings and resource descriptions, set up the matching
   # structures required for classifying an HTTP request.
-  process: (map, resources) ->
-    for resource_type, mapping of map
+  process: (mappings, resources) ->
+    for resource_type, mapping of mappings
       resource = resources[resource_type]
       path = mapping.path
       supported_methods = {}
 
       for action_name, definition of resource.actions
         supported_methods[definition.method] = true
-        @register path, definition,
+        @register mapping, definition,
           resource_type: resource_type
           action_name: action_name
           success_status: definition.status
 
       # setup OPTIONS handling
-      @register path, { method: "OPTIONS" },
+      @register mapping, { method: "OPTIONS" },
         resource_type: "meta"
         action_name: "options"
         allow: Object.keys(supported_methods).sort()
 
 
-  register: (path, definition, payload) ->
-    sequence = @create_match_sequence(path, definition)
-    @register_match_sequence(path, sequence, payload)
+  register: (mapping, definition, payload) ->
+    sequence = @create_match_sequence(mapping, definition)
+    @register_match_sequence(mapping, sequence, payload)
 
   # collect all the values from the resource description
   # that we will need to match against.
-  create_match_sequence: (path, definition) ->
+  create_match_sequence: (mapping, definition) ->
     # We use the MATCH_ORDER array (here and at classification time) to make sure
     # that we always present the facets of a request in the right order.
     # Each item in the "match sequence" we create here needs a string identifier
@@ -62,18 +59,18 @@ class Classifier
     identifiers = {}
     specs = {}
 
-    identifiers.Path = specs.Path = path
+    identifiers.Path = specs.Path = mapping
     identifiers.Method = specs.Method = definition.method
     identifiers.Authorization = specs.Authorization = definition.authorization || "[any]"
 
-    if definition.query
+    if mapping.query
       specs.Query =
         required: {}
         optional: {}
       required_keys = []
       optional_keys = []
       # create a string that uniquely identifies the query spec
-      for key, val of definition.query
+      for key, val of mapping.query
         if val.required
           specs.Query.required[key] = val
           required_keys.push(key)
@@ -118,7 +115,7 @@ class Classifier
 
     sequence
 
-  register_match_sequence: (path, sequence, payload) ->
+  register_match_sequence: (mapping, sequence, payload) ->
     matchers = @matchers
     for item in sequence
       matchers[item.ident] ||= new item.klass(item.spec)

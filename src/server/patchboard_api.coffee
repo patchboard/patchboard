@@ -1,9 +1,8 @@
 module.exports =
   
-  paths:
+  mappings:
     service:
       path: "/"
-      publish: true
 
   resources:
     service:
@@ -20,7 +19,7 @@ module.exports =
 
   schema:
     id: "patchboard"
-    properties:
+    definitions:
       resource:
         type: "object"
         properties:
@@ -29,7 +28,7 @@ module.exports =
             format: "uri"
             readonly: true
       service:
-        extends: {$ref: "#resource"}
+        extends: {$ref: "#/definitions/resource"}
 
       description:
         type: "object"

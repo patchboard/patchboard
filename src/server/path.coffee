@@ -1,12 +1,12 @@
 class Path
-  constructor: (path_string) ->
-    @spec = @path_spec(path_string)
+  constructor: (mapping) ->
+    @spec = @path_spec(mapping)
     @generate = @path_generator(@spec)
 
   tokenize_path: (string) ->
     tokens = string.slice(1).split("/")
 
-  path_spec: (path_string) ->
+  path_spec: (mapping) ->
     spec =
       components: []
       fields: {}
