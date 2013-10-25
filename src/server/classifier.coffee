@@ -14,7 +14,7 @@ class Classifier
     "Accept"
   ]
 
-  constructor: ({@schema_manager, @resources, @map}) ->
+  constructor: ({@schema_manager, @resources, @mappings}) ->
     
     @matchers = {}
 
@@ -24,15 +24,15 @@ class Classifier
   # Given the path mappings and resource descriptions, set up the matching
   # structures required for classifying an HTTP request.
   process: (mappings, resources) ->
-    for resource_type, mapping of mappings
+    for name, mapping of mappings
+      resource_type = mapping.resource
       resource = resources[resource_type]
-      path = mapping.path
       supported_methods = {}
 
       for action_name, definition of resource.actions
         supported_methods[definition.method] = true
         @register mapping, definition,
-          resource_type: resource_type
+          resource_type: name
           action_name: action_name
           success_status: definition.status
 
@@ -45,7 +45,7 @@ class Classifier
 
   register: (mapping, definition, payload) ->
     sequence = @create_match_sequence(mapping, definition)
-    @register_match_sequence(mapping, sequence, payload)
+    @register_match_sequence(sequence, payload)
 
   # collect all the values from the resource description
   # that we will need to match against.
@@ -59,7 +59,8 @@ class Classifier
     identifiers = {}
     specs = {}
 
-    identifiers.Path = specs.Path = mapping
+    specs.Path = mapping
+    identifiers.Path = JSON.stringify(mapping)
     identifiers.Method = specs.Method = definition.method
     identifiers.Authorization = specs.Authorization = definition.authorization || "[any]"
 
@@ -89,17 +90,17 @@ class Classifier
       if schema
         identifiers.ContentType = specs.ContentType = schema.mediaType
       else
-        throw "No schema found for #{request_schema}"
+        throw "No schema found for request '#{request_schema}'"
 
     else
       identifiers.ContentType = specs.ContentType = "[any]"
 
     if response_schema = definition.response_schema
-      schema = @schema_manager.find(name: response_schema)
+      schema = @schema_manager.find(response_schema)
       if schema
         identifiers.Accept = specs.Accept = schema.mediaType
       else
-        throw "No schema found for #{response_schema}"
+        throw "No schema found for response '#{response_schema}'"
     else if definition.accept
       identifiers.Accept = specs.Accept = definition.accept
     else
@@ -115,7 +116,7 @@ class Classifier
 
     sequence
 
-  register_match_sequence: (mapping, sequence, payload) ->
+  register_match_sequence: (sequence, payload) ->
     matchers = @matchers
     for item in sequence
       matchers[item.ident] ||= new item.klass(item.spec)

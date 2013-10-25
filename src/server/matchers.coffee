@@ -1,8 +1,14 @@
 class Path
-  constructor: (pattern) ->
+  constructor: (options) ->
+    {path, template} = options
     @type = "path"
-    @pattern = @parse_pattern(pattern)
     @matchers = {}
+    if path
+      @pattern = @parse_pattern(path)
+    else if template
+      @pattern = @parse_pattern(template)
+    else
+      throw new Error "Must specify a path or a template"
 
   parse_pattern: (pattern) ->
     captures = []

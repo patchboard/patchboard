@@ -3,6 +3,7 @@ module.exports =
   mappings:
     service:
       path: "/"
+      resource: "service"
 
   resources:
     service:
@@ -14,13 +15,14 @@ module.exports =
 
         description:
           method: "GET"
-          response_schema: "description"
+          response_schema: "urn:patchboard#description"
           status: 200
 
   schema:
-    id: "patchboard"
+    id: "urn:patchboard"
     definitions:
       resource:
+        id: "#resource"
         type: "object"
         properties:
           url:
@@ -28,9 +30,10 @@ module.exports =
             format: "uri"
             readonly: true
       service:
-        extends: {$ref: "#/definitions/resource"}
+        extends: {$ref: "urn:patchboard#resource"}
 
       description:
+        id: "#description"
         type: "object"
         mediaType: "application/json"
         properties:

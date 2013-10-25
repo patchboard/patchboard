@@ -15,7 +15,10 @@ search_query =
 exports.media_type = media_type = (name) ->
   "application/vnd.gh-knockoff.#{name}+json;version=1.0"
 
+urn = (name) ->
+  "urn:gh-knockoff##{name}"
  
+exports.mappings =
   authenticated_user:
     path: "/user"
     resource: "user"
@@ -54,31 +57,31 @@ exports.resources =
     actions:
       get:
         method: "GET"
-        response_schema: "user"
+        response_schema: urn("user")
         status: 200
       update:
         method: "PUT"
-        request_schema: "user"
-        response_schema: "user"
+        request_schema: urn("user")
+        response_schema: urn("user")
         status: 200
 
   user_search:
     actions:
       get:
         method: "GET"
-        response_schema: "user_list"
+        response_schema: urn("user_list")
         status: 200
 
   repository:
     actions:
       get:
         method: "GET"
-        response_schema: "repository"
+        response_schema: urn("repository")
         status: 200
 
       update:
         method: "PUT"
-        response_schema: "repository"
+        response_schema: urn("repository")
         status: 200
 
       delete:
@@ -88,28 +91,28 @@ exports.resources =
     actions:
       get:
         method: "GET"
-        response_schema: "repository_list"
+        response_schema: urn("repository_list")
         status: 200
 
   repositories:
     actions:
       create:
         method: "POST"
-        request_schema: "repository"
+        request_schema: urn("repository")
         status: 201
 
   ref:
     actions:
       get:
         method: "GET"
-        response_schema: "reference"
+        response_schema: urn("reference")
         status: 200
 
   branch:
     actions:
       get:
         method: "GET"
-        response_schema: "reference"
+        response_schema: urn("reference")
         status: 200
       rename:
         method: "POST"
@@ -122,7 +125,7 @@ exports.resources =
     actions:
       get:
         method: "GET"
-        response_schema: "reference"
+        response_schema: urn("reference")
         status: 200
       delete:
         method: "DELETE"

@@ -1,21 +1,36 @@
 assert = require("assert")
 Testify = require "testify"
 
+patchboard_api = require "../src/server/patchboard_api"
 {api, partial_equal} = require("./helpers")
 media_type = api.media_type
+
+{definitions} = api.schema
+# `definitions` is the conventional place to put schemas,
+# so we'll define fragment IDs by default
+if definitions
+  for name, schema of definitions
+    schema.id ||= "##{name}"
+
+
+JSCK = require "jsck"
+jsck = new JSCK.draft3 patchboard_api.schema, api.schema
+#console.log Object.keys(jsck.references)
 
 Service = require "../src/server/service"
 Classifier = require "../src/server/classifier"
 
-service = new Service(api)
-classifier = new Classifier(service)
+classifier = new Classifier
+  schema_manager: jsck
+  resources: api.resources
+  mappings: api.mappings
 
 
 class MockRequest
 
   constructor: ({@url, @method, @headers}) ->
     @headers ||= {}
-    service.augment_request(@)
+    Service.augment_request(@)
 
 
 Testify.test "Classifier", (context) ->
@@ -26,15 +41,36 @@ Testify.test "Classifier", (context) ->
       classification = classifier.classify(request)
       partial_equal(classification, result)
 
-  test_classification "Action with response_schema",
+  test_classification "simple URL, response schema",
     request:
-      url: "http://gh-knockoff.com/plans"
+      url: "http://gh-knockoff.com/user"
       method: "GET"
       headers:
-        "Accept": media_type("plan_list")
+        "Accept": media_type("user")
     result:
-      resource_type: "plans", action_name: "list",
+      resource_type: "authenticated_user", action_name: "get",
 
+  test_classification "URL with path capture, response schema",
+    request:
+      url: "http://gh-knockoff.com/user/dyoder"
+      method: "GET"
+      headers:
+        "Accept": media_type("user")
+    result:
+      resource_type: "user", action_name: "get",
+
+
+  test_classification "Simple URL, request_schema and response_schema",
+    request:
+      url: "http://gh-knockoff.com/user"
+      method: "PUT"
+      headers:
+        "Content-Type": media_type("user")
+        "Accept": media_type("user")
+    result:
+      resource_type: "authenticated_user", action_name: "update"
+
+  return
 
   test_classification "Action with request_schema and response_schema",
     request:
@@ -46,16 +82,6 @@ Testify.test "Classifier", (context) ->
     result:
       resource_type: "organizations", action_name: "create"
 
-
-  test_classification "URL with path capture",
-    request:
-      url: "http://gh-knockoff.com/organizations/smurf"
-      method: "GET"
-      headers:
-        "Accept": media_type("organization")
-    result:
-      resource_type: "organization", action_name: "get",
-      path: {id: "smurf"},
 
 
   test_classification "Action with authorization",
