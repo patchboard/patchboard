@@ -39,15 +39,15 @@ class Service
     for key, value of api.resources
       @resources[key] = value
 
-    for resource_type, mapping of PatchboardAPI.mappings when mapping.path
-      @directory[resource_type] =
-        resource: mapping.resource
-        url: "#{@service_url}#{mapping.path}"
 
-    for resource_type, mapping of @mappings when mapping.path
-      @directory[resource_type] =
-        resource: mapping.resource
-        url: "#{@service_url}#{mapping.path}"
+    for mappings in [PatchboardAPI.mappings, @mappings]
+
+      for resource_type, mapping of mappings
+        @directory[resource_type] =
+          resource: mapping.resource
+          url: "#{@service_url}#{mapping.path}"
+          query: mapping.query
+
 
     for resource_type, mapping of @mappings
       @paths[resource_type] = new Path(mapping)
