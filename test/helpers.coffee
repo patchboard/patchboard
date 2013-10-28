@@ -4,5 +4,8 @@ module.exports =
 
   partial_equal: (actual, expected) ->
     for key, val of expected
-      assert.deepEqual(actual[key], val)
+      if got = actual[key]
+        assert.deepEqual(actual[key], val)
+      else
+        assert.fail got, val, "No value found for '#{key}'"
 

@@ -31,6 +31,7 @@ module.exports =
             readonly: true
       service:
         extends: {$ref: "urn:patchboard#resource"}
+        id: "#service"
 
       description:
         id: "#description"

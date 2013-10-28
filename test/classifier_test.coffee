@@ -1,29 +1,14 @@
 assert = require("assert")
 Testify = require "testify"
 
-patchboard_api = require "../src/server/patchboard_api"
-{api, partial_equal} = require("./helpers")
-media_type = api.media_type
-
-{definitions} = api.schema
-# `definitions` is the conventional place to put schemas,
-# so we'll define fragment IDs by default
-if definitions
-  for name, schema of definitions
-    schema.id ||= "##{name}"
-
-
-JSCK = require "jsck"
-jsck = new JSCK.draft3 patchboard_api.schema, api.schema
-#console.log Object.keys(jsck.references)
-
 Service = require "../src/server/service"
 Classifier = require "../src/server/classifier"
+SchemaManager = require "../src/server/schema_manager2"
 
-classifier = new Classifier
-  schema_manager: jsck
-  resources: api.resources
-  mappings: api.mappings
+{api, partial_equal} = require("./helpers")
+{media_type, resources, mappings} = api
+schema_manager = new SchemaManager api.schema
+classifier = new Classifier {schema_manager, resources, mappings}
 
 
 class MockRequest
@@ -70,40 +55,28 @@ Testify.test "Classifier", (context) ->
     result:
       resource_type: "authenticated_user", action_name: "update"
 
-  return
-
-  test_classification "Action with request_schema and response_schema",
-    request:
-      url: "http://gh-knockoff.com/organizations"
-      method: "POST"
-      headers:
-        "Content-Type": media_type("organization")
-        "Accept": media_type("organization")
-    result:
-      resource_type: "organizations", action_name: "create"
-
-
-
-  test_classification "Action with authorization",
-    request:
-      url: "http://gh-knockoff.com/organizations/smurf"
-      method: "DELETE"
-      headers:
-        # TODO: test for real base64
-        "Authorization": "Basic Pyrzqxgl"
-    result:
-      resource_type: "organization", action_name: "delete"
-
-
   test_classification "Action with query",
     request:
-      url: "http://gh-knockoff.com/organizations?q=smurf&limit=3"
+      url: "http://gh-knockoff.com/user?match=smurf&limit=3"
       method: "GET"
       headers:
-        "Accept": media_type("organization_list")
+        "Accept": media_type("user_list")
     result:
-      resource_type: "organizations", action_name: "search"
-      query: {q: "smurf", limit: "3"}
+      resource_type: "user_search", action_name: "get"
+      query: {match: "smurf", limit: "3"}
+
+  return
+
+  #test_classification "Action with authorization",
+    #request:
+      #url: "http://gh-knockoff.com/organizations/smurf"
+      #method: "DELETE"
+      #headers:
+        ## TODO: test for real base64
+        #"Authorization": "Basic Pyrzqxgl"
+    #result:
+      #resource_type: "organization", action_name: "delete"
+
 
 
   # Test failures

@@ -90,7 +90,7 @@ class Classifier
       if schema
         identifiers.ContentType = specs.ContentType = schema.mediaType
       else
-        throw "No schema found for request '#{request_schema}'"
+        throw new Error "No schema found for request '#{request_schema}'"
 
     else
       identifiers.ContentType = specs.ContentType = "[any]"
@@ -100,7 +100,7 @@ class Classifier
       if schema
         identifiers.Accept = specs.Accept = schema.mediaType
       else
-        throw "No schema found for response '#{response_schema}'"
+        throw new Error "No schema found for response '#{response_schema}'"
     else if definition.accept
       identifiers.Accept = specs.Accept = definition.accept
     else

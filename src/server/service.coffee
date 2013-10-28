@@ -4,7 +4,7 @@ PatchboardAPI = require("./patchboard_api")
 Dispatcher = require("./simple_dispatcher")
 Documenter = require("./documenter")
 Classifier = require("./classifier")
-SchemaManager = require("./schema_manager")
+SchemaManager = require("./schema_manager2")
 SchemaValidator = require("./schema_validator")
 Path = require("./path")
 
@@ -22,14 +22,12 @@ class Service
     @decorator = @options.decorator
     @log = @options.log || console
 
-    SchemaManager.normalize(PatchboardAPI.schema)
-    SchemaManager.normalize(api.schema)
+    #SchemaManager.normalize(PatchboardAPI.schema)
+    #SchemaManager.normalize(api.schema)
 
-    @schema_manager = new SchemaManager(PatchboardAPI.schema, api.schema)
+    @schema_manager = new SchemaManager(api.schema)
 
-    unless @options.validate == false
-      @validator = new SchemaValidator(@schema_manager)
-    @map = api.paths
+    @mappings = api.mappings
 
 
     @resources = {}
@@ -41,16 +39,20 @@ class Service
     for key, value of api.resources
       @resources[key] = value
 
-    for resource_type, mapping of PatchboardAPI.paths when mapping.publish
-      @directory[resource_type] = "#{@service_url}#{mapping.path}"
-    for resource_type, mapping of @map when mapping.publish
-      @directory[resource_type] = "#{@service_url}#{mapping.path}"
+    for resource_type, mapping of PatchboardAPI.mappings when mapping.path
+      @directory[resource_type] =
+        resource: mapping.resource
+        url: "#{@service_url}#{mapping.path}"
 
-    for resource_type, mapping of @map
-      path_string = mapping.path
-      @paths[resource_type] = new Path(path_string)
+    for resource_type, mapping of @mappings when mapping.path
+      @directory[resource_type] =
+        resource: mapping.resource
+        url: "#{@service_url}#{mapping.path}"
 
-    @documenter = new Documenter(@schema_manager.names, @resources)
+    for resource_type, mapping of @mappings
+      @paths[resource_type] = new Path(mapping)
+
+    @documenter = new Documenter(@schema_manager.uris, @resources)
     @default_handlers = require("./handlers")(@)
 
     @classifier = new Classifier(@)
@@ -58,7 +60,7 @@ class Service
     @description =
       resources: @resources
       schemas: @schema_manager.schemas
-      directory: @directory
+      mappings: @directory
 
 
   classify: (args...) ->
@@ -69,7 +71,7 @@ class Service
     if path
       "#{@service_url}#{path.generate(args...)}"
     else
-      throw "Problem generating URL. No such resource: #{resource_type}"
+      throw new Error "Problem generating URL. No such resource: #{resource_type}"
 
   normalize_schema: (schema) ->
     for name, definition of schema.properties
@@ -115,6 +117,9 @@ class Service
     url = @parse_url(request.url)
     request.path = url.pathname
     request.query = url.query
+
+  augment_request: (request) ->
+    @constructor.augment_request(request)
 
   documentation: () ->
     """

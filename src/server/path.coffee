@@ -10,16 +10,20 @@ class Path
     spec =
       components: []
       fields: {}
-    tokens = @tokenize_path(path_string)
-    for token, index in tokens
-      if token.indexOf(":") == 0
-        name = token.slice(1)
-        spec.fields[name] = index
-        spec.components.push(null)
-      else
-        # all other path components are exact matchers
-        spec.components.push(token)
-    spec
+    path_string = (mapping.path || mapping.template)
+    if !path_string
+      throw new Error "Bad mapping: #{JSON.stringify(mapping)}"
+    else
+      tokens = @tokenize_path(path_string)
+      for token, index in tokens
+        if token.indexOf(":") == 0
+          name = token.slice(1)
+          spec.fields[name] = index
+          spec.components.push(null)
+        else
+          # all other path components are exact matchers
+          spec.components.push(token)
+      spec
 
   path_generator: (spec) ->
     service = @

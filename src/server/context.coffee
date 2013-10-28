@@ -27,7 +27,8 @@ codes =
 module.exports = class Context
   constructor: (@service, @request, @response, @match) ->
     {@schema_manager, @log} = @service
-    @response_schema = @schema_manager.find(media_type: @match.accept)
+    if @match.accept
+      @response_schema = @schema_manager.find(mediaType: @match.accept)
 
   set_cors_headers: (origin) ->
     if @request.headers["origin"]
