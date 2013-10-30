@@ -16,7 +16,6 @@
   ],
   "dependencies": {
     "connect": "2.3.x",
-    "colors": "0.6.x",
     "marked": "0.2.x",
     "c50n": "~0.3.1",
     "patchboard-js": "0.3.1",
