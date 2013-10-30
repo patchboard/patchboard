@@ -7,7 +7,7 @@ PathMatcher = matchers.Path
 
 Testify.test "Path matching", (context) ->
   context.test "for '/'", ->
-    matcher = new PathMatcher("/")
+    matcher = new PathMatcher(path: "/")
     assert.deepEqual(
       matcher.match("/"),
       {}
@@ -18,7 +18,7 @@ Testify.test "Path matching", (context) ->
     )
 
   context.test "capturing last component", ->
-    matcher = new PathMatcher("/accounts/:account_id")
+    matcher = new PathMatcher(template: "/accounts/:account_id")
     assert.deepEqual(
       matcher.pattern,
       ["accounts", {name: "account_id"}]
@@ -38,14 +38,14 @@ Testify.test "Path matching", (context) ->
     )
 
   context.test "capturing middle component", ->
-    matcher = new PathMatcher("/accounts/:account_id/channels")
+    matcher = new PathMatcher(template: "/accounts/:account_id/channels")
     assert.deepEqual(
       matcher.pattern,
       ["accounts", {name: "account_id"}, "channels"]
     )
 
   context.test "capturing multiple components", ->
-    matcher = new PathMatcher("/accounts/:account_id/channels/:channel_id")
+    matcher = new PathMatcher(template: "/accounts/:account_id/channels/:channel_id")
     assert.deepEqual(
       matcher.pattern,
       ["accounts", {name: "account_id"}, "channels", {name: "channel_id"}]
