@@ -30,9 +30,9 @@ end
 
 desc "Run tests"
 task "test" do
-  sh "coffee test/server/path_matcher_test.coffee"
-  sh "coffee test/server/classifier_test.coffee"
-  sh "coffee test/server/service_test.coffee"
+  sh "coffee test/path_matcher_test.coffee"
+  sh "coffee test/classifier_test.coffee"
+  sh "coffee test/service_test.coffee"
 end
 
 #def format_issue(issue, format="plain")
