@@ -3,7 +3,7 @@ Testify = require "testify"
 
 Service = require "../src/server/service"
 Classifier = require "../src/server/classifier"
-SchemaManager = require "../src/server/schema_manager2"
+SchemaManager = require "../src/server/schema_manager"
 
 {api, partial_equal} = require("./helpers")
 {media_type, resources, mappings} = api

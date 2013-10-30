@@ -37,7 +37,6 @@ class SimpleDispatcher
           #)
           #return
 
-
       handler = @find_handler(match)
       context = new Context(@service, request, response, match)
       handler(context)

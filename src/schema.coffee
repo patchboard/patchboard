@@ -1,20 +1,33 @@
 module.exports =
-  id: "https://github.com/automathew/patchboard-spec"
+  id: "urn:patchboard.api"
   properties:
 
     schema:
-      $ref: "http://json-schema.org/draft-03/schema#"
+      required: true
+      #$ref: "http://json-schema.org/draft-03/schema#"
 
-    paths:
+    mappings:
+      required: true
       type: "object"
       additionalProperties:
         type: "object"
         properties:
+          resource:
+            type: "string"
+          url:
+            type: "string"
           path:
             type: "string"
-            required: true
-          publish:
-            type: "boolean"
+          template:
+            type: "string"
+          query:
+            ## Extend the full JSON schema, so we can constrain the legal
+            ## values of "type".
+            #extends: {$ref: "http://json-schema.org/draft-03/schema#"}
+            properties:
+              type:
+                enum:
+                  ["string", "number", "integer", "boolean"]
 
     resources:
       required: true
@@ -40,14 +53,6 @@ module.exports =
                   required: true
                   type: "string"
                   enum: ["GET", "PUT", "POST", "PATCH", "DELETE"]
-                query:
-                  # Extend the full JSON schema, so we can constrain the legal
-                  # values of "type".
-                  extends: {$ref: "http://json-schema.org/draft-03/schema#"}
-                  properties:
-                    type:
-                      enum:
-                        ["string", "number", "integer", "boolean"]
                 request_schema:
                   type: "string"
                   description: "The name of the schema describing the request body"
@@ -56,7 +61,10 @@ module.exports =
                   description: "The name of the schema describing the response body"
                 status:
                   type: "integer"
-                  description: "The HTTP status code that indicates a succesful response for this action"
+                  description: """
+                    The HTTP status code that indicates a succesful response
+                    for this action
+                  """
                   enum: [200, 201, 202, 204]
 
 

@@ -1,18 +1,20 @@
 path = require("path")
 fs = require("fs")
 
-JSV = require("JSV").JSV
-jsv = JSV.createEnvironment("json-schema-draft-03")
-
 CSON = require "c50n"
+JSCK = require("jsck").draft3
 
 schema = require("./schema")
+jsck = new JSCK schema
 
 example =
-  paths:
+  mappings:
     things:
+      resource: "things"
       path: "/things"
-      publish: true
+      query:
+        limit:
+          type: "integer"
 
   resources:
     things:
@@ -26,7 +28,7 @@ example =
           response_schema: "foo_list"
 
   schema:
-    id: "patchboard.example"
+    id: "urn:pb-app"
     thing:
       type: "object"
       properties:
@@ -44,13 +46,10 @@ module.exports =
     api_file = path.resolve(api_file)
     try
       api = require(api_file)
-      report = jsv.validate api, schema
-      if report.errors.length == 0
+      report = jsck.schema("urn:patchboard.api#").validate api
+      if report.valid == true
         console.log "Valid API definition"
       else
-        # TODO: provide more useful output, perhaps by finding and printing
-        # the exact objects in the data and schema that are failing.
-        # JSV may have some useful functions for this.
         console.log "Invalid API.  Errors:", report.errors
         process.exit(1)
     catch error

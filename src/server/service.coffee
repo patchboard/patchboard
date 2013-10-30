@@ -4,8 +4,7 @@ PatchboardAPI = require("./patchboard_api")
 Dispatcher = require("./simple_dispatcher")
 Documenter = require("./documenter")
 Classifier = require("./classifier")
-SchemaManager = require("./schema_manager2")
-SchemaValidator = require("./schema_validator")
+SchemaManager = require("./schema_manager")
 Path = require("./path")
 
 class Service
@@ -21,9 +20,6 @@ class Service
 
     @decorator = @options.decorator
     @log = @options.log || console
-
-    #SchemaManager.normalize(PatchboardAPI.schema)
-    #SchemaManager.normalize(api.schema)
 
     @schema_manager = new SchemaManager(api.schema)
 
