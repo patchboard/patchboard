@@ -39,10 +39,16 @@ class Service
     for mappings in [PatchboardAPI.mappings, @mappings]
 
       for resource_type, mapping of mappings
-        @directory[resource_type] =
-          resource: mapping.resource
-          url: "#{@service_url}#{mapping.path}"
-          query: mapping.query
+        if mapping.path
+          @directory[resource_type] =
+            resource: mapping.resource
+            url: "#{@service_url}#{mapping.path}"
+            query: mapping.query
+        else if mapping.query
+          @directory[resource_type] =
+            resource: mapping.resource
+            query: mapping.query
+
 
 
     for resource_type, mapping of @mappings
@@ -69,19 +75,19 @@ class Service
     else
       throw new Error "Problem generating URL. No such resource: #{resource_type}"
 
-  normalize_schema: (schema) ->
-    for name, definition of schema.properties
-      if definition.id
-        if definition.id.indexOf("#") == 0
-          definition.id = "#{schema.id}#{definition.id}"
-      else
-        definition.id = "#{schema.id}##{name}"
+  #normalize_schema: (schema) ->
+    #for name, definition of schema.properties
+      #if definition.id
+        #if definition.id.indexOf("#") == 0
+          #definition.id = "#{schema.id}#{definition.id}"
+      #else
+        #definition.id = "#{schema.id}##{name}"
 
-      if definition.extends
-        if definition.extends.$ref && definition.extends.$ref.indexOf("#") == 0
-          definition.extends.$ref = "#{schema.id}#{definition.extends.$ref}"
-      if definition.type == "array" && definition.items.$ref.indexOf("#") == 0
-        definition.items.$ref = "#{schema.id}#{definition.items.$ref}"
+      #if definition.extends
+        #if definition.extends.$ref && definition.extends.$ref.indexOf("#") == 0
+          #definition.extends.$ref = "#{schema.id}#{definition.extends.$ref}"
+      #if definition.type == "array" && definition.items.$ref.indexOf("#") == 0
+        #definition.items.$ref = "#{schema.id}#{definition.items.$ref}"
 
 
   simple_dispatcher: (app_handlers) ->
