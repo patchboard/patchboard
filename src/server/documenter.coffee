@@ -36,26 +36,27 @@ class Documenter
       if keys.length > 0
         lines.push "- **Required query parameters:** #{keys.join(', ')}"
 
+    {request, response, authorization} = definition
     headers = []
-    if definition.request_schema
-      content_type = @schemas[definition.request_schema].mediaType
-      headers.push "  - **Content-Type: `#{content_type}`**"
+    if request?.type
+      headers.push "  - **Content-Type: `#{request.type}`**"
+      # FIXME busted
       re = definition.request_schema
-    if definition.response_schema
-      accept = @schemas[definition.response_schema].mediaType
-      headers.push "  - **Accept: `#{accept}`**"
-    if definition.authorization
-      headers.push "  - **Authorization: `#{definition.authorization} <credential>`**"
+    if response?.type
+      headers.push "  - **Accept: `#{response.type}`**"
+    if authorization
+      headers.push "  - **Authorization: `#{authorization} <credential>`**"
     if headers.length > 0
       lines.push "- **Headers**"
       lines.push headers.join("\n\n")
-      if definition.request_schema
+      if request?.type
         lines.push "- **Body Schema**: [#{re}](##{@schemas[re].id.replace("#", "/")})"
 
     lines.push "**HTTP Response**"
-    if status = definition.status
+    if status = definition.response?.status
       lines.push "- **Expected Status**: #{status} - #{http.STATUS_CODES[status]}"
-    if definition.response_schema
+    if response?.type
+      # FIXME busted
       re = definition.response_schema
       lines.push "- **Body Schema**: [#{re}](##{@schemas[re].id.replace("#", "/")})"
 

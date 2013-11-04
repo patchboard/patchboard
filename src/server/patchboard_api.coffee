@@ -15,8 +15,9 @@ module.exports =
 
         description:
           method: "GET"
-          response_schema: "urn:patchboard#description"
-          status: 200
+          response:
+            type: "application/json"
+            status: 200
 
   schema:
     id: "urn:patchboard"

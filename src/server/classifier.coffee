@@ -34,7 +34,7 @@ class Classifier
         @register mapping, definition,
           resource_type: name
           action_name: action_name
-          success_status: definition.status
+          success_status: definition.response?.status || 200
 
       # setup OPTIONS handling
       @register mapping, { method: "OPTIONS" },
@@ -85,24 +85,14 @@ class Classifier
       specs.Query = {}
       identifiers.Query = "none"
 
-    if request_schema = definition.request_schema
-      schema = @schema_manager.find(request_schema)
-      if schema
-        identifiers.ContentType = specs.ContentType = schema.mediaType
-      else
-        throw new Error "No schema found for request '#{request_schema}'"
-
+    {request, response} = definition
+    if request?.type
+      identifiers.ContentType = specs.ContentType = request.type
     else
       identifiers.ContentType = specs.ContentType = "[any]"
 
-    if response_schema = definition.response_schema
-      schema = @schema_manager.find(response_schema)
-      if schema
-        identifiers.Accept = specs.Accept = schema.mediaType
-      else
-        throw new Error "No schema found for response '#{response_schema}'"
-    else if definition.accept
-      identifiers.Accept = specs.Accept = definition.accept
+    if response?.type
+      identifiers.Accept = specs.Accept = response.type
     else
       identifiers.Accept = specs.Accept = "[any]"
 

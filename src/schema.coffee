@@ -53,19 +53,24 @@ module.exports =
                   required: true
                   type: "string"
                   enum: ["GET", "PUT", "POST", "PATCH", "DELETE"]
-                request_schema:
-                  type: "string"
-                  description: "The name of the schema describing the request body"
-                response_schema:
-                  type: "string"
-                  description: "The name of the schema describing the response body"
-                status:
-                  type: "integer"
-                  description: """
-                    The HTTP status code that indicates a succesful response
-                    for this action
-                  """
-                  enum: [200, 201, 202, 204]
+                request:
+                  type: "object"
+                  properties:
+                    type:
+                      title: "The media type to be used for the request"
+                      type: "string"
+                response:
+                  type: "object"
+                  properties:
+                    type:
+                      title: "The media type to be used for the request"
+                      type: "string"
+                    status:
+                      title: "The HTTP status code that indicates success"
+                      type: "integer"
+                      enum: [200, 201, 202, 204]
+
+
 
 
 

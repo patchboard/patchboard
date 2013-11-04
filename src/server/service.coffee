@@ -1,5 +1,9 @@
 URL = require("url")
 
+JSCK = require("jsck").draft3
+schema = require("../schema")
+jsck = new JSCK schema
+
 PatchboardAPI = require("./patchboard_api")
 Dispatcher = require("./simple_dispatcher")
 Documenter = require("./documenter")
@@ -10,6 +14,11 @@ Path = require("./path")
 class Service
 
   constructor: (api, @options={}) ->
+    report = jsck.schema("urn:patchboard.api#").validate api
+    if !report.valid
+      errors = JSON.stringify report.errors, null, 2
+      throw new Error "Invalid API definition. Errors: #{errors}"
+
     url = @options.url || "http://localhost:1337"
 
     # We construct full urls by concatenating @service_url and the path,
