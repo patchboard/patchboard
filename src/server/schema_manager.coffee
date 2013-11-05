@@ -10,12 +10,13 @@ module.exports = class SchemaManager
       # so we'll define fragment IDs by default where they are
       # not explicitly specified.
       if definitions = schema.definitions
+        base_id = schema.id
         for name, definition of definitions
           definition.id ||= "##{name}"
 
     @jsck = new JSCK.draft3 patchboard_api.schema, schemas...
     @schemas = [patchboard_api.schema].concat(schemas)
-    @uris = @jsck.references
+    @uris = @jsck.uris
 
   find: (args...) ->
     @jsck.find(args...)
@@ -27,15 +28,18 @@ module.exports = class SchemaManager
     out = []
     out.push "# Schemas"
     for uri, schema of @uris
-      if string = @schema_doc(uri, schema)
-        out.push string
+      if /\#[^/]+$/.test uri
+        # only display schemas with fragment ids
+        # e.g. urn:whatever#monkey
+        if string = @schema_doc(uri, schema)
+          out.push string
     out.join("\n\n")
 
   schema_doc: (uri, schema) ->
     lines = []
     if schema.id
       lines.push """
-      <a id="#{schema.id.replace("#", "/")}"></a>
+      <a id="#{schema.id.replace("#", "_")}"></a>
       ## #{uri} 
       """
       lines.push """

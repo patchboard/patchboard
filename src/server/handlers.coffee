@@ -10,6 +10,10 @@ html = (input) ->
 
       <style type="text/css">
         body { padding: 1em; }
+        h2 {
+          border-top: 1px solid gray;
+          padding-top: 10px;
+        }
       </style>
     </head>
     <body>

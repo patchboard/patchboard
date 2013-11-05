@@ -14,7 +14,7 @@ class Classifier
     "Accept"
   ]
 
-  constructor: ({@schema_manager, @resources, @mappings}) ->
+  constructor: ({@resources, @mappings}) ->
     
     @matchers = {}
 

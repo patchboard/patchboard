@@ -5,7 +5,7 @@ marked.setOptions
   pedantic: false
 
 class Documenter
-  constructor: (@schemas, @resources) ->
+  constructor: (@schema_manager, @resources) ->
 
   document_resources: () ->
     out = []
@@ -39,26 +39,32 @@ class Documenter
     {request, response, authorization} = definition
     headers = []
     if request?.type
-      headers.push "  - **Content-Type: `#{request.type}`**"
+      headers.push "  - **`Content-Type`: `#{request.type}`**"
       # FIXME busted
       re = definition.request_schema
     if response?.type
-      headers.push "  - **Accept: `#{response.type}`**"
+      headers.push "  - **`Accept`: `#{response.type}`**"
     if authorization
-      headers.push "  - **Authorization: `#{authorization} <credential>`**"
+      headers.push "  - **`Authorization`: `#{authorization} <credential>`**"
+
     if headers.length > 0
       lines.push "- **Headers**"
       lines.push headers.join("\n\n")
       if request?.type
-        lines.push "- **Body Schema**: [#{re}](##{@schemas[re].id.replace("#", "/")})"
+        schema = @schema_manager.find mediaType: request.type
+        anchor = schema.id.replace "#", "_"
+        link = "[#{schema.id}](##{anchor})"
+        lines.push "- **Body Schema**: #{link}"
 
     lines.push "**HTTP Response**"
     if status = definition.response?.status
       lines.push "- **Expected Status**: #{status} - #{http.STATUS_CODES[status]}"
     if response?.type
       # FIXME busted
-      re = definition.response_schema
-      lines.push "- **Body Schema**: [#{re}](##{@schemas[re].id.replace("#", "/")})"
+      if schema = @schema_manager.find(mediaType: response.type)
+        anchor = schema.id.replace "#", "_"
+        link = "[#{schema.id}](##{anchor})"
+        lines.push "- **Body Schema**: #{link}"
 
     lines.join("\n\n")
 

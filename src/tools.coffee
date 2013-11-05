@@ -15,17 +15,18 @@ example =
       query:
         limit:
           type: "integer"
+        sort:
+          type: "string"
+          enum: ["asc", "desc"]
 
   resources:
     things:
       actions:
         list:
           method: "GET"
-          query:
-            sort:
-              type: "string"
-              enum: ["asc", "desc"]
-          response_schema: "foo_list"
+          response:
+            type: "application/vnd.example.thing_list+json;version=1.0"
+            status: 200
 
   schema:
     id: "urn:pb-app"
@@ -60,11 +61,11 @@ module.exports =
     if type == "json"
       api = example
       string = JSON.stringify(api, null, 2)
-      fs.writeFileSync("api.json", string)
+      console.log string
     else if type == "cson"
       api = example
       string = CSON.stringify(api)
-      fs.writeFileSync("api.cson", string)
+      console.log string
     else
       console.log "Unsupported type: #{type}"
 

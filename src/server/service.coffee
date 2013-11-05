@@ -63,7 +63,7 @@ class Service
     for resource_type, mapping of @mappings
       @paths[resource_type] = new Path(mapping)
 
-    @documenter = new Documenter(@schema_manager.uris, @resources)
+    @documenter = new Documenter(@schema_manager, @resources)
     @default_handlers = require("./handlers")(@)
 
     @classifier = new Classifier(@)
