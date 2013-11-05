@@ -14,44 +14,43 @@ Path = require("./path")
 class Service
 
   constructor: (api, @options={}) ->
-    report = jsck.schema("urn:patchboard.api#").validate api
+    # Validate the API definition against the Patchboard Definition schema
+    report = jsck.validator("urn:patchboard.api#").validate api
     if !report.valid
       errors = JSON.stringify report.errors, null, 2
       throw new Error "Invalid API definition. Errors: #{errors}"
 
-    url = @options.url || "http://localhost:1337"
-
-    # We construct full urls by concatenating @service_url and the path,
-    # so make sure that @service_url does not end in a slash.
-    if url[url.length-1] == "/"
-      url = url.slice(0,-1)
-    @service_url = url
-
-    @decorator = @options.decorator
+    {@decorator} = @options
     @log = @options.log || console
 
-    @schema_manager = new SchemaManager(api.schema)
+    url = @options.url || "http://localhost:1337"
+    # We construct full urls by concatenating @url and the path,
+    # so make sure that @url does not end in a slash.
+    if url[url.length-1] == "/"
+      url = url.slice(0,-1)
+    @url = url
 
+    @schema_manager = new SchemaManager(api.schema)
     @mappings = api.mappings
 
-
     @resources = {}
-    @paths = {}
-    @directory = {}
-
     for key, value of PatchboardAPI.resources
       @resources[key] = value
     for key, value of api.resources
       @resources[key] = value
 
 
-    for mappings in [PatchboardAPI.mappings, @mappings]
+    @directory = {}
+    @paths = {}
 
+    for mappings in [PatchboardAPI.mappings, @mappings]
       for resource_type, mapping of mappings
+        @paths[resource_type] = new Path(mapping)
+
         if mapping.path
           @directory[resource_type] =
             resource: mapping.resource
-            url: "#{@service_url}#{mapping.path}"
+            url: "#{@url}#{mapping.path}"
             query: mapping.query
         else if mapping.query
           @directory[resource_type] =
@@ -59,14 +58,9 @@ class Service
             query: mapping.query
 
 
-
-    for resource_type, mapping of @mappings
-      @paths[resource_type] = new Path(mapping)
-
-    @documenter = new Documenter(@schema_manager, @resources)
     @default_handlers = require("./handlers")(@)
-
     @classifier = new Classifier(@)
+    @documenter = new Documenter(@)
 
     @description =
       resources: @resources
@@ -80,28 +74,15 @@ class Service
   generate_url: (resource_type, args...) ->
     path = @paths[resource_type]
     if path
-      "#{@service_url}#{path.generate(args...)}"
+      "#{@url}#{path.generate(args...)}"
     else
       throw new Error "Problem generating URL. No such resource: #{resource_type}"
-
-  #normalize_schema: (schema) ->
-    #for name, definition of schema.properties
-      #if definition.id
-        #if definition.id.indexOf("#") == 0
-          #definition.id = "#{schema.id}#{definition.id}"
-      #else
-        #definition.id = "#{schema.id}##{name}"
-
-      #if definition.extends
-        #if definition.extends.$ref && definition.extends.$ref.indexOf("#") == 0
-          #definition.extends.$ref = "#{schema.id}#{definition.extends.$ref}"
-      #if definition.type == "array" && definition.items.$ref.indexOf("#") == 0
-        #definition.items.$ref = "#{schema.id}#{definition.items.$ref}"
 
 
   simple_dispatcher: (app_handlers) ->
     handlers = {}
 
+    # TODO: move this logic into the Dispatcher
     # Install Patchboard's default handlers
     for resource, actions of @default_handlers
       handlers[resource] ||= {}

@@ -17,10 +17,21 @@ module.exports = class SchemaManager
     @jsck = new JSCK.draft3 patchboard_api.schema, schemas...
     @schemas = [patchboard_api.schema].concat(schemas)
     @uris = @jsck.uris
+    @types = @jsck.media_types
 
   find: (args...) ->
     @jsck.find(args...)
 
+  validate: ({mediaType}, document) ->
+    # We only need to validate if the media type is registered for
+    # one of the schemas.
+    if @types[mediaType]
+      @jsck.validator({mediaType}).validate(document)
+    else
+      valid: true
+
+
+  # TODO: move this logic into the Documenter module
   document: () ->
     @document_markdown()
 
@@ -50,9 +61,6 @@ module.exports = class SchemaManager
       lines.join("\n\n")
 
   #schema: (args...) ->
-    #@jsck.validate(args...)
-
-  #validate: (args...) ->
     #@jsck.validate(args...)
 
 

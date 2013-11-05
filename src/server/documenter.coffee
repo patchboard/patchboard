@@ -5,7 +5,7 @@ marked.setOptions
   pedantic: false
 
 class Documenter
-  constructor: (@schema_manager, @resources) ->
+  constructor: ({@schema_manager, @resources}) ->
 
   document_resources: () ->
     out = []

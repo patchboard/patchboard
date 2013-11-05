@@ -26,23 +26,22 @@ class SimpleDispatcher
     if match.error
       @error_handler(match.error, response)
     else
-      ## FIXME: temporarily disabled while reworking to use JSCK
-      #if match.content_type && @service.options.validate
-        #validation = @validate(match.content_type, request)
-        #if validation.errors.length > 0
-          #@error_handler(
-            ## TODO: more informative description
-            #{status: 400, message: "Bad Request", errors: validation.description},
-            #response
-          #)
-          #return
+      if match.content_type && @service.options.validate
+        report = @validate(match.content_type, request)
+        if report.valid != true
+          @error_handler(
+            # TODO: more informative description
+            {status: 400, message: "Bad Request"},
+            response
+          )
+          return
 
       handler = @find_handler(match)
       context = new Context(@service, request, response, match)
       handler(context)
 
-  validate: (media_type, request) ->
-    @service.schema_manager.validate {media_type: media_type}, request.body
+  validate: (mediaType, request) ->
+    @service.schema_manager.validate {mediaType}, request.body
 
 
   find_handler: (match) ->

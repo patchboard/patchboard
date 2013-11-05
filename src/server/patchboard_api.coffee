@@ -37,7 +37,6 @@ module.exports =
       description:
         id: "#description"
         type: "object"
-        mediaType: "application/json"
         properties:
           schema: {type: "object"}
           resources: {type: "object"}
