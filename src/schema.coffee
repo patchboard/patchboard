@@ -4,6 +4,7 @@ module.exports =
 
     schema:
       required: true
+      ## TODO: re-enable when JSCK supports remote refs
       #$ref: "http://json-schema.org/draft-03/schema#"
 
     mappings:
@@ -11,7 +12,10 @@ module.exports =
       type: "object"
       additionalProperties:
         type: "object"
+        additionalProperties: false
         properties:
+          description:
+            type: "string"
           resource:
             type: "string"
           url:
@@ -21,6 +25,7 @@ module.exports =
           template:
             type: "string"
           query:
+            ## TODO: re-enable when JSCK supports remote refs
             ## Extend the full JSON schema, so we can constrain the legal
             ## values of "type".
             #extends: {$ref: "http://json-schema.org/draft-03/schema#"}
@@ -47,6 +52,7 @@ module.exports =
               type: "object"
               description: "An action on a resource. Name is inferred from the property key"
 
+              additionalProperties: false
               properties:
                 description: {type: "string"}
                 method:
@@ -69,8 +75,6 @@ module.exports =
                       title: "The HTTP status code that indicates success"
                       type: "integer"
                       enum: [200, 201, 202, 204]
-
-
 
 
 

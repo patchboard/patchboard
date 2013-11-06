@@ -1,54 +1,60 @@
 # Imaginary API of a GitHub knockoff
 
-search_query =
-  match:
-    type: "string"
-  limit:
-    type: "integer"
-  offset:
-    type: "integer"
-  sort:
-    type: "string"
-    enum: ["asc", "desc"]
-
-
 exports.media_type = media_type = (name) ->
   "application/vnd.gh-knockoff.#{name}+json;version=1.0"
 
-urn = (name) ->
-  "urn:gh-knockoff##{name}"
- 
 exports.mappings =
   authenticated_user:
     path: "/user"
     resource: "user"
  
+  user_search:
+    path: "/user"
+    resource: "user_search"
+    query:
+      match:
+        required: true
+        type: "string"
+      limit:
+        type: "integer"
+      offset:
+        type: "integer"
+      sort:
+        type: "string"
+        enum: ["asc", "desc"]
+ 
   user:
     resource: "user"
     template: "/user/:login"
 
-  user_search:
-    path: "/user"
-    resource: "user_search"
-    query: search_query
- 
   repositories:
+    resource: "repositories"
     description: "Repositories for the authenticated user"
     path: "/user/repos"
-    resource: "repositories"
   
   user_repositories:
-    path: "/user/:login/repos"
     resource: "repositories"
+    template: "/user/:login/repos"
   
   repository:
-    template: "/repos/:login/:name"
     resource: "repository"
+    template: "/repos/:login/:name"
   
   repo_search:
-    path: "/repos"
-    query: search_query
     resource: "repo_search"
+    path: "/repos"
+    query:
+      match:
+        required: true
+        type: "string"
+      limit:
+        type: "integer"
+      offset:
+        type: "integer"
+      sort:
+        type: "string"
+        enum: ["asc", "desc"]
+ 
 
 
 exports.resources =
@@ -57,79 +63,91 @@ exports.resources =
     actions:
       get:
         method: "GET"
-        response_schema: urn("user")
-        status: 200
+        response:
+          type: media_type "user"
+          status: 200
       update:
         method: "PUT"
-        request_schema: urn("user")
-        response_schema: urn("user")
-        status: 200
+        request:
+          type: media_type "user"
+        response:
+          type: media_type "user"
+          status: 200
 
   user_search:
     actions:
       get:
         method: "GET"
-        response_schema: urn("user_list")
-        status: 200
+        response:
+          type: media_type "user_list"
+          status: 200
 
   repository:
     actions:
       get:
         method: "GET"
-        response_schema: urn("repository")
-        status: 200
+        response:
+          type: media_type "repository"
+          status: 200
 
       update:
         method: "PUT"
-        response_schema: urn("repository")
-        status: 200
+        response:
+          type: media_type "repository"
+          status: 200
 
       delete:
-        method: "DELETE", status: 204
+        method: "DELETE"
+        response:
+          status: 204
 
   repo_search:
     actions:
       get:
         method: "GET"
-        response_schema: urn("repository_list")
-        status: 200
+        response:
+          type: media_type "repository_list"
+          status: 200
 
   repositories:
     actions:
       create:
         method: "POST"
-        request_schema: urn("repository")
-        status: 201
+        request:
+          type: media_type "repository"
+          status: 201
 
   ref:
     actions:
       get:
         method: "GET"
-        response_schema: urn("reference")
-        status: 200
+        response:
+          type: media_type "reference"
+          status: 200
 
   branch:
     actions:
       get:
         method: "GET"
-        response_schema: urn("reference")
-        status: 200
-      rename:
-        method: "POST"
-        status: 200
+        response:
+          type: media_type "reference"
+          status: 200
       delete:
         method: "DELETE"
-        status: 204
+        response:
+          status: 204
 
   tag:
     actions:
       get:
         method: "GET"
-        response_schema: urn("reference")
-        status: 200
+        response:
+          type: media_type "reference"
+          status: 200
       delete:
         method: "DELETE"
-        status: 204
+        response:
+          status: 204
 
 
 exports.schema =

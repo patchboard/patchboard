@@ -47,7 +47,7 @@ module.exports =
     api_file = path.resolve(api_file)
     try
       api = require(api_file)
-      report = jsck.schema("urn:patchboard.api#").validate api
+      report = jsck.validator("urn:patchboard.api#").validate api
       if report.valid == true
         console.log "Valid API definition"
       else

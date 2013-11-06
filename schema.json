@@ -9,7 +9,11 @@
       "type": "object",
       "additionalProperties": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
+          "description": {
+            "type": "string"
+          },
           "resource": {
             "type": "string"
           },
@@ -51,6 +55,7 @@
             "additionalProperties": {
               "type": "object",
               "description": "An action on a resource. Name is inferred from the property key",
+              "additionalProperties": false,
               "properties": {
                 "description": {
                   "type": "string"
@@ -66,23 +71,33 @@
                     "DELETE"
                   ]
                 },
-                "request_schema": {
-                  "type": "string",
-                  "description": "The name of the schema describing the request body"
+                "request": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "title": "The media type to be used for the request",
+                      "type": "string"
+                    }
+                  }
                 },
-                "response_schema": {
-                  "type": "string",
-                  "description": "The name of the schema describing the response body"
-                },
-                "status": {
-                  "type": "integer",
-                  "description": "The HTTP status code that indicates a succesful response\nfor this action",
-                  "enum": [
-                    200,
-                    201,
-                    202,
-                    204
-                  ]
+                "response": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "title": "The media type to be used for the request",
+                      "type": "string"
+                    },
+                    "status": {
+                      "title": "The HTTP status code that indicates success",
+                      "type": "integer",
+                      "enum": [
+                        200,
+                        201,
+                        202,
+                        204
+                      ]
+                    }
+                  }
                 }
               }
             }
