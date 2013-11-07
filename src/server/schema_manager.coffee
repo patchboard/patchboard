@@ -60,10 +60,9 @@ module.exports = class SchemaManager
       """
       lines.join("\n\n")
 
-  #schema: (args...) ->
-    #@jsck.validate(args...)
 
-
+  ## These are functions used by a previous implementation to
+  #make JSV errors more intelligible to developers.
   #format_name: (data_uri) ->
     #[root, data_property] = data_uri.split("#/")
     #data_property ?= "<root>"

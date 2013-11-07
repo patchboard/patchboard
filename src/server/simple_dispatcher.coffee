@@ -1,5 +1,4 @@
 URL = require("url")
-Classifier = require("./classifier")
 Context = require("./context")
 
 class SimpleDispatcher

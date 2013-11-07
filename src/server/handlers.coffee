@@ -52,6 +52,7 @@ module.exports = (service) ->
 
       markdown = service.documentation()
       if /html/.test request.headers["accept"]
+        # TODO: move this logic into the Documenter module
         content = html(marked(markdown))
         media_type = "text/html"
       else
