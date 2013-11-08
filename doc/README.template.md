@@ -15,62 +15,14 @@ Examples are excerpts from the [Trivial example][patchboard-trivial], which is w
 
 A dictionary that maps arbitrary logical names to resources and the URLs used to access them.
 
-```.coffee
-
-module.exports =
-
-  users:
-    resource: "users"
-    path: "/users"
-
-  user_search:
-    resource: "user"
-    path: "/user"
-    query:
-      login:
-        required: true
-        type: "string"
-
-  user:
-    resource: "user"
-    template: "/users/:id"
-```
+```../../patchboard-examples/trivial/src/api/mappings.coffee#L1-17```
 
 ### Schemas
 
 A JSON Schema (currently limited to [draft 3][json-schema-3]) describing the data structures used by an API. Resource schemas are defined as properties of the top level `definitions` field.  
 
 
-```.coffee
-
-media_type = (name) ->
-  "application/vnd.trivial.#{name}+json;version=1.0"
-
-module.exports =
-
-  id: "urn:patchboard.trivial"
-  definitions:
-
-    resource:
-      extends: {$ref: "urn:patchboard#resource"}
-
-    user:
-      extends: {$ref: "#resource"}
-      mediaType: media_type "user"
-      properties:
-        login:
-          required: true
-          type: "string"
-          pattern: "^[a-zA-z0-9_.]{3,32}"
-        email:
-          type: "string"
-          format: "email"
-        password:
-          type: "string"
-          minLength: 4
-          maxLength: 64
-        questions: {$ref: "#questions"}
-```
+```../../patchboard-examples/trivial/src/api/schema.coffee#L1-27```
 
 
 ### Resources
@@ -79,42 +31,7 @@ A dictionary describing the resources provided by the API.  Each top level field
 
 An excerpt of the Trivial example:
 
-```.coffee
-
-type = (name) ->
-  "application/vnd.trivial.#{name}+json;version=1.0"
-
-module.exports =
-  users:
-    actions:
-      create:
-        method: "POST"
-        request:
-          type: type "user"
-        response:
-          type: type "user"
-          status: 201
-
-  user_search:
-    actions:
-      get:
-        method: "GET"
-        response:
-          type: type "user"
-          status: 200
-
-  user:
-    actions:
-      get:
-        method: "GET"
-        response:
-          type: type "user"
-          status: 200
-      delete:
-        method: "DELETE"
-        response:
-          status: 204
-```
+```../../patchboard-examples/trivial/src/api/resources.coffee#L1-33```
 
 For each resource, the `actions` dictionary defines the available actions, specifying the HTTP method, the request and/or response media types, and the status that signifies a successful response.
 
