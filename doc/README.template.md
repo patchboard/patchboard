@@ -46,7 +46,7 @@ Patchboard includes a [JSON Schema][patchboard-def-schema] that describes a vali
 
 You can also print a basic example definition to STDOUT.
 
-    bin/patchboard generate json # or cson
+    bin/patchboard example json # or cson
 
 
 ### Patchboard.Server

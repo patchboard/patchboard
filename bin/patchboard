@@ -11,16 +11,16 @@ switch command
       tools.validate(api_file)
     else
       console.log "You must specify the path to the API definition file"
-  when "generate"
+  when "example"
     [type] = args
     if type
-      tools.generate(type)
+      tools.example(type)
     else
       console.log "You must specify a type of either json or cson"
   when "schema"
     console.log JSON.stringify(require("../schema"), null, 2)
   when undefined
-    console.log "You must enter a command (validate, generate, schema)"
+    console.log "You must enter a command (validate, example, schema)"
   else
     console.log "Unsupported command: #{command}"
 

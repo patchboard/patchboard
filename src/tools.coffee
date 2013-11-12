@@ -57,7 +57,7 @@ module.exports =
       console.log "Problem reading API description:", error.message
       process.exit(1)
 
-  generate: (type) ->
+  example: (type) ->
     if type == "json"
       api = example
       string = JSON.stringify(api, null, 2)
