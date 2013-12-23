@@ -14,11 +14,11 @@ module.exports = class Server
 
     @connect = connect()
 
-    @connect.use(@error_check())
-    @connect.use(connect.compress())
-    @connect.use(middleware.request_encoding())
-    @connect.use(middleware.json())
-    @connect.use(dispatcher)
+    @connect.use @error_check()
+    @connect.use connect.compress()
+    @connect.use middleware.request_encoding()
+    @connect.use middleware.json()
+    @connect.use dispatcher
 
   error_check: ->
     (request, response, next) =>

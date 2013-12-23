@@ -52,6 +52,11 @@ class Service
             resource: mapping.resource
             url: "#{@url}#{mapping.path}"
             query: mapping.query
+        else if mapping.template
+          @directory[resource_type] =
+            resource: mapping.resource
+            template: "#{@url}#{mapping.template}"
+            query: mapping.query
         else if mapping.query
           @directory[resource_type] =
             resource: mapping.resource
