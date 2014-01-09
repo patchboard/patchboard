@@ -65,6 +65,9 @@ module.exports =
                     type:
                       title: "The media type to be used for the request"
                       type: "string"
+                    authorization:
+                      title: "The name of the authorization scheme"
+                      type: "string"
                 response:
                   type: "object"
                   properties:

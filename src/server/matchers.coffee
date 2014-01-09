@@ -93,8 +93,11 @@ class Authorization extends Basic
     if @value == "[any]"
       true
     else if input
-      scheme = input.split(" ")[0]
-      scheme == @value
+      [scheme, credential] = input.split(" ")
+      if scheme == @value
+        credential
+      else
+        false
     else
       false
 

@@ -62,7 +62,7 @@ class Classifier
     specs.Path = mapping
     identifiers.Path = JSON.stringify(mapping)
     identifiers.Method = specs.Method = definition.method
-    identifiers.Authorization = specs.Authorization = definition.authorization || "[any]"
+    identifiers.Authorization = specs.Authorization = definition.request?.authorization || "[any]"
 
     if mapping.query
       specs.Query =
