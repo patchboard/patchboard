@@ -36,6 +36,20 @@ module.exports = class Context
       @response.setHeader "access-control-allow-origin", origin
 
   respond: (status, @response_content="", _headers={}) ->
+    try
+      content = @marshal(@response_content)
+      @_respond status, content, _headers
+      return
+    catch error
+      console.error error.stack
+      @error "internal server error", "Decoration failed: #{error}"
+      return
+
+
+  _respond: (status, content, _headers={}) ->
+    if content.constructor != String
+      content = JSON.stringify(content)
+
     # Normalize input headers to lowercase, as it should be legal to
     # pass header keys in any case, and we need to check for the presence
     # of certain headers.
@@ -45,13 +59,11 @@ module.exports = class Context
 
     if status == 202 || status == 204
       # Clobber content and header for status codes where a body is not allowed.
-      @response_content = ""
+      content = ""
       delete headers["content-type"]
 
     else if status < 400 && @match.accept?
       headers["content-type"] ||= @match.accept
-
-    content = @marshal(@response_content)
 
     # Must set the content-type and content-length headers explicitly 
     # for the benefit of connect's compress middleware.
@@ -62,29 +74,25 @@ module.exports = class Context
     @response.writeHead(status)
     @response.end(content)
 
-
-  error: (name, message) ->
-    if status = codes[name.toLowerCase()]
-      @respond status, {name: name, message: message},
+  error: (message, reason) ->
+    if status = codes[message.toLowerCase()]
+      @_respond status, {message, reason},
         "content-type": "application/json"
     else
-      @respond 500, {name: "internal server error", message: name},
+      @_respond 500, {name: "internal server error", reason: message},
         "content-type": "application/json"
 
   url: (name, args...) ->
     @service.generate_url(name, args...)
 
   marshal: (content) ->
-    if content.constructor == String
-      content
-    else
-      if @response_schema && @service.decorator
-        @service.decorator
-          service: @service
-          context: @
-          response_schema: @response_schema
-          response_content: content
-      JSON.stringify(content)
+    if @response_schema && @service.decorator
+      @service.decorator
+        service: @service
+        context: @
+        response_schema: @response_schema
+        response_content: content
+    content
 
   decorate: (callback) ->
     @traverse(@response_schema, @response_content, callback)

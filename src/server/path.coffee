@@ -27,18 +27,19 @@ class Path
 
   path_generator: (spec) ->
     service = @
-    expected_keys = Object.keys(spec.fields).sort().join(",")
     expected_arity = Object.keys(spec.fields).length
 
     return (args...) ->
       out = spec.components.slice(0)
 
       if args.length == 1 && args[0].constructor == Object
-        # url template will be filled in using properties from the args object
         options = args[0]
-        input_keys = Object.keys(options).sort().join(",")
-        if input_keys != expected_keys
-          throw "Input properties not suitable to generate URL"
+        missing = (k for k, v of spec.fields when !options[k]?)
+        if missing.length > 0
+          throw new Error(
+            "URL generation failed. Missing properties: #{missing.join(',')}"
+          )
+
         for name, index of spec.fields
           value = options[name]
           # TODO: validate that the value is not an array or object
