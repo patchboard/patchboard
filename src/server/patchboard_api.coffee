@@ -7,6 +7,9 @@ module.exports =
 
   resources:
     service:
+      description: """
+        A resource describing the resources and schemas for this API.
+      """
       actions:
 
         documentation:
