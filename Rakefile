@@ -15,11 +15,8 @@ task "install_local" do
   sh "npm install ../patchboard-js"
 end
 
-task "build" =>  %w[ validate_example schema.json ]
+task "build" =>  %w[ schema.json ]
 
-task "validate_example" do
-  sh "bin/patchboard validate src/example_api.coffee"
-end
 
 file "schema.json" => "src/schema.coffee" do
   sh "coffee src/schema.coffee > schema.json"
