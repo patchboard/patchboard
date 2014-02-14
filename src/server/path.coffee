@@ -1,5 +1,6 @@
 class Path
   constructor: (mapping) ->
+    @resource = mapping.resource
     @spec = @path_spec(mapping)
     @generate = @path_generator(@spec)
 
@@ -37,7 +38,7 @@ class Path
         missing = (k for k, v of spec.fields when !options[k]?)
         if missing.length > 0
           throw new Error(
-            "URL generation failed. Missing properties: #{missing.join(',')}"
+            "URL generation failed for '#{@resource}'. Missing properties: #{missing.join(',')}"
           )
 
         for name, index of spec.fields

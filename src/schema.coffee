@@ -17,6 +17,7 @@ module.exports =
           description:
             type: "string"
           resource:
+            required: true
             type: "string"
           url:
             type: "string"
@@ -45,6 +46,7 @@ module.exports =
 
         properties:
           actions:
+            required: true
             type: "object"
             description: "A dictionary of actions"
 
@@ -69,6 +71,7 @@ module.exports =
                       title: "The name of the authorization scheme"
                       type: "string"
                 response:
+                  required: true
                   type: "object"
                   properties:
                     type:

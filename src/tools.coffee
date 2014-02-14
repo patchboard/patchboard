@@ -51,7 +51,7 @@ module.exports =
       if report.valid == true
         console.log "Valid API definition"
       else
-        console.log "Invalid API.  Errors:", report.errors
+        console.log "Invalid API.  Errors:", JSON.stringify(report.errors, null, 2)
         process.exit(1)
     catch error
       console.log "Problem reading API description:", error.message
