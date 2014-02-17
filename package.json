@@ -2,7 +2,7 @@
   "name": "patchboard",
   "description": "Patchboard API server and tools",
   "author": "Matthew King",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/automatthew/patchboard/"
@@ -16,7 +16,6 @@
     "schema.json"
   ],
   "dependencies": {
-    "patchboard-js": "0.4.2",
     "connect": "2.3.x",
     "marked": "0.2.x",
     "c50n": "0.3.1",
