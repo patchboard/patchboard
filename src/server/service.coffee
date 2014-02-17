@@ -1,8 +1,6 @@
 URL = require("url")
+log4js = require "log4js"
 
-#JSCK = require("jsck").draft3
-#schema = require("../schema")
-#jsck = new JSCK schema
 validate = require("../validate")
 
 PatchboardAPI = require("./patchboard_api")
@@ -12,11 +10,16 @@ Classifier = require("./classifier")
 SchemaManager = require("./schema_manager")
 Path = require("./path")
 
+
 class Service
 
   constructor: (api, @options={}) ->
     {@decorator} = @options
-    @log = @options.log || console
+    @log = @options.log || do ->
+      log = log4js.getLogger()
+      log.setLevel "DEBUG"
+      log
+      
 
     # Validate the API definition against the Patchboard Definition schema
     #report = jsck.validator("urn:patchboard.api#").validate api
