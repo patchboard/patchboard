@@ -1,8 +1,9 @@
 URL = require("url")
 
-JSCK = require("jsck").draft3
-schema = require("../schema")
-jsck = new JSCK schema
+#JSCK = require("jsck").draft3
+#schema = require("../schema")
+#jsck = new JSCK schema
+validate = require("../validate")
 
 PatchboardAPI = require("./patchboard_api")
 Dispatcher = require("./simple_dispatcher")
@@ -15,10 +16,12 @@ class Service
 
   constructor: (api, @options={}) ->
     # Validate the API definition against the Patchboard Definition schema
-    report = jsck.validator("urn:patchboard.api#").validate api
+    #report = jsck.validator("urn:patchboard.api#").validate api
+    report = validate(api)
     if !report.valid
       errors = JSON.stringify report.errors, null, 2
-      throw new Error "Invalid API definition. Errors: #{errors}"
+      console.log "Invalid API.  Errors:", JSON.stringify(report.errors, null, 2)
+      process.exit(1)
 
     {@decorator} = @options
     @log = @options.log || console
