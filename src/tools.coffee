@@ -2,10 +2,12 @@ path = require("path")
 fs = require("fs")
 
 CSON = require "c50n"
-JSCK = require("jsck").draft3
+#JSCK = require("jsck").draft3
 
-schema = require("./schema")
-jsck = new JSCK schema
+validate = require("./validate")
+
+#schema = require("./schema")
+#jsck = new JSCK schema
 
 example =
   mappings:
@@ -47,14 +49,15 @@ module.exports =
     api_file = path.resolve(api_file)
     try
       api = require(api_file)
-      report = jsck.validator("urn:patchboard.api#").validate api
-      if report.valid == true
-        console.log "Valid API definition"
-      else
-        console.log "Invalid API.  Errors:", JSON.stringify(report.errors, null, 2)
-        process.exit(1)
     catch error
       console.log "Problem reading API description:", error.message
+      process.exit(1)
+
+    report = validate(api)
+    if report.valid == true
+      console.log "Valid API definition"
+    else
+      console.log "Invalid API.  Errors:", JSON.stringify(report.errors, null, 2)
       process.exit(1)
 
   example: (type) ->

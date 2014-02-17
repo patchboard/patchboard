@@ -15,6 +15,7 @@
             "type": "string"
           },
           "resource": {
+            "required": true,
             "type": "string"
           },
           "url": {
@@ -50,6 +51,7 @@
         "description": "A resource. Name is inferred from the property key",
         "properties": {
           "actions": {
+            "required": true,
             "type": "object",
             "description": "A dictionary of actions",
             "additionalProperties": {
@@ -85,6 +87,7 @@
                   }
                 },
                 "response": {
+                  "required": true,
                   "type": "object",
                   "properties": {
                     "type": {
