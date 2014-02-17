@@ -41,7 +41,7 @@ module.exports = class Context
       @_respond status, content, _headers
       return
     catch error
-      console.error error.stack
+      @log.error error.stack
       @error "internal server error", "Decoration failed: #{error}"
       return
 

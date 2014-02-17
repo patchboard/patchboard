@@ -5,6 +5,7 @@ middleware = require "./server/middleware"
 module.exports = class Server
   constructor: (api, @options) ->
     {@host, @port, @cert, @key, @timeout} = @options
+    @log = @options.log || console
     @host ||= "127.0.0.1"
     @service = new Service api, @options
 
@@ -49,6 +50,6 @@ module.exports = class Server
     if @timeout
       @server.timeout = @timeout
     @server.listen(@port, @host, @options.tcp_backlog)
-    console.log("HTTP server listening on #{@protocol}://#{@host}:#{@port}")
+    @log.info "HTTP server listening on #{@protocol}://#{@host}:#{@port}"
 
 

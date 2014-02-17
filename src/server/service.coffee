@@ -15,16 +15,17 @@ Path = require("./path")
 class Service
 
   constructor: (api, @options={}) ->
+    {@decorator} = @options
+    @log = @options.log || console
+
     # Validate the API definition against the Patchboard Definition schema
     #report = jsck.validator("urn:patchboard.api#").validate api
     report = validate(api)
     if !report.valid
       errors = JSON.stringify report.errors, null, 2
-      console.log "Invalid API.  Errors:", JSON.stringify(report.errors, null, 2)
+      @log.error "Invalid API.  Errors: #{errors}"
       process.exit(1)
 
-    {@decorator} = @options
-    @log = @options.log || console
 
     url = @options.url || "http://localhost:1337"
     # We construct full urls by concatenating @url and the path,
