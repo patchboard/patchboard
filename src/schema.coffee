@@ -26,14 +26,15 @@ module.exports =
           template:
             type: "string"
           query:
+            type: "object"
             ## TODO: re-enable when JSCK supports remote refs
             ## Extend the full JSON schema, so we can constrain the legal
             ## values of "type".
             #extends: {$ref: "http://json-schema.org/draft-03/schema#"}
-            properties:
-              type:
-                enum:
-                  ["string", "number", "integer", "boolean"]
+            #properties:
+              #type:
+                #enum:
+                  #["string", "number", "integer", "boolean", "enum"]
 
     resources:
       required: true

@@ -41,6 +41,7 @@ validate_schema = (api) ->
   jsck.validator("urn:patchboard.api#").validate(api)
 
 validate_mappings = ({mappings, resources}) ->
+  # TODO: report resources for which there are no mappings
   report =
     valid: true
     errors: []
