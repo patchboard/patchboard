@@ -28,16 +28,7 @@
             "type": "string"
           },
           "query": {
-            "properties": {
-              "type": {
-                "enum": [
-                  "string",
-                  "number",
-                  "integer",
-                  "boolean"
-                ]
-              }
-            }
+            "type": "object"
           }
         }
       }
