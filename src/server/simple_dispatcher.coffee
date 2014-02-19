@@ -30,7 +30,7 @@ class SimpleDispatcher
         if report.valid != true
           @error_handler(
             # TODO: more informative description
-            {status: 400, message: "Bad Request"},
+            {status: 400, message: "Bad Request", reason: report.errors},
             response
           )
           return
@@ -57,7 +57,7 @@ class SimpleDispatcher
 
     response.writeHead error.status,
       "Content-Type": "application/json"
-    response.end JSON.stringify(error)
+    response.end JSON.stringify(error, null, 2)
 
 
 
