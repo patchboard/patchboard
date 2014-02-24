@@ -14,7 +14,7 @@ class Classifier
     "Accept"
   ]
 
-  constructor: ({@resources, @mappings}) ->
+  constructor: ({@resources, @mappings, @options, @schema_manager}) ->
     
     @matchers = {}
 
@@ -138,6 +138,8 @@ class Classifier
       sequence.push [type, components[type]]
 
     results = @match_request_sequence(sequence)
+
+
     if results.error
       results
     else
@@ -147,7 +149,20 @@ class Classifier
       for k,v of match.payload
         match[k] = v
       delete match.payload
-      match
+
+      if !match.content_type? || !@options.validate
+        match
+      else
+        report = @schema_manager.validate {mediaType: match.content_type}, request.body
+        if report.valid == true
+          match
+        else
+          results =
+            error:
+              status: 400
+              message: "Bad Request"
+              reason: report.errors
+
 
   # this code was stolen and adapted from Djinn, which 
   # is why it looks so hideous.  Not that Djinn is hideous,
