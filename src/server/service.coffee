@@ -1,4 +1,3 @@
-URL = require("url")
 log4js = require "log4js"
 
 validate = require("../validate")
@@ -16,7 +15,7 @@ class Service
   constructor: (api, @options={}) ->
     {@decorator} = @options
     @log = @options.log || do ->
-      log = log4js.getLogger()
+      log = log4js.getLogger("Patchboard")
       log.setLevel "DEBUG"
       log
       
@@ -92,38 +91,8 @@ class Service
 
 
   simple_dispatcher: (app_handlers) ->
-    handlers = {}
-
-    # TODO: move this logic into the Dispatcher
-    # Install Patchboard's default handlers
-    for resource, actions of @default_handlers
-      handlers[resource] ||= {}
-      for name, handler of actions
-        handlers[resource][name] = handler
-
-    for resource, actions of app_handlers
-      handlers[resource] ||= {}
-      for name, handler of actions
-        handlers[resource][name] = handler
-
-    dispatcher = new Dispatcher(@, handlers)
+    dispatcher = new Dispatcher(@, app_handlers)
     dispatcher.request_listener()
-
-  @parse_url: (url) ->
-    parsed = URL.parse(url, true)
-    parsed.path = parsed.pathname = parsed.pathname.replace("//", "/")
-    parsed
-
-
-  @augment_request: (request) ->
-    # TODO: replace this with our own Request object, which wraps
-    # and supplements the raw Node.js request
-    url = @parse_url(request.url)
-    request.path = url.pathname
-    request.query = url.query
-
-  augment_request: (request) ->
-    @constructor.augment_request(request)
 
   documentation: () ->
     """

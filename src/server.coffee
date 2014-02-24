@@ -14,23 +14,17 @@ module.exports = class Server
 
     @connect = connect()
 
-    @connect.use @error_check()
     @connect.use connect.compress()
     @connect.use middleware.request_encoding()
     @connect.use middleware.json()
     @connect.use dispatcher
 
-  error_check: ->
-    (request, response, next) =>
-      # TODO: CORS handling.  Will require manually constructing response,
-      # rather than using next(error).
-      if @status != "ok"
-        error = new Error @status
-        error.status = 500
-        delete error.stack
-        next(error)
-      else
-        next()
+  run: ->
+    @server = @_create()
+    if @timeout
+      @server.timeout = @timeout
+    @server.listen(@port, @host, @options.tcp_backlog)
+    @service.log.info "HTTP server listening on #{@protocol}://#{@host}:#{@port}"
 
   _create: ->
     if @cert && @key
@@ -42,13 +36,5 @@ module.exports = class Server
     else
       @protocol = "http"
       @server = require("http").createServer(@connect)
-
-  run: ->
-    @status = "ok"
-    @server = @_create()
-    if @timeout
-      @server.timeout = @timeout
-    @server.listen(@port, @host, @options.tcp_backlog)
-    @service.log.info "HTTP server listening on #{@protocol}://#{@host}:#{@port}"
 
 

@@ -14,7 +14,7 @@ class Classifier
     "Accept"
   ]
 
-  constructor: ({@resources, @mappings, @options, @schema_manager}) ->
+  constructor: ({@log, @resources, @mappings, @options, @schema_manager}) ->
     
     @matchers = {}
 
@@ -121,6 +121,28 @@ class Classifier
   # and action_name which should handle the request.  Users of this method
   # may then find and use handler functions as they see fit.
   classify: (request) ->
+    match = @_classify(request)
+    r = JSON.stringify {
+      url: request.url
+      method: request.method
+    }
+    if match.error?
+      error = JSON.stringify {
+        message: match.error.message
+        status: match.error.status
+      }
+      @log.debug => "Request failure: #{r} => #{error}"
+    else
+      classification = JSON.stringify {
+        resource: match.resource_type, action: match.action_name,
+        status: match.success_status
+        accept: match.accept
+        content_type: match.content_type
+      }
+      @log.debug "Request classification: #{r} => #{classification}"
+    match
+
+  _classify: (request) ->
     headers = request.headers
     components =
       Path: request.path
@@ -215,7 +237,7 @@ class Classifier
     error =
       status: status
       message: http.STATUS_CODES[status]
-      description: "Problem with request"
+      reason: "Problem with request"
 
   statuses:
     "Authorization": 401

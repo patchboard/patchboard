@@ -1,29 +1,34 @@
 URL = require("url")
 Context = require("./context")
 
-class SimpleDispatcher
+module.exports = class SimpleDispatcher
 
   constructor: (@service, @handlers) ->
-    handler = @handlers.service.default
+    for resource, actions of @service.default_handlers
+      handlers[resource] ||= {}
+      for name, handler of actions
+        handlers[resource][name] = handler
+
+    missing = @handlers.service.default
 
     for resource, definition of @service.resources
       for action, spec of definition.actions
         @handlers[resource] ||= {}
-        @handlers[resource][action] ||= handler
+        @handlers[resource][action] ||= missing
 
   request_listener: () ->
     (request, response) =>
       @dispatch(request, response)
 
   dispatch: (request, response) ->
-    @service.augment_request(request)
-    match = @service.classify(request)
-    if match.error?
-      @error_handler(match.error, response)
+    context = new Context @service, request, response
+    if context.match.error?
+      response.setHeader "Access-Control-Allow-Origin", "*"
+      response.writeHead context.match.error.status,
+        "Content-Type": "application/json"
+      response.end JSON.stringify(context.match.error, null, 2)
     else
-      handler = @find_handler(match)
-      context = new Context(@service, request, response, match)
-      handler(context)
+      @find_handler(context.match)(context)
 
   find_handler: (match) ->
     if !(resource = @handlers[match.resource_type])?
@@ -34,13 +39,5 @@ class SimpleDispatcher
 
     action
 
-  error_handler: (error, response) ->
-    response.setHeader "Access-Control-Allow-Origin", "*"
-
-    response.writeHead error.status,
-      "Content-Type": "application/json"
-    response.end JSON.stringify(error, null, 2)
 
 
-
-module.exports = SimpleDispatcher

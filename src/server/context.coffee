@@ -1,3 +1,4 @@
+URL = require("url")
 SchemaManager = require "./schema_manager"
 
 # Map the names to numbers of the codes that are appropriate for a Patchboard
@@ -24,14 +25,29 @@ codes =
   "gateway timeout": 504
 
 
+parse_url = (url) ->
+  parsed = URL.parse(url, true)
+  parsed.path = parsed.pathname = parsed.pathname.replace("//", "/")
+  parsed
+
+augment_request = (request) ->
+  # TODO: replace this with our own Request object, which wraps
+  # and supplements the raw Node.js request
+  url = parse_url(request.url)
+  request.path = url.pathname
+  request.query = url.query
+
 module.exports = class Context
-  constructor: (@service, @request, @response, @match) ->
+  constructor: (@service, @request, @response) ->
     {@schema_manager, @log} = @service
-    if @match.accept
+    augment_request(request)
+    @match = @service.classify(request)
+
+    if @match.accept?
       @response_schema = @schema_manager.find(mediaType: @match.accept)
 
   set_cors_headers: (origin) ->
-    if @request.headers["origin"]
+    if @request.headers["origin"]?
       origin ||= @request.headers["origin"]
       @response.setHeader "access-control-allow-origin", origin
 
@@ -42,7 +58,7 @@ module.exports = class Context
       return
     catch error
       @log.error error.stack
-      @error "internal server error", "Decoration failed: #{error}"
+      @error "internal server error", "Response content decoration failed: #{error}"
       return
 
 
@@ -58,6 +74,10 @@ module.exports = class Context
       headers[key.toLowerCase()] = value
 
     if status == 202 || status == 204
+      if content.length > 0
+        @log.warn """
+          Context.respond called with #{status} status and non-empty content"
+        """
       # Clobber content and header for status codes where a body is not allowed.
       content = ""
       delete headers["content-type"]
@@ -82,8 +102,8 @@ module.exports = class Context
       @_respond 500, {name: "internal server error", reason: message},
         "content-type": "application/json"
 
-  url: (name, args...) ->
-    @service.generate_url(name, args...)
+  url: (resource_name, args...) ->
+    @service.generate_url(resource_name, args...)
 
   marshal: (content) ->
     if @response_schema && @service.decorator
