@@ -1,5 +1,5 @@
-URL = require("url")
 SchemaManager = require "./schema_manager"
+{augment_request, parse_url} = require "./util"
 
 # Map the names to numbers of the codes that are appropriate for a Patchboard
 # application to use.  Explanation of missing codes:
@@ -25,19 +25,8 @@ codes =
   "gateway timeout": 504
 
 
-parse_url = (url) ->
-  parsed = URL.parse(url, true)
-  parsed.path = parsed.pathname = parsed.pathname.replace("//", "/")
-  parsed
-
-augment_request = (request) ->
-  # TODO: replace this with our own Request object, which wraps
-  # and supplements the raw Node.js request
-  url = parse_url(request.url)
-  request.path = url.pathname
-  request.query = url.query
-
 module.exports = class Context
+
   constructor: (@service, @request, @response) ->
     {@schema_manager, @log} = @service
     augment_request(request)
