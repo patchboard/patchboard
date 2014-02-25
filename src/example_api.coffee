@@ -189,6 +189,8 @@ exports.schema =
       properties:
         name: {type: "string"}
         description: {type: "string"}
+        login: {type: "string"}
+        owner: {$ref: "#user"}
         refs:
           type: "object"
           properties:
