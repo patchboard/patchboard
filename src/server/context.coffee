@@ -29,11 +29,17 @@ module.exports = class Context
 
   constructor: (@service, @request, @response) ->
     {@schema_manager, @log} = @service
-    augment_request(request)
-    @match = @service.classify(request)
-
-    if @match.accept?
-      @response_schema = @schema_manager.find(mediaType: @match.accept)
+    try
+      augment_request(request)
+      @match = @service.classify(request)
+      if @match.accept?
+        @response_schema = @schema_manager.find(mediaType: @match.accept)
+    catch error
+      @match =
+        error:
+          status: 400
+          message: "Bad Request"
+          reason: error.message
 
   set_cors_headers: (origin) ->
     if @request.headers["origin"]?

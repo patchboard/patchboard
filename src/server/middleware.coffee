@@ -55,6 +55,8 @@ module.exports =
           next()
         catch err
           err.status = 400
+          # Connect insists on printing out the error stack, which is bad and wrong.
+          delete err.stack
           next(err)
 
       if request._raw_body

@@ -1,3 +1,4 @@
+require "./json_patch"
 log4js = require "log4js"
 
 validate = require("../validate")
