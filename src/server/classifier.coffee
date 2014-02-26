@@ -131,7 +131,7 @@ class Classifier
         message: match.error.message
         status: match.error.status
       }
-      @log.debug => "Request failure: #{r} => #{error}"
+      @log.debug "Request failure: #{r} => #{error}"
     else
       classification = JSON.stringify {
         resource: match.resource_type, action: match.action_name,
