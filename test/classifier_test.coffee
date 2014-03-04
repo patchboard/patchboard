@@ -15,10 +15,9 @@ service = new Service api,
     debug: ->
     info: ->
     warn: ->
-    error: ->
+    error: (error) -> console.error error
 
 classifier = service.classifier
-
 
 class MockRequest
 

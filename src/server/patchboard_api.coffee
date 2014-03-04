@@ -14,7 +14,8 @@ module.exports =
 
         documentation:
           method: "GET"
-          status: 200
+          response:
+            status: 200
 
         description:
           method: "GET"

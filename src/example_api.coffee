@@ -55,6 +55,13 @@ exports.mappings =
         type: "string"
         enum: ["asc", "desc"]
  
+  tag:
+    resource: "tag"
+    template: "/tags/:sha"
+
+  branch:
+    resource: "branch"
+    template: "/branches/:name"
 
 
 exports.resources =
@@ -170,7 +177,7 @@ exports.schema =
           format: "uri"
 
     user:
-      extends: {$ref: "#/definitions/resource"}
+      extends: {$ref: "#resource"}
       mediaType: type("user")
       properties:
         login: {type: "string"}
@@ -180,11 +187,11 @@ exports.schema =
     user_list:
       mediaType: type("user_list")
       type: "array"
-      items: {$ref: "#/definitions/user"}
+      items: {$ref: "#user"}
 
 
     repository:
-      extends: {$ref: "#/definitions/resource"}
+      extends: {$ref: "#resource"}
       mediaType: type("repository")
       properties:
         name: {type: "string"}
@@ -194,22 +201,22 @@ exports.schema =
         refs:
           type: "object"
           properties:
-            main: {$ref: "#/definitions/branch"}
+            main: {$ref: "#branch"}
             branches:
               type: "object"
-              additionalProperties: {$ref: "#/definitions/branch"}
+              additionalProperties: {$ref: "#branch"}
             tags:
               type: "array"
-              items: {$ref: "#/definitions/tag"}
+              items: {$ref: "#tag"}
 
     repository_list:
       mediaType: type("repository_list")
       type: "array"
-      items: {$ref: "#/definitions/repository"}
+      items: {$ref: "#repository"}
 
 
     reference:
-      extends: {$ref: "#/definitions/resource"}
+      extends: {$ref: "#resource"}
       mediaType: type("reference")
       properties:
         name:
@@ -223,12 +230,16 @@ exports.schema =
           type: "string"
 
     branch:
-      extends: {$ref: "#/definitions/reference"}
+      extends: {$ref: "#reference"}
       mediaType: type("branch")
 
     tag:
-      extends: {$ref: "#/definitions/reference"}
+      extends: {$ref: "#reference"}
       mediaType: type("tag")
 
+# Write out as JSON for non-Node clients
+fs = require "fs"
+path = "#{__dirname}/example_api.json"
+fs.writeFileSync path, JSON.stringify(module.exports, null, 2)
 
 
