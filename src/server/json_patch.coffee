@@ -1,6 +1,5 @@
 {type} = require "fairmont"
 
-
 process = (data) ->
   if type(data) == "array"
     process_array(data)
