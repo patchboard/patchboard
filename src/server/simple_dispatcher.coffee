@@ -23,7 +23,9 @@ module.exports = class SimpleDispatcher
   dispatch: (request, response) ->
     context = new Context @service, request, response
     if context.match.error?
+      body = JSON.stringify(context.match.error, null, 2)
       response.setHeader "Access-Control-Allow-Origin", "*"
+      response.setHeader "Content-Length", Buffer.byteLength(body)
       response.writeHead context.match.error.status,
         "Content-Type": "application/json"
       response.end JSON.stringify(context.match.error, null, 2)
