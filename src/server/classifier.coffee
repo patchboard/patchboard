@@ -32,7 +32,7 @@ class Classifier
       for action_name, definition of resource.actions
         supported_methods[definition.method] = true
         @register mapping, definition,
-          resource_type: name
+          resource_type: resource_type
           action_name: action_name
           success_status: definition.response?.status || 200
 
@@ -131,7 +131,7 @@ class Classifier
         message: match.error.message
         status: match.error.status
       }
-      @log.debug "Request failure: #{r} => #{error}"
+      @log.warn "Request failure: #{r} => #{error}"
     else
       classification = JSON.stringify {
         resource: match.resource_type, action: match.action_name,

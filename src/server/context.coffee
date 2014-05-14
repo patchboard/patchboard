@@ -20,6 +20,7 @@ codes =
   "conflict": 409
   "gone": 410
   "internal server error": 500
+  "not implemented": 500
   "bad gateway": 502
   "service unavailable": 503
   "gateway timeout": 504
