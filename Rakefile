@@ -1,4 +1,7 @@
+$:.unshift "../starter/lib"
+
 require "starter/tasks/npm"
+require "starter/tasks/npm/release"
 require "starter/tasks/git"
 require "starter/tasks/github"
 
