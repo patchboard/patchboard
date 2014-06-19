@@ -35,7 +35,7 @@ module.exports = (service) ->
         "Allow": allowed
         "Access-Control-Allow-Origin": "*"
         "Access-Control-Allow-Methods": allowed
-        "Access-Control-Allow-Headers": "Content-Type, Accept"
+        "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization"
         "Access-Control-Max-Age": 30 # seconds
 
   service:
