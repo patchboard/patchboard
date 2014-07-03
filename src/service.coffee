@@ -13,7 +13,7 @@ Context = require("./context")
 
 class Service
 
-  constructor: (api, @options={}) ->
+  constructor: (@api, @options={}) ->
     {@decorator} = @options
     @log = @options.log || do ->
       log = log4js.getLogger("Patchboard")
@@ -23,7 +23,7 @@ class Service
 
     # Validate the API definition against the Patchboard Definition schema
     #report = jsck.validator("urn:patchboard.api#").validate api
-    report = validate(api)
+    report = validate(@api)
     if !report.valid
       errors = JSON.stringify report.errors, null, 2
       @log.error "Invalid API.  Errors: #{errors}"
@@ -37,13 +37,13 @@ class Service
       url = url.slice(0,-1)
     @url = url
 
-    @schema_manager = new SchemaManager(api.schema)
-    @mappings = api.mappings
+    @schema_manager = new SchemaManager(@api.schema)
+    @mappings = @api.mappings
 
     @resources = {}
     for key, value of base_api.resources
       @resources[key] = value
-    for key, value of api.resources
+    for key, value of @api.resources
       @resources[key] = value
 
 
