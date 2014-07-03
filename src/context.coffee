@@ -35,6 +35,14 @@ module.exports = class Context
       @match = @service.classify(request)
       if @match.accept?
         @response_schema = @schema_manager.find(mediaType: @match.accept)
+
+      if @match.error?
+        body = JSON.stringify(@match.error, null, 2)
+        response.setHeader "Access-Control-Allow-Origin", "*"
+        response.setHeader "Content-Length", Buffer.byteLength(body)
+        response.writeHead @match.error.status,
+          "Content-Type": "application/json"
+        response.end body
     catch error
       @match =
         error:

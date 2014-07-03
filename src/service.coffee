@@ -8,6 +8,7 @@ Documenter = require("./documenter")
 Classifier = require("./classifier")
 SchemaManager = require("./schema_manager")
 Path = require("./path")
+Context = require("./context")
 
 
 class Service
@@ -78,6 +79,8 @@ class Service
       schemas: @schema_manager.schemas
       mappings: @directory
 
+  context:(request, response) ->
+    new Context @, request, response
 
   classify: (args...) ->
     @classifier.classify(args...)

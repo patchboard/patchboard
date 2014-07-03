@@ -9,28 +9,20 @@ module.exports = class SimpleDispatcher
       for name, handler of actions
         handlers[resource][name] = handler
 
-    missing = @handlers.service.default
-
     for resource, definition of @service.resources
       for action, spec of definition.actions
         @handlers[resource] ||= {}
-        @handlers[resource][action] ||= missing
+        @handlers[resource][action] ||= @unimplemented
 
   request_listener: () ->
     (request, response) =>
       @dispatch(request, response)
 
   dispatch: (request, response) ->
-    context = new Context @service, request, response
-    if context.match.error?
-      body = JSON.stringify(context.match.error, null, 2)
-      response.setHeader "Access-Control-Allow-Origin", "*"
-      response.setHeader "Content-Length", Buffer.byteLength(body)
-      response.writeHead context.match.error.status,
-        "Content-Type": "application/json"
-      response.end JSON.stringify(context.match.error, null, 2)
-    else
+    context = @service.context(request, response)
+    unless context.match.error?
       @find_handler(context.match)(context)
+
 
   find_handler: (match) ->
     if !(resource = @handlers[match.resource_type])?
@@ -41,5 +33,15 @@ module.exports = class SimpleDispatcher
 
     action
 
+
+  unimplemented: (context) ->
+    {match} = context
+
+    content = JSON.stringify
+      message: "Unimplemented: #{match.resource_type}.#{match.action_name}"
+    context.set_cors_headers("*")
+    context.respond 501, content,
+      "Content-Type": "application/json"
+      "Content-Length": content.length
 
 
