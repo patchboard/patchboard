@@ -4,7 +4,6 @@ log4js = require "log4js"
 {validate} = require("patchboard-api")
 
 base_api = require("./base_api")
-Dispatcher = require("./simple_dispatcher")
 Documenter = require("./documenter")
 Classifier = require("./classifier")
 SchemaManager = require("./schema_manager")
@@ -90,10 +89,6 @@ class Service
     else
       throw new Error "Problem generating URL. No such resource: #{resource_type}"
 
-
-  simple_dispatcher: (app_handlers) ->
-    dispatcher = new Dispatcher(@, app_handlers)
-    dispatcher.request_listener()
 
   documentation: () ->
     """

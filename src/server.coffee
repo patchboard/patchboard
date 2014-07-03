@@ -1,5 +1,6 @@
 connect = require "connect"
 {Service, middleware} = require "./index"
+SimpleDispatcher = require("./dispatchers/simple")
 
 module.exports = class Server
   constructor: (api, @options) ->
@@ -7,16 +8,14 @@ module.exports = class Server
     @host ||= "127.0.0.1"
     @service = new Service api, @options
 
-    # service.simple_dispatcher returns the http handler function
-    # used by Connect or the stdlib http server.
-    dispatcher = @service.simple_dispatcher(options.handlers)
+    dispatcher = new SimpleDispatcher(@service, options.handlers)
 
     @connect = connect()
 
     @connect.use connect.compress()
     @connect.use middleware.request_encoding()
     @connect.use middleware.json()
-    @connect.use dispatcher
+    @connect.use dispatcher.request_listener()
 
   run: ->
     @server = @_create()

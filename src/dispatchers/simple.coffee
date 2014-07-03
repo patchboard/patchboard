@@ -1,5 +1,5 @@
 URL = require("url")
-Context = require("./context")
+Context = require("../context")
 
 module.exports = class SimpleDispatcher
 
