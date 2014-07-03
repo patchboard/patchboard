@@ -139,7 +139,7 @@ class Classifier
         accept: match.accept
         content_type: match.content_type
       }
-      @log.debug "Request classification: #{r} => #{classification}"
+      @log.info "Classified request: #{r} => #{classification}"
     match
 
   _classify: (request) ->
