@@ -16,6 +16,7 @@
     "schema.json"
   ],
   "dependencies": {
+    "patchboard-api": "~0.4.1",
     "connect": "2.3.x",
     "marked": "0.2.x",
     "c50n": "0.3.1",

@@ -1,6 +1,6 @@
 #!/usr/bin/env coffee
 
-tools = require("../src/tools")
+{example, validate} = require "patchboard-api"
 
 [interpreter, script, command, args...] = process.argv
 
@@ -8,13 +8,13 @@ switch command
   when "validate"
     [api_file] = args
     if api_file
-      tools.validate(api_file)
+      validate(api_file)
     else
       console.log "You must specify the path to the API definition file"
   when "example"
     [type] = args
     if type
-      tools.example(type)
+      example(type)
     else
       console.log "You must specify a type of either json or cson"
   when "schema"
