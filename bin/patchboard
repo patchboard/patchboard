@@ -1,6 +1,6 @@
 #!/usr/bin/env coffee
 
-{example, validate} = require "patchboard-api"
+{example, validate_file} = require "patchboard-api"
 
 [interpreter, script, command, args...] = process.argv
 
@@ -8,7 +8,7 @@ switch command
   when "validate"
     [api_file] = args
     if api_file
-      validate(api_file)
+      validate_file(api_file)
     else
       console.log "You must specify the path to the API definition file"
   when "example"

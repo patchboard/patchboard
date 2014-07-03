@@ -1,9 +1,9 @@
 require "./json_patch"
 log4js = require "log4js"
 
-validate = require("../validate")
+{validate} = require("patchboard-api")
 
-PatchboardAPI = require("./patchboard_api")
+base_api = require("./base_api")
 Dispatcher = require("./simple_dispatcher")
 Documenter = require("./documenter")
 Classifier = require("./classifier")
@@ -41,7 +41,7 @@ class Service
     @mappings = api.mappings
 
     @resources = {}
-    for key, value of PatchboardAPI.resources
+    for key, value of base_api.resources
       @resources[key] = value
     for key, value of api.resources
       @resources[key] = value
@@ -50,7 +50,7 @@ class Service
     @directory = {}
     @paths = {}
 
-    for mappings in [PatchboardAPI.mappings, @mappings]
+    for mappings in [base_api.mappings, @mappings]
       for resource_type, mapping of mappings
         @paths[resource_type] = new Path(mapping)
 

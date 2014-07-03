@@ -1,6 +1,6 @@
 JSCK = require "jsck"
 
-patchboard_api = require "./patchboard_api"
+patchboard_api = require "./base_api"
 
 module.exports = class SchemaManager
 

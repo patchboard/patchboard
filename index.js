@@ -1,2 +1,2 @@
 require("coffee-script/register");
-module.exports = require("./src/patchboard")
+module.exports = require("./src/index")

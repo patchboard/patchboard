@@ -1,5 +1,5 @@
 connect = require "connect"
-{Service, middleware} = require "./patchboard"
+{Service, middleware} = require "./index"
 
 module.exports = class Server
   constructor: (api, @options) ->

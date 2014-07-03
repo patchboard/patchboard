@@ -1,7 +1,7 @@
 http = require("http")
 
 Matchers = require("./matchers")
-PatchboardAPI = require("./patchboard_api")
+base_api = require("./base_api")
 
 class Classifier
 
@@ -18,7 +18,7 @@ class Classifier
     
     @matchers = {}
 
-    @process(PatchboardAPI.mappings, PatchboardAPI.resources)
+    @process(base_api.mappings, base_api.resources)
     @process(@mappings, @resources)
 
   # Given the path mappings and resource descriptions, set up the matching
