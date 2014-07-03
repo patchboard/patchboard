@@ -30,7 +30,7 @@ class Service
       process.exit(1)
 
 
-    url = @options.url || "http://localhost:1337"
+    url = @options.url || "http://localhost:1646"
     # We construct full urls by concatenating @url and the path,
     # so make sure that @url does not end in a slash.
     if url[url.length-1] == "/"
