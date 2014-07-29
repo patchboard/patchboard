@@ -36,6 +36,7 @@ module.exports = class Context
       if @match.accept?
         @response_schema = @schema_manager.find(mediaType: @match.accept)
 
+      # TODO: leave error handling up to the dispatcher
       if @match.error?
         body = JSON.stringify(@match.error, null, 2)
         response.setHeader "Access-Control-Allow-Origin", "*"
