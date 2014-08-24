@@ -1,5 +1,5 @@
+Request = require "./request"
 SchemaManager = require "./schema_manager"
-{augment_request, parse_url} = require "./util"
 
 # Map the names to numbers of the codes that are appropriate for a Patchboard
 # application to use.  Explanation of missing codes:
@@ -28,23 +28,16 @@ codes =
 
 module.exports = class Context
 
-  constructor: (@service, @request, @response) ->
+  constructor: (@service, request, @response) ->
     {@schema_manager, @log} = @service
     try
-      augment_request(request)
-      @match = @service.classify(request)
+      @request = new Request(request)
+      @match = @service.classify(@request)
       if @match.accept?
         @response_schema = @schema_manager.find(mediaType: @match.accept)
 
-      # TODO: leave error handling up to the dispatcher
-      if @match.error?
-        body = JSON.stringify(@match.error, null, 2)
-        response.setHeader "Access-Control-Allow-Origin", "*"
-        response.setHeader "Content-Length", Buffer.byteLength(body)
-        response.writeHead @match.error.status,
-          "Content-Type": "application/json"
-        response.end body
     catch error
+      @log.error error
       @match =
         error:
           status: 400

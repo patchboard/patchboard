@@ -20,7 +20,13 @@ module.exports = class SimpleDispatcher
 
   dispatch: (request, response) ->
     context = @service.context(request, response)
-    unless context.match.error?
+    {match} = context
+    if context.match.error?
+      # TODO: allow custom processing
+      status = context.match.error.status
+      context.set_cors_headers("*")
+      context.respond status, match.error
+    else
       @find_handler(context.match)(context)
 
 

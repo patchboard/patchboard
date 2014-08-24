@@ -107,6 +107,8 @@ class Classifier
     sequence
 
   register_match_sequence: (sequence, payload) ->
+    # TODO: document what the heck this is doing.
+    # I think it's constructing a directed graph.
     matchers = @matchers
     for item in sequence
       matchers[item.ident] ||= new item.klass(item.spec)
@@ -143,14 +145,15 @@ class Classifier
     match
 
   _classify: (request) ->
+    console.log request.method
     headers = request.headers
     components =
       Path: request.path
       Query: request.query
       Method: request.method
-      Authorization: headers["authorization"] || headers["Authorization"]
-      ContentType: headers["content-type"] || headers["Content-Type"]
-      Accept: headers["accept"] || headers["Accept"]
+      Authorization: request.authorization
+      ContentType: request.content_type
+      Accept: request.accept
 
     # the request sequence uses pseudo-tuples so that we can
     # tell at what stage match failures occur.  This is crucial 

@@ -65,7 +65,7 @@ class Query
 
 
 
-class Basic
+class Matcher
   constructor: (@value) ->
     @matchers = {}
 
@@ -75,7 +75,7 @@ class Basic
     else
       input == @value
 
-class Method extends Basic
+class Method extends Matcher
   constructor: (method) ->
     @type = "method"
     super(method)
@@ -84,24 +84,33 @@ class Method extends Basic
     input == @value
 
 
-class Authorization extends Basic
-  constructor: (authorization) ->
+class Authorization
+  constructor: (arg) ->
+    @matchers = {}
+    if arg == "[any]"
+      @schemes = arg
+    else if arg.constructor == String
+      @schemes = [arg]
+    else
+      @schemes = arg
+
     @type = "authorization"
-    super(authorization)
 
   match: (input) ->
-    if @value == "[any]"
+    if @schemes == "[any]"
       true
     else if input
-      [scheme, credential] = input.split(" ")
-      if scheme == @value
-        credential
+      {scheme, params} = input
+      if scheme in @schemes
+        input
       else
         false
     else
       false
 
-class ContentType extends Basic
+
+
+class ContentType extends Matcher
   # TODO: handle mediatypes in a better way than simple string match
   constructor: (content_type) ->
     @type = "content_type"
@@ -120,7 +129,6 @@ class Accept
   # TODO: handle mediatypes in a better way than simple string match
   constructor: (@value, @payload) ->
     @type = "accept"
-    #@matchers = {}
 
   match: (input) ->
     if @value == "[any]"
