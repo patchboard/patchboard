@@ -1,5 +1,7 @@
 URL = require("url")
 
+authorization = require "./authorization"
+
 parse_url = (url) ->
   parsed = URL.parse(url, true)
   parsed.path = parsed.pathname = parsed.pathname.replace("//", "/")
@@ -49,7 +51,7 @@ module.exports = class Request
     auth_string = @headers["Authorization"] || @headers["authorization"]
     if auth_string?
       try
-        @authorization = parse_authorization(auth_string)
+        @authorization = authorization.parse(auth_string)
       catch error
         @authorization = null
 
