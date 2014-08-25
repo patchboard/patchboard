@@ -18,13 +18,13 @@ task "install_local" do
   sh "npm install ../patchboard-js"
 end
 
-task "build" =>  %w[ schema.json ]
+#task "build" =>  %w[ schema.json ]
 
 
-file "schema.json" => "src/schema.coffee" do
-  sh "coffee src/schema.coffee > schema.json"
-  sh "git add schema.json"
-end
+#file "schema.json" => "src/schema.coffee" do
+  #sh "coffee src/schema.coffee > schema.json"
+  #sh "git add schema.json"
+#end
 
 desc "Run tests"
 task "test" do
