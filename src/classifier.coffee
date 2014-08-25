@@ -240,7 +240,6 @@ class Classifier
     error =
       status: status
       message: http.STATUS_CODES[status]
-      reason: "Problem with request"
 
   statuses:
     "Authorization": 401

@@ -48,7 +48,11 @@ module.exports = class Request
     @body =  @raw.body
     auth_string = @headers["Authorization"] || @headers["authorization"]
     if auth_string?
-      @authorization = parse_authorization(auth_string)
+      try
+        @authorization = parse_authorization(auth_string)
+      catch error
+        @authorization = null
+
     @content_type = @headers["content-type"] || @headers["Content-Type"]
     @accept =  @headers["accept"] || @headers["Accept"]
 

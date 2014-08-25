@@ -92,8 +92,22 @@ module.exports = class Context
     @response.writeHead(status)
     @response.end(content)
 
+  unauthorized: (challenge) ->
+    www_auth = []
+    for scheme, params of challenge
+      x = []
+      for name, value of params
+        x.push "#{name}=\"#{value}\""
+      www_auth.push "#{scheme} #{x.join(', ')}"
+    headers = {"WWW-Authenticate": www_auth.join(", ")}
+    @_respond 401, {message: "unauthorized"}, headers
+
+
   error: (message, reason) ->
-    if status = codes[message.toLowerCase()]
+    # FIXME: handle case where the reason isn't a proper 401 challenge
+    if message == "unauthorized"
+      @unauthorized(reason)
+    else if status = codes[message.toLowerCase()]
       @_respond status, {message, reason},
         "content-type": "application/json"
     else
