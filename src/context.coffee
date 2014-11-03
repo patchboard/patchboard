@@ -92,15 +92,17 @@ module.exports = class Context
     @response.writeHead(status)
     @response.end(content)
 
-  unauthorized: (challenge) ->
+  unauthorized: (reason) ->
+    {message, challenges} = reason
+    message ?= "unauthorized"
     www_auth = []
-    for scheme, params of challenge
+    for scheme, params of challenges
       x = []
       for name, value of params
         x.push "#{name}=\"#{value}\""
       www_auth.push "#{scheme} #{x.join(', ')}"
     headers = {"WWW-Authenticate": www_auth.join(", ")}
-    @_respond 401, {message: "unauthorized"}, headers
+    @_respond 401, {message}, headers
 
 
   error: (message, reason) ->

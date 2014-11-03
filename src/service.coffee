@@ -90,7 +90,7 @@ class Service
     if path
       "#{@url}#{path.generate(args...)}"
     else
-      throw new Error "Problem generating URL. No such resource: #{resource_type}"
+      throw new Error "Problem generating URL. No such mapping: #{resource_type}"
 
 
   documentation: () ->
