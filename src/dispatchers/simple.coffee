@@ -3,11 +3,13 @@ Context = require("../context")
 
 module.exports = class SimpleDispatcher
 
-  constructor: (@service, @handlers) ->
-    for resource, actions of @service.default_handlers
-      handlers[resource] ||= {}
+  constructor: (@service, handlers) ->
+    @handlers = @service.default_handlers
+    
+    for resource, actions of handlers
+      @handlers[resource] ||= {}
       for name, handler of actions
-        handlers[resource][name] = handler
+        @handlers[resource][name] = handler
 
     for resource, definition of @service.resources
       for action, spec of definition.actions
