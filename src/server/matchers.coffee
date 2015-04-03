@@ -116,18 +116,20 @@ class ContentType extends Basic
       else
         false
 
-class Accept
-  # TODO: handle mediatypes in a better way than simple string match
-  constructor: (@value, @payload) ->
-    @type = "accept"
-    #@matchers = {}
 
-  match: (input) ->
+{parseAccept} = require "./accept"
+class Accept
+  constructor: (mediaType) ->
+    @mediaTypes = [mediaType]
+    @type = "accept"
+
+  match: (header) ->
     if @value == "[any]"
       true
     else
-      if input == @value
-        input
+      types = parseAccept(header)
+      if (best = types.getBestMatch(@mediaTypes))?
+        best
       else
         false
 
