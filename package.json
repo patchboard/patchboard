@@ -17,7 +17,7 @@
   ],
   "dependencies": {
     "patchboard-api": "~0.5.0",
-    "connect": "2.3.x",
+    "connect": "3.7.x",
     "marked": "0.2.x",
     "c50n": "0.3.1",
     "jsck": "~0.1.4",
